@@ -1,0 +1,142 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+/* class 策略暗色模式（html.dark），由 ThemeToggle 控制 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* 765 系樱粉 —— 强调色，克制使用 */
+  --color-accent-50: #fdf3f7;
+  --color-accent-100: #fbe4ec;
+  --color-accent-200: #f8cddf;
+  --color-accent-300: #f3a7c6;
+  --color-accent-400: #ea76a4;
+  --color-accent-500: #dd4f89;
+  --color-accent-600: #c63571;
+  --color-accent-700: #a42559;
+  --color-accent-800: #86204b;
+  --color-accent-900: #711e44;
+  --color-accent-950: #470a26;
+
+  /* 系统字体栈：不引入 CJK webfont，保持轻量 */
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Noto Sans CJK SC',
+    'Source Han Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono:
+    ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, 'Courier New', monospace;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 2px 8px rgb(0 0 0 / 0.04);
+  --shadow-card-hover: 0 2px 4px rgb(0 0 0 / 0.05), 0 8px 24px rgb(0 0 0 / 0.08);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  :root.dark {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-neutral-50 font-sans text-neutral-800 antialiased dark:bg-neutral-900 dark:text-neutral-200;
+  }
+
+  ::selection {
+    @apply bg-accent-200 text-accent-950 dark:bg-accent-700 dark:text-accent-50;
+  }
+
+  /* 锚点定位不被吸顶导航遮挡 */
+  [id] {
+    scroll-margin-top: 5.5rem;
+  }
+
+  /* Shiki 双主题：亮色用内联默认，暗色切到 --shiki-dark 变量 */
+  .dark .astro-code,
+  .dark .astro-code span {
+    color: var(--shiki-dark) !important;
+    background-color: var(--shiki-dark-bg) !important;
+    font-style: var(--shiki-dark-font-style) !important;
+    font-weight: var(--shiki-dark-font-weight) !important;
+  }
+  .astro-code {
+    @apply overflow-x-auto rounded-xl border border-neutral-200/80 text-sm dark:border-neutral-700/60;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* 旧文章依赖的 callout 提示框（callout-warning / danger / success / callout-center） */
+  .callout {
+    @apply my-5 rounded-xl border-l-4 px-4 py-3 text-[0.95em];
+  }
+  .callout p {
+    @apply m-0;
+  }
+  .callout-warning {
+    @apply border-amber-400 bg-amber-50 text-amber-900 dark:border-amber-500 dark:bg-amber-950/40 dark:text-amber-200;
+  }
+  .callout-danger {
+    @apply border-red-400 bg-red-50 text-red-900 dark:border-red-500 dark:bg-red-950/40 dark:text-red-200;
+  }
+  .callout-success {
+    @apply border-emerald-400 bg-emerald-50 text-emerald-900 dark:border-emerald-500 dark:bg-emerald-950/40 dark:text-emerald-200;
+  }
+  .callout-center {
+    @apply text-center;
+  }
+
+  /* 旧文章 imas-hires 中的“返回顶部”锚点 */
+  .back-top {
+    @apply block text-right text-sm text-neutral-400 transition-colors hover:text-accent-500 dark:hover:text-accent-300;
+  }
+  .back-top::before {
+    content: '↑ ';
+  }
+
+  /* 文章正文内的折叠面板（imas-hires / imas-cd 大量使用） */
+  .prose details {
+    @apply my-4 overflow-hidden rounded-xl border border-neutral-200 bg-white transition-colors dark:border-neutral-700/60 dark:bg-neutral-800/40;
+  }
+  .prose details summary {
+    @apply m-0 cursor-pointer list-none select-none px-4 py-3 font-medium;
+  }
+  .prose details summary::-webkit-details-marker {
+    display: none;
+  }
+  .prose details summary::before {
+    content: '▸';
+    @apply mr-2 inline-block text-accent-500 transition-transform duration-200 dark:text-accent-400;
+  }
+  .prose details[open] summary::before {
+    transform: rotate(90deg);
+  }
+  .prose details[open] summary {
+    @apply border-b border-neutral-200/80 dark:border-neutral-700/60;
+  }
+  .prose details > *:not(summary) {
+    @apply px-4;
+  }
+
+  /* 图片预览对话框 */
+  .lightbox-dialog {
+    @apply m-auto max-w-[92vw] max-h-[92vh] bg-transparent p-0 backdrop:bg-black/80 backdrop:backdrop-blur-sm;
+  }
+  .lightbox-dialog img {
+    @apply max-h-[92vh] max-w-[92vw] rounded-lg object-contain shadow-2xl;
+  }
+}

@@ -1,0 +1,93 @@
+---
+import { Icon } from 'astro-icon/components';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE } from '../site.config';
+---
+
+<BaseLayout title={`搜索 · ${SITE.title}`} description="全站搜索" pathname="/search/">
+  <div id="search-app" class="mx-auto max-w-2xl">
+    <header class="mb-6">
+      <h1 class="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl dark:text-neutral-50">搜索</h1>
+    </header>
+
+    <div class="relative">
+      <Icon
+        name="material-symbols:search"
+        class="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-neutral-400"
+      />
+      <input
+        id="search-input"
+        type="search"
+        placeholder="搜索文章与资源…"
+        autofocus
+        class="w-full rounded-full border border-neutral-200 bg-white py-2.5 pr-4 pl-11 text-sm outline-none transition-colors placeholder:text-neutral-400 focus:border-accent-400 dark:border-neutral-700 dark:bg-neutral-800 dark:focus:border-accent-500"
+      />
+    </div>
+
+    <p id="search-status" class="mt-3 hidden text-xs text-neutral-500 tabular-nums dark:text-neutral-400" aria-live="polite"></p>
+    <ul id="search-results" class="mt-4 space-y-3 pb-16"></ul>
+  </div>
+</BaseLayout>
+
+<script>
+  let pagefind: any = null;
+
+  async function getPagefind() {
+    if (!pagefind) pagefind = await import(/* @vite-ignore */ '/pagefind/pagefind.js');
+    return pagefind;
+  }
+
+  function initSearch() {
+    const root = document.getElementById('search-app');
+    if (!root || root.dataset.bound === 'true') return;
+    root.dataset.bound = 'true';
+
+    const input = root.querySelector<HTMLInputElement>('#search-input')!;
+    const resultsEl = root.querySelector<HTMLUListElement>('#search-results')!;
+    const statusEl = root.querySelector<HTMLElement>('#search-status')!;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    async function run() {
+      const query = input.value.trim();
+      resultsEl.innerHTML = '';
+      if (!query) {
+        statusEl.hidden = true;
+        return;
+      }
+      try {
+        const pf = await getPagefind();
+        const search = await pf.search(query);
+        statusEl.hidden = false;
+        statusEl.textContent = `共 ${search.results.length} 个结果`;
+        const top = await Promise.all(search.results.slice(0, 20).map((r: any) => r.data()));
+        for (const result of top) {
+          const li = document.createElement('li');
+          li.className =
+            'rounded-xl border border-neutral-200/70 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-800/40';
+          const a = document.createElement('a');
+          a.href = result.url;
+          a.className = 'block font-medium text-neutral-800 hover:text-accent-600 dark:text-neutral-200 dark:hover:text-accent-400';
+          a.textContent = result.meta?.title ?? result.url;
+          const excerpt = document.createElement('div');
+          excerpt.className = 'mt-1 text-sm text-neutral-500 dark:text-neutral-400 [&_mark]:bg-accent-100 [&_mark]:text-accent-800 dark:[&_mark]:bg-accent-900/60 dark:[&_mark]:text-accent-200';
+          excerpt.innerHTML = result.excerpt;
+          li.append(a, excerpt);
+          resultsEl.appendChild(li);
+        }
+        if (search.results.length === 0) {
+          statusEl.textContent = '没有找到相关内容 (´･_･`)';
+        }
+      } catch {
+        statusEl.hidden = false;
+        statusEl.textContent = '搜索索引仅在构建后可用（npm run build 后预览）';
+      }
+    }
+
+    input.addEventListener('input', () => {
+      clearTimeout(timer);
+      timer = setTimeout(run, 200);
+    });
+  }
+
+  document.addEventListener('astro:page-load', initSearch);
+</script>

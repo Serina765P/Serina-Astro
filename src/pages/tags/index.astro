@@ -1,0 +1,55 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { tagSlug } from '../../site.config';
+import { SITE } from '../../site.config';
+
+const posts = await getCollection('posts');
+
+const tags = new Map<string, { name: string; count: number }>();
+for (const post of posts) {
+  for (const name of post.data.tags) {
+    const entry = tags.get(name) ?? { name, count: 0 };
+    entry.count++;
+    tags.set(name, entry);
+  }
+}
+const sorted = [...tags.values()].sort((a, b) => b.count - a.count);
+
+// 按文章数量决定字号（2.6rem → 0.95rem 之间），克制的标签云
+const max = Math.max(...sorted.map((t) => t.count), 1);
+const min = Math.min(...sorted.map((t) => t.count), 1);
+const fontSize = (count: number) => {
+  if (max === min) return '1rem';
+  const t = (count - min) / (max - min);
+  return `${(0.95 + t * 0.85).toFixed(2)}rem`;
+};
+const opacity = (count: number) => {
+  if (max === min) return 1;
+  const t = (count - min) / (max - min);
+  return 0.65 + t * 0.35;
+};
+---
+
+<BaseLayout title={`标签 · ${SITE.title}`} description="文章标签" pathname="/tags/">
+  <header class="mb-8">
+    <h1 class="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl dark:text-neutral-50">标签</h1>
+  </header>
+
+  <ul class="flex flex-wrap gap-x-5 gap-y-3" aria-label="全部标签">
+    {
+      sorted.map(({ name, count }) => (
+        <li>
+          <a
+            href={`/tags/${tagSlug(name)}/`}
+            class="inline-flex items-baseline gap-1.5 text-accent-600 transition-colors hover:text-accent-500 dark:text-accent-400 dark:hover:text-accent-300"
+            style={`font-size: ${fontSize(count)}; opacity: ${opacity(count)};`}
+          >
+            <span class="font-medium"># {name}</span>
+            <span class="text-xs text-neutral-400 tabular-nums dark:text-neutral-500">{count}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</BaseLayout>

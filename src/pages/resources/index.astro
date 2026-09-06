@@ -1,0 +1,350 @@
+---
+import { getCollection } from 'astro:content';
+import { Icon } from 'astro-icon/components';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { SITE } from '../../site.config';
+
+const all = (await getCollection('resources')).sort(
+  (a, b) => Number(a.data.排序值 || 0) - Number(b.data.排序值 || 0),
+);
+
+const franchises = [...new Set(all.map((r) => r.data.企划))];
+const types = [...new Set(all.map((r) => r.data.资源类型))];
+const years = [...new Set(all.map((r) => r.data.年份).filter(Boolean))].sort((a, b) => Number(b) - Number(a));
+const formats = [...new Set(all.map((r) => r.data.格式).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+const statuses = ['可用', '待分享'];
+
+const countOf = (field: '企划' | '资源类型', value: string) => all.filter((r) => r.data[field] === value).length;
+
+const searchOf = (r: (typeof all)[number]) =>
+  [r.data.名称, r.data.别名, r.data.系列, r.data.网盘路径, r.data.企划, r.data.资源类型, r.data.格式, r.data.年份]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+---
+
+<BaseLayout
+  title={`偶像大师资源索引 · ${SITE.title}`}
+  description="按企划、资源类型、系列、年份和格式查找偶像大师资源。"
+  pathname="/resources/"
+>
+  <div id="resource-app">
+    <header class="mb-6">
+      <h1 class="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl dark:text-neutral-50">
+        偶像大师资源索引
+      </h1>
+      <p class="mt-2 text-sm leading-relaxed text-neutral-500 dark:text-neutral-400">
+        按企划、资源类型、系列、年份和格式查找偶像大师资源。所有资源均整理自网络与自购分享，状态为「可用」的条目附带百度网盘地址。
+      </p>
+    </header>
+
+    <div
+      class="sticky top-16 z-20 -mx-4 space-y-3 border-b border-neutral-200/70 bg-neutral-50/95 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 dark:border-neutral-800 dark:bg-neutral-900/95"
+    >
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="relative min-w-52 flex-1">
+          <Icon
+            name="material-symbols:search"
+            class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400"
+          />
+          <input
+            id="resource-q"
+            type="search"
+            placeholder="搜索名称 / 别名 / 系列路径…"
+            class="w-full rounded-full border border-neutral-200 bg-white py-1.5 pr-3 pl-9 text-sm outline-none transition-colors placeholder:text-neutral-400 focus:border-accent-400 dark:border-neutral-700 dark:bg-neutral-800 dark:focus:border-accent-500"
+          />
+        </div>
+        <select
+          id="resource-year"
+          class="rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-accent-400 dark:border-neutral-700 dark:bg-neutral-800 dark:focus:border-accent-500"
+          aria-label="按年份筛选"
+        >
+          <option value="">全部年份</option>
+          {years.map((y) => <option value={y}>{y}</option>)}
+        </select>
+        <select
+          id="resource-format"
+          class="rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-accent-400 dark:border-neutral-700 dark:bg-neutral-800 dark:focus:border-accent-500"
+          aria-label="按格式筛选"
+        >
+          <option value="">全部格式</option>
+          {formats.map((f) => <option value={f}>{f}</option>)}
+        </select>
+        <button
+          id="resource-reset"
+          type="button"
+          class="rounded-full px-3 py-1.5 text-sm text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+        >
+          重置
+        </button>
+      </div>
+
+      <div class="space-y-1.5">
+        <div class="chip-row flex flex-wrap gap-1.5" role="group" aria-label="按企划筛选">
+          {
+            franchises.map((value) => (
+              <button
+                type="button"
+                data-chip="franchise"
+                data-value={value}
+                class="chip rounded-full border border-neutral-200 bg-white px-2.5 py-0.5 text-xs text-neutral-600 transition-colors hover:border-accent-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-accent-700"
+              >
+                {value} <span class="text-neutral-400 tabular-nums">{countOf('企划', value)}</span>
+              </button>
+            ))
+          }
+        </div>
+        <div class="chip-row flex flex-wrap gap-1.5" role="group" aria-label="按资源类型筛选">
+          {
+            types.map((value) => (
+              <button
+                type="button"
+                data-chip="type"
+                data-value={value}
+                class="chip rounded-full border border-neutral-200 bg-white px-2.5 py-0.5 text-xs text-neutral-600 transition-colors hover:border-accent-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-accent-700"
+              >
+                {value} <span class="text-neutral-400 tabular-nums">{countOf('资源类型', value)}</span>
+              </button>
+            ))
+          }
+        </div>
+        <div class="chip-row flex flex-wrap gap-1.5" role="group" aria-label="按状态筛选">
+          {
+            statuses.map((value) => (
+              <button
+                type="button"
+                data-chip="status"
+                data-value={value}
+                class="chip rounded-full border border-neutral-200 bg-white px-2.5 py-0.5 text-xs text-neutral-600 transition-colors hover:border-accent-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-accent-700"
+              >
+                {value}
+              </button>
+            ))
+          }
+        </div>
+      </div>
+
+      <p id="resource-count" class="text-xs text-neutral-500 tabular-nums dark:text-neutral-400" aria-live="polite"></p>
+    </div>
+
+    <ul id="resource-list" class="mt-4 space-y-2 pb-16">
+      {
+        all.map((r) => {
+          const d = r.data;
+          const available = d.状态 === '可用';
+          return (
+            <li
+              id={d.id}
+              data-item
+              data-franchise={d.企划}
+              data-type={d.资源类型}
+              data-status={d.状态}
+              data-year={d.年份}
+              data-format={d.格式}
+              data-search={searchOf(r)}
+              class="resource-item scroll-mt-48 rounded-xl border border-neutral-200/70 bg-white p-3.5 transition-colors sm:p-4 dark:border-neutral-800 dark:bg-neutral-800/40"
+            >
+              <div class="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+                <div class="min-w-0 flex-1">
+                  <h2 class="text-[0.95em] leading-snug font-medium text-neutral-800 dark:text-neutral-200">{d.名称}</h2>
+                  {d.别名 && <p class="mt-0.5 text-xs text-neutral-400 dark:text-neutral-500">{d.别名}</p>}
+                  <p class="mt-1 truncate font-mono text-xs text-neutral-400 dark:text-neutral-500" title={d.网盘路径}>
+                    {d.网盘路径}
+                  </p>
+                </div>
+                <div class="flex shrink-0 flex-wrap items-center gap-1.5">
+                  {d.年份 && <span class="badge">{d.年份}</span>}
+                  <span class="badge">{d.企划}</span>
+                  <span class="badge">{d.资源类型}</span>
+                  {d.格式 && <span class="badge">{d.格式}</span>}
+                  {d.大小 && <span class="badge">{d.大小}</span>}
+                  <span
+                    class:list={[
+                      'badge',
+                      available
+                        ? '!border-emerald-300 !bg-emerald-50 !text-emerald-700 dark:!border-emerald-700 dark:!bg-emerald-950/50 dark:!text-emerald-300'
+                        : '',
+                    ]}
+                  >
+                    {d.状态}
+                  </span>
+                </div>
+              </div>
+              {
+                available && (
+                  <div class="mt-2.5 flex flex-wrap items-center gap-2 border-t border-neutral-100 pt-2.5 dark:border-neutral-700/50">
+                    <a
+                      href={d.分享链接}
+                      target="_blank"
+                      rel="noopener"
+                      class="inline-flex items-center gap-1 rounded-full bg-accent-500 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-accent-600 dark:bg-accent-600 dark:hover:bg-accent-500"
+                    >
+                      <Icon name="material-symbols:cloud-download" class="size-3.5" />
+                      前往保存
+                    </a>
+                    <button
+                      type="button"
+                      data-copy={d.提取码}
+                      class="inline-flex items-center gap-1 rounded-full border border-neutral-200 px-2.5 py-1 font-mono text-xs text-neutral-500 transition-colors hover:border-accent-300 hover:text-accent-600 dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-accent-700 dark:hover:text-accent-300"
+                      title="点击复制提取码"
+                    >
+                      提取码：{d.提取码}
+                    </button>
+                  </div>
+                )
+              }
+            </li>
+          );
+        })
+      }
+    </ul>
+
+    <div id="resource-empty" hidden class="py-16 text-center text-sm text-neutral-400 dark:text-neutral-500">
+      （；´д｀） 没有匹配的资源，试试放宽条件
+    </div>
+
+    <noscript>
+      <p class="rounded-xl border border-neutral-200 bg-white p-4 text-sm text-neutral-500 dark:border-neutral-800 dark:bg-neutral-800/40 dark:text-neutral-400">
+        完整资源列表已在上方全部渲染；如需按企划/类型筛选，请启用 JavaScript。
+      </p>
+    </noscript>
+  </div>
+</BaseLayout>
+
+<style>
+  .badge {
+    @apply inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[0.7rem] whitespace-nowrap text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800/80 dark:text-neutral-400;
+  }
+</style>
+
+<script>
+  function initResourceFilter() {
+    const root = document.getElementById('resource-app');
+    if (!root || root.dataset.bound === 'true') return;
+    root.dataset.bound = 'true';
+
+    const items = [...root.querySelectorAll<HTMLElement>('[data-item]')];
+    const qInput = root.querySelector<HTMLInputElement>('#resource-q')!;
+    const yearSelect = root.querySelector<HTMLSelectElement>('#resource-year')!;
+    const formatSelect = root.querySelector<HTMLSelectElement>('#resource-format')!;
+    const countEl = root.querySelector<HTMLElement>('#resource-count')!;
+    const emptyEl = root.querySelector<HTMLElement>('#resource-empty')!;
+    const listEl = root.querySelector<HTMLElement>('#resource-list')!;
+
+    const state = { franchise: '', type: '', status: '', year: '', format: '', q: '' };
+
+    function readParams() {
+      const params = new URLSearchParams(location.search);
+      state.franchise = params.get('franchise') ?? '';
+      state.type = params.get('type') ?? '';
+      state.status = params.get('status') ?? '';
+      state.year = params.get('year') ?? '';
+      state.format = params.get('format') ?? '';
+      state.q = params.get('q') ?? '';
+    }
+
+    function syncControls() {
+      for (const [key, value] of Object.entries(state)) {
+        if (key === 'q') qInput.value = value;
+        else if (key === 'year') yearSelect.value = value;
+        else if (key === 'format') formatSelect.value = value;
+      }
+      root.querySelectorAll<HTMLButtonElement>('[data-chip]').forEach((chip) => {
+        const key = chip.dataset.chip as keyof typeof state;
+        chip.classList.toggle('chip-active', chip.dataset.value === state[key]);
+      });
+    }
+
+    function apply() {
+      let visible = 0;
+      const q = state.q.trim().toLowerCase();
+      for (const item of items) {
+        const match =
+          (!state.franchise || item.dataset.franchise === state.franchise) &&
+          (!state.type || item.dataset.type === state.type) &&
+          (!state.status || item.dataset.status === state.status) &&
+          (!state.year || item.dataset.year === state.year) &&
+          (!state.format || item.dataset.format === state.format) &&
+          (!q || (item.dataset.search ?? '').includes(q));
+        item.classList.toggle('hidden', !match);
+        if (match) visible++;
+      }
+      countEl.textContent = `共 ${visible} 条资源`;
+      emptyEl.hidden = visible > 0;
+      listEl.classList.toggle('hidden', visible === 0);
+
+      const params = new URLSearchParams();
+      for (const [key, value] of Object.entries(state)) {
+        if (value) params.set(key, value);
+      }
+      const query = params.toString();
+      history.replaceState(null, '', query ? `?${query}${location.hash}` : location.pathname + location.hash);
+    }
+
+    root.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement;
+
+      const copyBtn = target.closest<HTMLElement>('[data-copy]');
+      if (copyBtn) {
+        navigator.clipboard?.writeText(copyBtn.dataset.copy ?? '').then(() => {
+          const original = copyBtn.textContent;
+          copyBtn.textContent = '已复制 ✓';
+          setTimeout(() => (copyBtn.textContent = original), 1200);
+        });
+        return;
+      }
+
+      const chip = target.closest<HTMLButtonElement>('[data-chip]');
+      if (chip) {
+        const key = chip.dataset.chip as keyof typeof state;
+        state[key] = state[key] === chip.dataset.value ? '' : (chip.dataset.value ?? '');
+        syncControls();
+        apply();
+      }
+    });
+
+    qInput.addEventListener('input', () => {
+      state.q = qInput.value;
+      clearTimeout((root as any)._qTimer);
+      (root as any)._qTimer = setTimeout(apply, 150);
+    });
+    yearSelect.addEventListener('change', () => {
+      state.year = yearSelect.value;
+      apply();
+    });
+    formatSelect.addEventListener('change', () => {
+      state.format = formatSelect.value;
+      apply();
+    });
+    root.querySelector('#resource-reset')?.addEventListener('click', () => {
+      for (const key of Object.keys(state) as (keyof typeof state)[]) state[key] = '';
+      syncControls();
+      apply();
+    });
+
+    // 深链：?franchise=765AS&type=Hi-Res 直接落在筛选态；#resource-xxx 定位并高亮
+    readParams();
+    syncControls();
+    apply();
+
+    if (location.hash) {
+      const target = document.getElementById(decodeURIComponent(location.hash.slice(1)));
+      if (target?.matches('[data-item]')) {
+        target.scrollIntoView({ block: 'center' });
+        target.classList.add('resource-highlight');
+        setTimeout(() => target.classList.remove('resource-highlight'), 2400);
+      }
+    }
+  }
+
+  document.addEventListener('astro:page-load', initResourceFilter);
+</script>
+
+<style>
+  .chip-active {
+    @apply border-accent-400 bg-accent-50 font-medium text-accent-700 dark:border-accent-600 dark:bg-accent-900/60 dark:text-accent-300;
+  }
+  .resource-highlight {
+    @apply border-accent-400 ring-2 ring-accent-300 dark:border-accent-500 dark:ring-accent-700;
+  }
+</style>

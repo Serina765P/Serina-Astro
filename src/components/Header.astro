@@ -1,0 +1,112 @@
+---
+import { Icon } from 'astro-icon/components';
+import { NAV, SITE } from '../site.config';
+import ThemeToggle from './ThemeToggle.astro';
+
+const current = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isActive = (href: string) => {
+  const target = href.replace(/\/$/, '') || '/';
+  if (target === '/') return current === '/';
+  return current === target || current.startsWith(`${target}/`);
+};
+---
+
+<header
+  class="sticky top-0 z-40 border-b border-neutral-200/70 bg-neutral-50/85 backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-900/85"
+>
+  <div class="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4 sm:px-6">
+    <a href="/" class="flex min-w-0 items-center gap-2.5 rounded-lg py-1 pr-2">
+      <img src="/images/fav.webp" alt="" class="size-8 shrink-0 rounded-full" />
+      <span class="truncate font-semibold tracking-tight text-neutral-800 dark:text-neutral-100">
+        {SITE.title}
+      </span>
+    </a>
+
+    <nav class="hidden items-center gap-1 lg:flex" aria-label="主导航">
+      {
+        NAV.map((item) => (
+          <a
+            href={item.href}
+            aria-current={isActive(item.href) ? 'page' : undefined}
+            class:list={[
+              'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-colors',
+              isActive(item.href)
+                ? 'bg-accent-100 font-medium text-accent-700 dark:bg-accent-900/50 dark:text-accent-300'
+                : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100',
+            ]}
+          >
+            <Icon name={`material-symbols:${item.icon}`} class="size-4" />
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="flex items-center gap-1">
+      <a
+        href="/search/"
+        aria-label="搜索"
+        class="grid size-9 place-items-center rounded-full text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-accent-500 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-accent-300"
+      >
+        <Icon name="material-symbols:search" class="size-5" />
+      </a>
+      <ThemeToggle />
+      <button
+        id="mobile-menu-button"
+        type="button"
+        aria-label="打开菜单"
+        aria-expanded="false"
+        class="grid size-9 place-items-center rounded-full text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-accent-500 lg:hidden dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-accent-300"
+      >
+        <Icon name="material-symbols:menu" class="menu-open-icon size-5" />
+        <Icon name="material-symbols:close" class="menu-close-icon hidden size-5" />
+      </button>
+    </div>
+  </div>
+
+  <nav
+    id="mobile-menu"
+    hidden
+    class="border-t border-neutral-200/70 px-4 pb-4 pt-2 lg:hidden dark:border-neutral-800"
+    aria-label="移动端导航"
+  >
+    <ul class="grid grid-cols-2 gap-1">
+      {
+        NAV.map((item) => (
+          <li>
+            <a
+              href={item.href}
+              aria-current={isActive(item.href) ? 'page' : undefined}
+              class:list={[
+                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors',
+                isActive(item.href)
+                  ? 'bg-accent-100 font-medium text-accent-700 dark:bg-accent-900/50 dark:text-accent-300'
+                  : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800',
+              ]}
+            >
+              <Icon name={`material-symbols:${item.icon}`} class="size-4" />
+              {item.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+</header>
+
+<script>
+  // 事件委托绑定在 document 上：ClientRouter 换页后依然生效
+  document.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement | null;
+    const button = target?.closest<HTMLButtonElement>('#mobile-menu-button');
+    if (!button) return;
+    const menu = document.querySelector<HTMLElement>('#mobile-menu');
+    if (!menu) return;
+    const expanded = button.getAttribute('aria-expanded') === 'true';
+    button.setAttribute('aria-expanded', String(!expanded));
+    button.setAttribute('aria-label', expanded ? '打开菜单' : '关闭菜单');
+    menu.hidden = expanded;
+    button.querySelector('.menu-open-icon')?.classList.toggle('hidden', !expanded);
+    button.querySelector('.menu-close-icon')?.classList.toggle('hidden', expanded);
+  });
+</script>

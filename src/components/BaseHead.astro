@@ -1,0 +1,37 @@
+---
+import { SITE } from '../site.config';
+
+interface Props {
+  title: string;
+  description?: string;
+  /** 相对于站点根的路径（以 / 开头），用于 canonical/OG */
+  pathname?: string;
+  keywords?: string[];
+  ogType?: 'website' | 'article';
+}
+
+const { title, description = SITE.description, pathname = '', keywords = SITE.keywords, ogType = 'website' } = Astro.props;
+const canonical = new URL(pathname, Astro.site);
+const ogImage = new URL('/images/fav.webp', Astro.site);
+const rssUrl = new URL('/atom.xml', Astro.site);
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="generator" content={Astro.generator} />
+<title>{title}</title>
+<meta name="description" content={description} />
+<meta name="keywords" content={keywords.join(', ')} />
+<meta name="author" content={SITE.author} />
+<link rel="canonical" href={canonical} />
+<link rel="icon" href="/images/fav.webp" />
+<link rel="alternate" type="application/atom+xml" title={SITE.title} href={rssUrl} />
+<link rel="sitemap" href="/sitemap-index.xml" />
+
+<meta property="og:type" content={ogType} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:site_name" content={SITE.title} />
+<meta name="twitter:card" content="summary" />

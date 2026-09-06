@@ -1,0 +1,22 @@
+<dialog id="lightbox" class="lightbox-dialog" closedby="any">
+  <img src="" alt="" referrerpolicy="no-referrer" />
+</dialog>
+
+<script>
+  // 点击正文/皮肤内的图片放大预览；委托绑定，换页后依然生效
+  const dialog = document.querySelector<HTMLDialogElement>('#lightbox');
+  const previewImg = dialog?.querySelector('img');
+
+  document.addEventListener('click', (event) => {
+    if (!dialog || !previewImg) return;
+    const target = event.target as HTMLElement | null;
+    const img = target?.closest('img');
+    if (!img || !img.closest('.prose, .album-grid, .shuoshuo-images')) return;
+    if (img.closest('a')) return;
+    if (img.closest('dialog')) return;
+    event.preventDefault();
+    previewImg.src = img.getAttribute('src') ?? '';
+    previewImg.alt = img.alt;
+    if (!dialog.open) dialog.showModal();
+  });
+</script>

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Artplayer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: transparent;
+        }
+        #player {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* 自定义选集面板样式 */
+        .episodes-panel {
+            position: absolute;
+            top: 0;
+            right: -250px;
+            width: 250px;
+            height: 100%;
+            background: rgba(28, 28, 33, 0.9);
+            backdrop-filter: blur(5px);
+            color: #fff;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            z-index: 99;
+            border-left: 1px solid rgba(255,255,255,0.1);
+        }
+        .episodes-panel.show {
+            right: 0;
+        }
+        .ep-header {
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .ep-close {
+            cursor: pointer;
+            font-size: 20px;
+            line-height: 1;
+            color: #8f91a8;
+        }
+        .ep-close:hover {
+            color: #fff;
+        }
+        .ep-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .ep-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .ep-list::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+        }
+        .ep-item {
+            background: rgba(255,255,255,0.05);
+            color: #c8cad9;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .ep-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .ep-item.active {
+            background: rgba(97, 92, 237, 0.2);
+            border-color: #615ced;
+            color: #fff;
+        }
+        
+        /* 清晰度提示样式 */
+        .quality-toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            z-index: 10000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .quality-toast.show {
+            opacity: 1;
+        }
+        
+        /* 清晰度选择按钮样式 */
+        .quality-btn {
+            background: rgba(97, 92, 237, 0.8);
+            color: #fff;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .quality-btn:hover {
+            background: rgba(97, 92, 237, 1);
+        }
+    </style>
+</head>
+<body>
+    <div id="player"></div>
+    <div class="quality-toast" id="quality-toast"></div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.3.1/dist/hls.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/artplayer/dist/artplayer.js"></script>
+    <script>
+        // ================= 1. 配置你的剧集列表（支持多清晰度） =================
+        const episodes = [
+            {
+                name: '第 01 集',
+                qualities: [
+                    {
+                        name: '1080P',
+                        url: 'https://img1.mifengs.com/2026/04/14/7ybJNvSENSgBXDywiYa3Fsrcm36pcxWJ0miql2il4.mov',
+                        type: 'mov'  // 直接播放格式
+                    },
+                    {
+                        name: '720P',
+                        url: 'https://video.mifengs.com/7ce85fa0f5aa6670d90590c2de408daadd6ad039597fd736ea488c969bb1714c59b415ea7fe40e6feaccf378009a26bced33b1fa1d3be5b1bb090572bdfad5d61423605cdfd3038725df287b4ac54cde8921ef73d17586bf90cebdcc1f1a6e798e9f8e12bfb9ac2cbf15df3febb17b706d4f972bcb701546.m3u8',
+                        type: 'm3u8'  // HLS格式
+                    }
+                ],
+                defaultQuality: '1080P'  // 默认清晰度
+            },
+            {
+                name: '第 02 集',
+                qualities: [
+                    {
+                        name: '1080P',
+                        url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+                        type: 'm3u8'
+                    },
+                    {
+                        name: '720P',
+                        url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+                        type: 'm3u8'
+                    }
+                ],
+                defaultQuality: '720P'
+            },
+            {
+                name: '第 03 集',
+                qualities: [
+                    {
+                        name: '1080P',
+                        url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+                        type: 'm3u8'
+                    },
+                    {
+                        name: '720P',
+                        url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+                        type: 'm3u8'
+                    }
+                ],
+                defaultQuality: '720P'
+            }
+        ];
+
+        let currentIndex = 0;      // 当前剧集索引
+        let currentQuality = null; // 当前清晰度
+
+        // 获取当前剧集的初始URL
+        function getEpisodeUrl(episode, qualityName) {
+            if (!episode || !episode.qualities) return '';
+            
+            // 如果指定了清晰度，查找对应的URL
+            if (qualityName) {
+                const quality = episode.qualities.find(q => q.name === qualityName);
+                return quality ? quality.url : episode.qualities[0].url;
+            }
+            
+            // 否则使用默认清晰度
+            const defaultQuality = episode.qualities.find(q => q.name === episode.defaultQuality);
+            return defaultQuality ? defaultQuality.url : episode.qualities[0].url;
+        }
+
+        // 获取当前清晰度名称
+        function getCurrentQualityName(episode, url) {
+            if (!episode || !episode.qualities) return '';
+            const quality = episode.qualities.find(q => q.url === url);
+            return quality ? quality.name : '';
+        }
+
+        // ================= 2. 初始化 Artplayer =================
+        var art = new Artplayer({
+            container: '#player',
+            url: getEpisodeUrl(episodes[currentIndex], null),
+            theme: '#615ced',
+            volume: 0.5,
+            autoplay: false,
+            autoSize: false,
+            fullscreen: true,
+            fullscreenWeb: true,
+            setting: true,
+            pip: true,
+            playbackRate: true,
+            customType: {
+                m3u8: function (video, url, art) {
+                    if (Hls.isSupported()) {
+                        if (art.hls) art.hls.destroy();
+                        const hls = new Hls();
+                        hls.loadSource(url);
+                        hls.attachMedia(video);
+                        art.hls = hls;
+                        art.on('destroy', () => hls.destroy());
+                    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                        video.src = url;
+                    } else {
+                        art.notice.show = '不支持的播放格式';
+                    }
+                }
+            },
+            controls: [
+                {
+                    position: 'right',
+                    html: '选集',
+                    tooltip: '切换剧集',
+                    style: {
+                        padding: '0 10px',
+                        cursor: 'pointer'
+                    },
+                    click: function () {
+                        toggleEpisodesPanel();
+                    },
+                },
+                {
+                    position: 'right',
+                    html: '清晰度',
+                    tooltip: '切换清晰度',
+                    style: {
+                        padding: '0 10px',
+                        cursor: 'pointer'
+                    },
+                    click: function () {
+                        showQualityMenu();
+                    },
+                }
+            ],
+            layers: [
+                {
+                    name: 'episodesPanel',
+                    html: `
+                        <div class="episodes-panel" id="episodes-panel">
+                            <div class="ep-header">
+                                <span>剧集列表</span>
+                                <span class="ep-close" id="ep-close">&times;</span>
+                            </div>
+                            <div class="ep-list" id="ep-list"></div>
+                        </div>
+                    `,
+                }
+            ],
+            settings: []  // 动态添加设置项
+        });
+
+        // ================= 3. 清晰度切换功能 =================
+        
+        // 显示清晰度选择菜单
+        function showQualityMenu() {
+            const episode = episodes[currentIndex];
+            if (!episode || !episode.qualities || episode.qualities.length <= 1) {
+                showToast('当前无可切换清晰度');
+                return;
+            }
+
+            // 清空并重新构建设置面板
+            art.storage.clear();
+            
+            episode.qualities.forEach((quality, index) => {
+                const isActive = getCurrentQualityName(episode, art.url) === quality.name;
+                art.settings.add({
+                    html: `<span style="color: ${isActive ? '#615ced' : '#fff'}">${quality.name}</span>`,
+                    width: 150,
+                    tooltip: isActive ? '✓' : '',
+                    icon: isActive ? '<icon name="check"></icon>' : '',
+                    callback: function () {
+                        switchQuality(quality);
+                    }
+                });
+            });
+            
+            // 显示设置面板
+            art.extend('showSettings', true);
+        }
+
+        // 切换清晰度
+        function switchQuality(quality) {
+            const episode = episodes[currentIndex];
+            const oldQualityName = getCurrentQualityName(episode, art.url);
+            
+            // 如果相同则不切换
+            if (oldQualityName === quality.name) {
+                art.extends.controls.extShowSettings = false;
+                return;
+            }
+
+            const currentTime = art.currentTime;
+            const isPaused = art.paused;
+            
+            // 销毁旧的 Hls 实例
+            if (art.hls) {
+                art.hls.destroy();
+                art.hls = null;
+            }
+
+            // 切换URL
+            art.switchUrl(quality.url);
+            
+            // 恢复播放进度
+            setTimeout(() => {
+                art.currentTime = currentTime;
+                if (!isPaused) {
+                    art.play();
+                }
+            }, 100);
+
+            currentQuality = quality.name;
+            showToast(`已切换至: ${quality.name}`);
+            
+            // 隐藏设置面板
+            setTimeout(() => {
+                if (art.extends && art.extends.controls) {
+                    art.extends.controls.extShowSettings = false;
+                }
+            }, 300);
+        }
+
+        // 显示提示信息
+        function showToast(message) {
+            const toast = document.getElementById('quality-toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        // ================= 4. 剧集面板的交互逻辑 =================
+        const panel = document.getElementById('episodes-panel');
+        const epList = document.getElementById('ep-list');
+        const closeBtn = document.getElementById('ep-close');
+
+        function toggleEpisodesPanel() {
+            panel.classList.toggle('show');
+        }
+
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            panel.classList.remove('show');
+        });
+
+        // 渲染剧集列表
+        function renderEpisodes() {
+            epList.innerHTML = '';
+            episodes.forEach((ep, index) => {
+                const item = document.createElement('div');
+                item.className = 'ep-item' + (index === currentIndex ? ' active' : '');
+                
+                // 显示剧集名称和当前清晰度
+                const currentQ = getCurrentQualityName(ep, art.url);
+                item.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>${ep.name}</span>
+                        ${currentQ ? `<span style="font-size: 12px; color: #615ced;">${currentQ}</span>` : ''}
+                    </div>
+                `;
+                
+                item.onclick = (e) => {
+                    e.stopPropagation();
+                    if (index === currentIndex) return;
+                    
+                    currentIndex = index;
+                    const url = getEpisodeUrl(episodes[currentIndex], null);
+                    
+                    // 销毁旧的 Hls 实例
+                    if (art.hls) {
+                        art.hls.destroy();
+                        art.hls = null;
+                    }
+                    
+                    art.switchUrl(url);
+                    art.notice.show = `正在为您播放: ${ep.name}`;
+                    art.play();
+                    
+                    renderEpisodes();
+                    panel.classList.remove('show');
+                };
+                
+                epList.appendChild(item);
+            });
+        }
+
+        // 初始化渲染
+        renderEpisodes();
+
+        // 点击面板以外的地方关闭面板
+        art.on('click', (e) => {
+            if (!e.target.closest('#episodes-panel') && 
+                !e.target.closest('.art-control-right')) {
+                panel.classList.remove('show');
+            }
+        });
+
+        // 监听播放错误，尝试自动切换清晰度
+        art.on('error', () => {
+            const episode = episodes[currentIndex];
+            if (!episode || !episode.qualities || episode.qualities.length <= 1) return;
+            
+            const currentQ = getCurrentQualityName(episode, art.url);
+            const otherQuality = episode.qualities.find(q => q.name !== currentQ);
+            
+            if (otherQuality) {
+                showToast(`播放失败，正在切换至${otherQuality.name}...`);
+                setTimeout(() => {
+                    switchQuality(otherQuality);
+                }, 1000);
+            }
+        });
+
+        // 更新当前清晰度显示
+        art.on('ready', () => {
+            const episode = episodes[currentIndex];
+            if (episode && episode.qualities) {
+                currentQuality = getCurrentQualityName(episode, art.url);
+            }
+        });
+    </script>
+</body>
+</html>

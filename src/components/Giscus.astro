@@ -1,0 +1,53 @@
+---
+import { GISCUS } from '../site.config';
+---
+
+<section class="mt-12 border-t border-neutral-200/70 pt-8 dark:border-neutral-800" aria-label="评论">
+  <div id="giscus-root" class="giscus min-h-40"></div>
+</section>
+
+<script
+  is:inline
+  define:vars={{
+    repo: GISCUS.repo,
+    repoId: GISCUS.repoId,
+    category: GISCUS.category,
+    categoryId: GISCUS.categoryId,
+    mapping: GISCUS.mapping,
+    strict: GISCUS.strict,
+    reactions: GISCUS.reactionsEnabled,
+    inputPosition: GISCUS.inputPosition,
+    lang: GISCUS.lang,
+  }}
+>
+  (function () {
+    if (window.__giscusBound) return;
+    window.__giscusBound = true;
+
+    function mountGiscus() {
+      var container = document.getElementById('giscus-root');
+      if (!container || container.dataset.mounted === 'true') return;
+      container.dataset.mounted = 'true';
+
+      var theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      var s = document.createElement('script');
+      s.src = 'https://giscus.app/client.js';
+      s.setAttribute('data-repo', repo);
+      s.setAttribute('data-repo-id', repoId);
+      s.setAttribute('data-category', category);
+      s.setAttribute('data-category-id', categoryId);
+      s.setAttribute('data-mapping', mapping);
+      s.setAttribute('data-strict', strict);
+      s.setAttribute('data-reactions-enabled', reactions);
+      s.setAttribute('data-emit-metadata', '0');
+      s.setAttribute('data-input-position', inputPosition);
+      s.setAttribute('data-theme', theme);
+      s.setAttribute('data-lang', lang);
+      s.crossOrigin = 'anonymous';
+      s.async = true;
+      container.appendChild(s);
+    }
+
+    document.addEventListener('astro:page-load', mountGiscus);
+  })();
+</script>

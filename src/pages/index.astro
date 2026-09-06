@@ -1,0 +1,40 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero.astro';
+import PostCard from '../components/PostCard.astro';
+import SidebarCard from '../components/SidebarCard.astro';
+import { SITE } from '../site.config';
+
+const posts = (await getCollection('posts')).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+const recent = posts.slice(0, 10);
+---
+
+<BaseLayout title={`${SITE.title} · ${SITE.subtitle}`} description={SITE.description} pathname="/">
+  <Hero />
+
+  <div class="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
+    <section aria-labelledby="recent-heading">
+      <h2 id="recent-heading" class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+        最近文章
+      </h2>
+      <div class="mt-4 space-y-4">
+        {recent.map((post) => <PostCard post={post} />)}
+      </div>
+      {
+        posts.length > recent.length && (
+          <a
+            href="/archives/"
+            class="mt-6 inline-block text-sm text-accent-600 transition-colors hover:text-accent-500 dark:text-accent-400 dark:hover:text-accent-300"
+          >
+            查看全部 {posts.length} 篇 →
+          </a>
+        )
+      }
+    </section>
+
+    <SidebarCard />
+  </div>
+</BaseLayout>

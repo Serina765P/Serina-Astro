@@ -1,0 +1,80 @@
+---
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
+---
+
+{
+  toc.length > 0 && (
+    <nav
+      id="toc"
+      aria-label="目录"
+      class="hidden text-sm xl:block"
+    >
+      <p class="mb-3 font-semibold text-neutral-500 dark:text-neutral-400">目录</p>
+      <ul class="space-y-1.5 border-l border-neutral-200 dark:border-neutral-700">
+        {toc.map((heading) => (
+          <li>
+            <a
+              href={`#${heading.slug}`}
+              data-toc-link
+              class:list={[
+                '-ml-px block border-l-2 border-transparent py-0.5 transition-colors hover:text-accent-600 dark:hover:text-accent-300',
+                heading.depth === 2 ? 'pl-3' : heading.depth === 3 ? 'pl-6 text-[0.9em]' : 'pl-9 text-[0.85em]',
+              ]}
+            >
+              {heading.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}
+
+<style>
+  [data-toc-link].toc-active {
+    @apply border-accent-400 font-medium text-accent-600 dark:border-accent-500 dark:text-accent-300;
+  }
+</style>
+
+<script>
+  let observer: IntersectionObserver | null = null;
+
+  document.addEventListener('astro:before-swap', () => {
+    observer?.disconnect();
+    observer = null;
+  });
+
+  document.addEventListener('astro:page-load', () => {
+    const toc = document.getElementById('toc');
+    if (!toc) return;
+
+    const links = [...toc.querySelectorAll<HTMLAnchorElement>('a[data-toc-link]')];
+    const byId = new Map(links.map((a) => [a.getAttribute('href')!.slice(1), a]));
+
+    observer?.disconnect();
+    observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const link = byId.get(entry.target.id);
+          if (link) link.classList.toggle('toc-active', entry.isIntersecting);
+        }
+      },
+      { rootMargin: '-80px 0px -70% 0px' },
+    );
+    for (const [id] of byId) {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    }
+  });
+</script>

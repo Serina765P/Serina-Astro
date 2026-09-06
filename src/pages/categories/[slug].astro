@@ -1,0 +1,39 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { categorySlug } from '../../site.config';
+import { SITE } from '../../site.config';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts');
+  const map = new Map<string, { name: string; posts: typeof posts }>();
+  for (const post of posts) {
+    for (const name of post.data.categories) {
+      const slug = categorySlug(name);
+      const entry = map.get(slug) ?? { name, posts: [] };
+      entry.posts.push(post);
+      map.set(slug, entry);
+    }
+  }
+  return [...map.entries()].map(([slug, value]) => ({
+    params: { slug },
+    props: value,
+  }));
+}
+
+const { name, posts } = Astro.props;
+const sorted = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+
+<BaseLayout title={`分类：${name} · ${SITE.title}`} description={`分类「${name}」下的文章`} pathname={`/categories/${categorySlug(name)}/`}>
+  <header class="mb-8">
+    <p class="text-sm text-neutral-500 dark:text-neutral-400">分类</p>
+    <h1 class="mt-1 text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl dark:text-neutral-50">{name}</h1>
+    <p class="mt-2 text-sm text-neutral-500 dark:text-neutral-400">共 {sorted.length} 篇文章</p>
+  </header>
+
+  <div class="space-y-4">
+    {sorted.map((post) => <PostCard post={post} />)}
+  </div>
+</BaseLayout>

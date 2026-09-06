@@ -1,0 +1,40 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { categorySlug } from '../../site.config';
+import { SITE } from '../../site.config';
+
+const posts = await getCollection('posts');
+
+const categories = new Map<string, { name: string; count: number }>();
+for (const post of posts) {
+  for (const name of post.data.categories) {
+    const entry = categories.get(name) ?? { name, count: 0 };
+    entry.count++;
+    categories.set(name, entry);
+  }
+}
+const sorted = [...categories.values()].sort((a, b) => b.count - a.count);
+---
+
+<BaseLayout title={`分类 · ${SITE.title}`} description="文章分类" pathname="/categories/">
+  <header class="mb-8">
+    <h1 class="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl dark:text-neutral-50">分类</h1>
+  </header>
+
+  <ul class="grid gap-3 sm:grid-cols-2">
+    {
+      sorted.map(({ name, count }) => (
+        <li>
+          <a
+            href={`/categories/${categorySlug(name)}/`}
+            class="flex items-center justify-between rounded-xl border border-neutral-200/70 bg-white px-5 py-4 shadow-card transition-shadow hover:shadow-card-hover dark:border-neutral-800 dark:bg-neutral-800/40"
+          >
+            <span class="font-medium text-neutral-800 dark:text-neutral-200">{name}</span>
+            <span class="text-sm text-neutral-500 tabular-nums dark:text-neutral-400">{count} 篇</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</BaseLayout>
