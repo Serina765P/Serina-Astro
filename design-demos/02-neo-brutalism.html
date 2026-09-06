@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>02 · 新粗野主义 Neo-Brutalism — 设计 demo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --ink: #111; --paper: #FDF6E9; --pink: #FF90E8; --yellow: #FFC900; --blue: #23A9F2; --green: #B1F2A4;
+    --card: #ffffff;
+  }
+  body {
+    background: var(--paper);
+    background-image: radial-gradient(#11111114 1.2px, transparent 1.2px);
+    background-size: 26px 26px;
+    color: var(--ink); min-height: 100vh;
+    font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    line-height: 1.65;
+  }
+  .wrap { max-width: 1020px; margin: 0 auto; padding: 0 22px; }
+
+  /* 通用硬阴影块 */
+  .hard { border: 3px solid var(--ink); box-shadow: 7px 7px 0 var(--ink); background: var(--card); border-radius: 14px; }
+
+  nav { padding: 26px 0 8px; }
+  .nav-in { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .logo { font-weight: 900; font-size: 19px; padding: 9px 18px; background: var(--pink); }
+  .nav-links { display: flex; gap: 10px; margin-left: auto; flex-wrap: wrap; }
+  .nav-links a {
+    text-decoration: none; color: var(--ink); font-weight: 700; font-size: 14px;
+    padding: 8px 16px; background: #fff;
+  }
+  .nav-links a.on { background: var(--yellow); }
+  .nav-links a:hover { transform: translate(-2px,-2px); box-shadow: 4px 4px 0 var(--ink); }
+  .nav-links a { transition: .12s; }
+
+  .hero { text-align: center; padding: 66px 0 54px; position: relative; }
+  .avatar {
+    width: 128px; height: 128px; border-radius: 50%; object-fit: cover;
+    border: 3px solid var(--ink); box-shadow: 8px 8px 0 var(--ink); background: #fff;
+  }
+  h1 { font-size: 54px; font-weight: 900; letter-spacing: 1px; margin-top: 26px; line-height: 1.25; }
+  h1 .mark { background: linear-gradient(transparent 58%, var(--yellow) 58%); padding: 0 6px; }
+  .hero p { font-size: 17px; font-weight: 600; margin-top: 14px; }
+  .stickers { display: flex; justify-content: center; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+  .sticker { font-weight: 800; font-size: 13.5px; padding: 7px 16px; border: 3px solid var(--ink); border-radius: 999px; box-shadow: 4px 4px 0 var(--ink); background: #fff; }
+  .sticker:nth-child(1) { background: var(--pink); transform: rotate(-3deg); }
+  .sticker:nth-child(2) { background: var(--green); transform: rotate(2deg); }
+  .sticker:nth-child(3) { background: var(--blue); transform: rotate(-1.5deg); color: #fff; }
+  .sticker:nth-child(4) { background: var(--yellow); transform: rotate(3deg); }
+
+  .sec-head { display: inline-block; font-weight: 900; font-size: 24px; background: #fff; padding: 8px 22px; margin: 34px 0 24px; }
+
+  .posts { display: grid; gap: 18px; }
+  .post { display: flex; align-items: center; gap: 20px; padding: 18px 22px; text-decoration: none; color: var(--ink); transition: .12s; }
+  .post:hover { transform: translate(-3px,-3px); box-shadow: 10px 10px 0 var(--ink); }
+  .post img { width: 88px; height: 88px; object-fit: cover; border: 3px solid var(--ink); border-radius: 10px; flex-shrink: 0; }
+  .post .t { font-weight: 800; font-size: 18px; line-height: 1.45; }
+  .post .m { margin-top: 8px; display: flex; gap: 10px; align-items: center; font-size: 13px; font-weight: 600; }
+  .tag { border: 2.5px solid var(--ink); border-radius: 999px; padding: 2px 12px; font-size: 12px; font-weight: 800; }
+  .tg-pink { background: var(--pink); } .tg-yellow { background: var(--yellow); } .tg-blue { background: var(--blue); color: #fff; } .tg-green { background: var(--green); }
+
+  .article { margin-top: 52px; padding: 40px 44px; }
+  @media (max-width: 640px) { .article { padding: 26px 20px; } }
+  .article .kicker { display: inline-block; font-weight: 900; font-size: 13px; background: var(--blue); color: #fff; padding: 4px 14px; border: 3px solid var(--ink); border-radius: 999px; }
+  .article h2 { font-size: 30px; font-weight: 900; margin: 16px 0 20px; line-height: 1.35; }
+  .article p { margin-bottom: 16px; font-size: 15.5px; font-weight: 500; }
+  .article blockquote {
+    margin: 24px 0; padding: 18px 22px; background: var(--yellow);
+    border: 3px solid var(--ink); border-radius: 12px; box-shadow: 5px 5px 0 var(--ink);
+    font-weight: 700; font-size: 15px;
+  }
+  .article code.inline { background: #111; color: #fff; border-radius: 6px; padding: 2px 8px; font-family: Consolas, monospace; font-size: 13.5px; }
+  .article pre {
+    background: #111; color: #fff; border: 3px solid var(--ink); border-radius: 12px; box-shadow: 6px 6px 0 var(--pink);
+    padding: 18px 20px; font-family: Consolas, monospace; font-size: 13.5px; overflow-x: auto; margin: 20px 0 28px; line-height: 1.8;
+  }
+  .meta-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 26px; padding-top: 18px; border-top: 3px dashed var(--ink); font-weight: 700; font-size: 13.5px; }
+
+  footer { margin: 74px 0 40px; background: var(--ink); color: #fff; border-radius: 16px; border: 3px solid var(--ink); box-shadow: 7px 7px 0 var(--pink); }
+  .foot-in { padding: 26px; display: flex; justify-content: space-between; font-weight: 700; font-size: 14px; flex-wrap: wrap; gap: 8px; }
+
+  .back { position: fixed; left: 16px; top: 14px; z-index: 20; font-size: 12px; font-weight: 800; color: var(--ink); text-decoration: none;
+    background: #fff; border: 3px solid var(--ink); border-radius: 999px; padding: 5px 13px; box-shadow: 3px 3px 0 var(--ink); }
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← 返回目录</a>
+<div class="wrap">
+
+  <nav><div class="nav-in">
+    <div class="logo hard" style="border-radius:12px">芹菜P<span style="font-weight:500">.blog</span></div>
+    <div class="nav-links">
+      <a class="hard on" href="#">首页</a><a class="hard" href="#">文章</a><a class="hard" href="#">分类</a><a class="hard" href="#">说说</a><a class="hard" href="#">关于</a>
+    </div>
+  </div></nav>
+
+  <header class="hero">
+    <img class="avatar" src="assets/avatar.webp" alt="avatar">
+    <h1><span class="mark">芹菜P的部落阁</span></h1>
+    <p>偶像大师资源整理 × 学习笔记 × 生活碎片</p>
+    <div class="stickers">
+      <span class="sticker">♪ 765PRO</span>
+      <span class="sticker">10 篇文章</span>
+      <span class="sticker">Hi-Res 搬运工</span>
+      <span class="sticker">since 2025</span>
+    </div>
+  </header>
+
+  <div class="sec-head hard">📋 最新文章</div>
+  <div class="posts">
+    <a class="post hard" href="#">
+      <img src="assets/covers/c1.webp" alt=""><div>
+        <div class="t">偶像大师本家Hi-Res高解析度音频整理聚合贴【2026年更新】</div>
+        <div class="m"><span class="tag tg-pink">资源</span> 2026-02-23</div>
+      </div>
+    </a>
+    <a class="post hard" href="#">
+      <img src="assets/covers/c2.webp" alt=""><div>
+        <div class="t">偶像大师本家CD整理聚合贴【2026年更新】</div>
+        <div class="m"><span class="tag tg-pink">资源</span> 2026-02-22</div>
+      </div>
+    </a>
+    <a class="post hard" href="#">
+      <img src="assets/covers/c3.webp" alt=""><div>
+        <div class="t">数据结构笔记 第三章 栈和队列</div>
+        <div class="m"><span class="tag tg-green">笔记</span> 2026-03-26</div>
+      </div>
+    </a>
+    <a class="post hard" href="#">
+      <img src="assets/covers/c4.webp" alt=""><div>
+        <div class="t">基于中州韵输入法 + 雾凇拼音词库改善 Windows 输入方案</div>
+        <div class="m"><span class="tag tg-blue">技术</span> 2026-02-22</div>
+      </div>
+    </a>
+  </div>
+
+  <section class="article hard">
+    <span class="kicker">FEATURED ★</span>
+    <h2>基于中州韵输入法 + 雾凇拼音词库改善 Windows 输入方案</h2>
+    <p>在此前我使用的是搜狗拼音输入法，这东西从小学四年级陪我到现在，已经记录了我很多年的输入习惯。虽然功能强大，但愈发严重的广告和隐私问题让我逐渐失去了兴趣。</p>
+    <blockquote>他们致力于让用户喜欢上打字，享受打字的乐趣，而不是被迫去适应输入法的各种限制和广告。</blockquote>
+    <p>中州韵的 Windows 客户端叫做<strong>小狼毫</strong>（Weasel）。配置入口在 <code class="inline">default.custom.yaml</code>：</p>
+    <pre>patch:
+  "menu/page_size": 9
+  "switches": [ [@full_shape] ]</pre>
+    <div class="meta-row"><span>📅 2026-02-22</span><span>·</span><span>约 1.2k 字</span><span style="margin-left:auto"><span class="tag tg-yellow">Windows</span> <span class="tag tg-pink">输入法</span></span></div>
+  </section>
+
+  <footer><div class="foot-in">
+    <span>© 2025–2026 芹菜P · 手工敲成 ✌</span>
+    <span>GitHub / X / RSS</span>
+  </div></footer>
+</div>
+</body>
+</html>

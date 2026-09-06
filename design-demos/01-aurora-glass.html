@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>01 · 极光玻璃 Aurora Glass — 设计 demo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0a0c16; --card: rgba(255,255,255,.055); --border: rgba(255,255,255,.09);
+    --text: #eef0f8; --sub: #9aa1b5; --pink: #f472b6; --violet: #a78bfa; --cyan: #22d3ee;
+  }
+  body {
+    background: var(--bg); color: var(--text); min-height: 100vh;
+    font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    line-height: 1.7; overflow-x: hidden;
+  }
+  /* 极光背景 */
+  .blob { position: fixed; border-radius: 50%; filter: blur(110px); opacity: .32; pointer-events: none; z-index: 0; }
+  .b1 { width: 560px; height: 560px; background: #ec4899; top: -180px; left: -120px; animation: drift 18s ease-in-out infinite alternate; }
+  .b2 { width: 480px; height: 480px; background: #8b5cf6; top: 10%; right: -140px; animation: drift 22s ease-in-out infinite alternate-reverse; }
+  .b3 { width: 420px; height: 420px; background: #06b6d4; bottom: -160px; left: 30%; opacity: .22; animation: drift 26s ease-in-out infinite alternate; }
+  @keyframes drift { to { transform: translate(60px, 40px) scale(1.08); } }
+  @media (prefers-reduced-motion: reduce) { .blob { animation: none; } }
+
+  .wrap { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* 玻璃导航 */
+  nav {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(12,14,26,.55); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-in { max-width: 1080px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; gap: 28px; }
+  .logo { font-weight: 700; font-size: 17px; letter-spacing: .5px;
+    background: linear-gradient(90deg, var(--pink), var(--violet), var(--cyan));
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .nav-links { display: flex; gap: 6px; margin-left: auto; }
+  .nav-links a { color: var(--sub); text-decoration: none; font-size: 14px; padding: 7px 14px; border-radius: 999px; transition: .2s; }
+  .nav-links a:hover, .nav-links a.on { color: var(--text); background: rgba(255,255,255,.08); }
+
+  /* hero */
+  .hero { text-align: center; padding: 92px 0 64px; }
+  .avatar-ring { width: 108px; height: 108px; margin: 0 auto 22px; border-radius: 50%; padding: 3px;
+    background: conic-gradient(from 30deg, var(--pink), var(--violet), var(--cyan), var(--pink));
+    box-shadow: 0 0 44px rgba(167,139,250,.45); }
+  .avatar-ring img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; background: #171a2b; }
+  h1 { font-size: 42px; font-weight: 700; letter-spacing: 1px; }
+  .grad { background: linear-gradient(90deg, var(--pink), var(--violet) 55%, var(--cyan));
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p { color: var(--sub); margin-top: 12px; font-size: 16px; }
+  .stats { display: flex; justify-content: center; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--border); background: var(--card); border-radius: 999px; padding: 7px 18px; font-size: 13.5px; color: var(--sub); backdrop-filter: blur(8px); }
+  .chip b { color: var(--text); font-weight: 600; }
+
+  .sec-title { display: flex; align-items: baseline; gap: 14px; margin: 40px 0 22px; }
+  .sec-title h2 { font-size: 22px; font-weight: 650; }
+  .sec-title span { color: var(--sub); font-size: 13px; }
+  .sec-title a { margin-left: auto; color: var(--cyan); font-size: 13.5px; text-decoration: none; }
+
+  /* 文章卡片 */
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  .post {
+    display: flex; gap: 16px; padding: 18px; border-radius: 20px;
+    background: var(--card); border: 1px solid var(--border); backdrop-filter: blur(14px);
+    transition: .25s; text-decoration: none;
+  }
+  .post:hover { transform: translateY(-3px); border-color: rgba(167,139,250,.45); box-shadow: 0 14px 40px rgba(139,92,246,.16); }
+  .post img { width: 84px; height: 84px; border-radius: 14px; object-fit: cover; flex-shrink: 0; background:#171a2b; }
+  .post .t { font-weight: 600; font-size: 15.5px; line-height: 1.5; color: var(--text); }
+  .post:hover .t { color: #fff; }
+  .post .m { margin-top: 10px; font-size: 12.5px; color: var(--sub); display: flex; gap: 10px; align-items: center; }
+  .tag { font-size: 11.5px; padding: 2.5px 10px; border-radius: 999px; border: 1px solid rgba(244,114,182,.4); color: var(--pink); }
+
+  /* 文章排版示例 */
+  .article {
+    margin-top: 46px; border-radius: 24px; padding: 44px 48px;
+    background: var(--card); border: 1px solid var(--border); backdrop-filter: blur(14px);
+  }
+  @media (max-width: 640px) { .article { padding: 28px 22px; } }
+  .article .kicker { font-size: 12.5px; letter-spacing: 2.5px; color: var(--cyan); text-transform: uppercase; }
+  .article h2 { font-size: 26px; margin: 10px 0 22px; }
+  .article p { color: #c3c8d8; margin-bottom: 16px; font-size: 15.5px; }
+  .article blockquote {
+    margin: 22px 0; padding: 16px 22px; border-left: 3px solid var(--violet);
+    background: rgba(167,139,250,.08); border-radius: 0 14px 14px 0; color: var(--sub); font-size: 14.5px;
+  }
+  .article code.inline { background: rgba(255,255,255,.09); border: 1px solid var(--border); border-radius: 6px; padding: 1.5px 7px; font-size: 13.5px; font-family: Consolas, monospace; color: #a5f3fc; }
+  .article pre {
+    background: #0d1020; border: 1px solid var(--border); border-radius: 14px;
+    padding: 18px 20px; font-family: Consolas, "Cascadia Code", monospace; font-size: 13.5px;
+    color: #c9d1d9; overflow-x: auto; margin: 18px 0 26px; line-height: 1.75;
+  }
+  .article pre .k { color: #ff7b72; } .article pre .s { color: #a5d6ff; } .article pre .n { color: #79c0ff; }
+  .meta-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--sub); font-size: 13px; }
+
+  footer { margin-top: 70px; border-top: 1px solid var(--border); background: rgba(10,12,22,.6); backdrop-filter: blur(14px); }
+  .foot-in { max-width: 1080px; margin: 0 auto; padding: 30px 24px; display: flex; justify-content: space-between; color: var(--sub); font-size: 13px; flex-wrap: wrap; gap: 10px; }
+
+  .back { position: fixed; left: 16px; top: 14px; z-index: 20; font-size: 12px; color: var(--sub); text-decoration: none;
+    background: rgba(12,14,26,.7); border: 1px solid var(--border); border-radius: 999px; padding: 5px 13px; backdrop-filter: blur(10px); }
+  .back:hover { color: #fff; }
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+<a class="back" href="index.html">← 返回目录</a>
+
+<nav><div class="nav-in">
+  <div class="logo">SerinaP<span style="opacity:.5">.blog</span></div>
+  <div class="nav-links">
+    <a class="on" href="#">首页</a><a href="#">文章</a><a href="#">分类</a><a href="#">说说</a><a href="#">关于</a>
+  </div>
+</div></nav>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="avatar-ring"><img src="assets/avatar.webp" alt="avatar"></div>
+    <h1><span class="grad">芹菜P的部落阁</span></h1>
+    <p>偶像大师资源整理 × 学习笔记 × 生活碎片</p>
+    <div class="stats">
+      <span class="chip">📄 <b>10</b> 篇文章</span>
+      <span class="chip">🎵 <b>247</b> 张专辑封面</span>
+      <span class="chip">💬 <b>44</b> 条说说</span>
+      <span class="chip">📅 since 2025</span>
+    </div>
+  </header>
+
+  <div class="sec-title"><h2>最新文章</h2><span>RECENT POSTS</span><a href="#">全部 →</a></div>
+  <div class="grid">
+    <a class="post" href="#">
+      <img src="assets/covers/c1.webp" alt=""><div>
+        <div class="t">偶像大师本家Hi-Res高解析度音频整理聚合贴【2026年更新】</div>
+        <div class="m"><span class="tag">资源</span> 2026-02-23</div>
+      </div>
+    </a>
+    <a class="post" href="#">
+      <img src="assets/covers/c2.webp" alt=""><div>
+        <div class="t">偶像大师本家CD整理聚合贴【2026年更新】</div>
+        <div class="m"><span class="tag">资源</span> 2026-02-22</div>
+      </div>
+    </a>
+    <a class="post" href="#">
+      <img src="assets/covers/c3.webp" alt=""><div>
+        <div class="t">数据结构笔记 第三章 栈和队列</div>
+        <div class="m"><span class="tag">笔记</span> 2026-03-26</div>
+      </div>
+    </a>
+    <a class="post" href="#">
+      <img src="assets/covers/c4.webp" alt=""><div>
+        <div class="t">基于中州韵输入法 + 雾凇拼音词库改善 Windows 输入方案</div>
+        <div class="m"><span class="tag">技术</span> 2026-02-22</div>
+      </div>
+    </a>
+  </div>
+
+  <section class="article">
+    <div class="kicker">Featured · 技术分享</div>
+    <h2>基于中州韵输入法 + 雾凇拼音词库改善 Windows 输入方案</h2>
+    <p>在此前我使用的是搜狗拼音输入法，这东西从小学四年级陪我到现在，已经记录了我很多年的输入习惯。虽然功能强大，但愈发严重的广告和隐私问题让我逐渐失去了兴趣。</p>
+    <blockquote>他们致力于让用户喜欢上打字，享受打字的乐趣，而不是被迫去适应输入法的各种限制和广告。</blockquote>
+    <p>中州韵的 Windows 客户端叫做<strong>小狼毫</strong>（Weasel）。配置入口在 <code class="inline">default.custom.yaml</code>：</p>
+    <pre><span class="k">patch</span>:
+  <span class="s">"menu/page_size"</span>: <span class="n">9</span>
+  <span class="s">"switches"</span>: [ [@full_shape] ]</pre>
+    <div class="meta-row"><span>2026-02-22</span><span>·</span><span>约 1.2k 字</span><span>·</span><span>3 分钟读完</span><span style="margin-left:auto"><span class="tag">Windows</span> <span class="tag">输入法</span></span></div>
+  </section>
+</div>
+
+<footer><div class="foot-in">
+  <span>© 2025–2026 芹菜P · SerinaP's Blog</span>
+  <span>GitHub · X · RSS ✦</span>
+</div></footer>
+</body>
+</html>

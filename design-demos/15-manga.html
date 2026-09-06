@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>15 · 漫画分镜 Manga — 设计 demo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --ink: #141414; --paper: #ffffff; --accent: #ff5c8a; }
+  body {
+    background: var(--paper); color: var(--ink); min-height: 100vh; padding-bottom: 80px;
+    font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif; line-height: 1.7;
+  }
+  /* 网点纸背景（页面边缘感） */
+  .halftone-bg { position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(#000 1px, transparent 1.2px); background-size: 9px 9px; opacity: .05; }
+
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 0 20px; }
+  .panel { background: var(--paper); border: 3.5px solid var(--ink); box-shadow: 7px 7px 0 rgba(20,20,20,.9); }
+
+  /* 顶部：速度线 banner + 对话框导航 */
+  .banner { position: relative; margin-top: 26px; padding: 40px 30px 34px; overflow: hidden; }
+  .banner::before { content: ""; position: absolute; inset: -60%; z-index: 0;
+    background: repeating-conic-gradient(from 0deg at 50% 50%, rgba(20,20,20,.9) 0deg 1.6deg, transparent 1.6deg 7deg);
+    -webkit-mask-image: radial-gradient(circle at 82% 50%, #000 0 34%, transparent 62%);
+            mask-image: radial-gradient(circle at 82% 50%, #000 0 34%, transparent 62%); }
+  .banner-in { position: relative; z-index: 1; display: flex; align-items: center; gap: 26px; flex-wrap: wrap; }
+  .avatar-frame { width: 108px; height: 108px; border: 3.5px solid var(--ink); background: #fff; padding: 5px; transform: rotate(-2deg); flex-shrink: 0; }
+  .avatar-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  h1 { font-size: clamp(30px, 4.6vw, 46px); font-weight: 900; letter-spacing: 2px; line-height: 1.25;
+    text-shadow: 3px 3px 0 rgba(255,92,138,.5); }
+  .banner .sub { font-weight: 700; font-size: 14.5px; margin-top: 6px; color: #444; display: inline-block; background: rgba(255,255,255,.92); padding: 3px 12px; border: 2px solid var(--ink); box-shadow: 3px 3px 0 rgba(20,20,20,.85); }
+  .sfx { position: absolute; right: 26px; bottom: 14px; z-index: 1; font-size: 40px; font-weight: 900; font-style: italic;
+    color: var(--accent); -webkit-text-stroke: 2px var(--ink); transform: rotate(-6deg); letter-spacing: 2px; }
+
+  /* 对话气泡导航 */
+  .bubbles { display: flex; gap: 14px; flex-wrap: wrap; margin: 22px 0 8px; }
+  .bub { position: relative; text-decoration: none; color: var(--ink); font-weight: 800; font-size: 14px;
+    background: #fff; border: 3px solid var(--ink); border-radius: 999px; padding: 9px 22px; transition: .12s; }
+  .bub::after { content: ""; position: absolute; left: 26px; bottom: -9px; width: 14px; height: 14px; background: #fff;
+    border-right: 3px solid var(--ink); border-bottom: 3px solid var(--ink); transform: rotate(45deg) skew(8deg, 8deg); }
+  .bub.on { background: var(--accent); color: #fff; }
+  .bub.on::after { background: var(--accent); }
+  .bub:hover { transform: translateY(-3px); box-shadow: 4px 4px 0 var(--ink); }
+
+  /* 分镜式文章格 */
+  .frames { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 26px; }
+  @media (max-width: 780px) { .frames { grid-template-columns: 1fr; } }
+  .frame-card { position: relative; text-decoration: none; color: var(--ink); display: flex; flex-direction: column; transition: .13s; }
+  .frame-card:hover { transform: translate(-3px,-3px) rotate(-.4deg); box-shadow: 11px 11px 0 rgba(20,20,20,.9); }
+  .frame-card .imgbox { border-bottom: 3.5px solid var(--ink); background:
+    radial-gradient(#000 1px, transparent 1.2px); background-size: 7px 7px; background-color: #f3f3f3; position: relative; }
+  .frame-card .imgbox img { width: 100%; aspect-ratio: 16/8.6; object-fit: cover; display: block; }
+  .frame-card .num { position: absolute; top: -14px; left: -12px; background: var(--ink); color: #fff; font-weight: 900;
+    font-size: 13px; padding: 4px 12px; transform: rotate(-3deg); z-index: 2; }
+  .frame-card .pad { padding: 16px 18px 18px; flex: 1; display: flex; flex-direction: column; }
+  .frame-card .t { font-weight: 800; font-size: 16px; line-height: 1.5; }
+  .frame-card .m { margin-top: auto; padding-top: 10px; font-size: 12px; font-weight: 700; color: #555; display: flex; gap: 10px; align-items: center; }
+  .frame-card .cat { background: var(--accent); color: #fff; padding: 1px 10px; font-size: 11px; border: 2px solid var(--ink); }
+
+  /* 正文分格 */
+  .story { margin-top: 26px; padding: 36px 40px 34px; position: relative; }
+  @media (max-width: 640px) { .story { padding: 24px 20px; } }
+  .story .kicker { display: inline-block; background: var(--ink); color: #fff; font-weight: 800; font-size: 12px; padding: 4px 14px; transform: rotate(-1deg); }
+  .story h2 { font-size: 27px; font-weight: 900; line-height: 1.45; margin: 14px 0 16px; }
+  .story p { margin-bottom: 15px; font-size: 15.5px; }
+  .story blockquote {
+    margin: 20px 0; padding: 18px 22px; border: 3px solid var(--ink); border-radius: 22px 22px 22px 4px;
+    font-weight: 700; background: #fff; box-shadow: 5px 5px 0 rgba(255,92,138,.6); font-size: 15px; position: relative;
+  }
+  .story blockquote::after { content: ""; position: absolute; left: -2px; bottom: -13px; width: 16px; height: 16px; background: #fff;
+    border-left: 3px solid var(--ink); border-bottom: 3px solid var(--ink); transform: rotate(-45deg) skew(10deg,10deg); }
+  .story code.inline { background: #f0f0f0; border: 2px solid var(--ink); padding: 1px 8px; font-family: Consolas, monospace; font-size: 13px; font-weight: 700; }
+  .story pre { background: var(--ink); color: #fff; padding: 18px 22px; font-family: Consolas, monospace; font-size: 13.5px; overflow-x: auto; margin: 18px 0 22px; line-height: 1.8; box-shadow: 6px 6px 0 var(--accent); }
+  .tone-divider { display: flex; align-items: center; gap: 14px; margin: 26px 0 20px; }
+  .tone-divider .dots { flex: 1; height: 14px; background: radial-gradient(#000 1.2px, transparent 1.5px); background-size: 7px 7px; opacity: .5; border-radius: 99px; }
+  .tone-divider .word { font-weight: 900; font-size: 13px; letter-spacing: 3px; }
+  .story .meta { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; font-weight: 700; color: #444; }
+
+  footer { margin-top: 30px; padding: 22px 26px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+  footer .brand { font-weight: 800; font-size: 14px; }
+  footer .tbc { font-weight: 900; font-size: 20px; font-style: italic; color: var(--accent); -webkit-text-stroke: 1px var(--ink); transform: rotate(-2deg); }
+
+  .back { position: fixed; left: 16px; top: 14px; z-index: 20; font-size: 12px; font-weight: 800; text-decoration: none;
+    background: #fff; border: 3px solid var(--ink); color: var(--ink); padding: 4px 12px; box-shadow: 3px 3px 0 var(--ink); }
+</style>
+</head>
+<body>
+<div class="halftone-bg"></div>
+<a class="back" href="index.html">← 返回目录</a>
+<div class="wrap">
+
+  <header class="banner panel">
+    <div class="banner-in">
+      <div class="avatar-frame"><img src="assets/avatar.webp" alt="avatar"></div>
+      <div>
+        <h1>芹菜P的部落阁</h1>
+        <div class="sub">偶像大师资源整理 × 学习笔记 × 生活碎片 —— 每周连载中！</div>
+      </div>
+    </div>
+    <span class="sfx">ドン!</span>
+  </header>
+
+  <nav class="bubbles">
+    <a class="bub on" href="#">首页</a><a class="bub" href="#">文章</a><a class="bub" href="#">分类</a><a class="bub" href="#">说说</a><a class="bub" href="#">关于</a>
+  </nav>
+
+  <div class="frames">
+    <a class="frame-card panel" href="#">
+      <div class="imgbox"><span class="num">第10话</span><img src="assets/covers/c1.webp" alt=""></div>
+      <div class="pad">
+        <div class="t">偶像大师本家Hi-Res高解析度音频整理聚合贴【2026年更新】</div>
+        <div class="m"><span class="cat">资源</span> 2026-02-23 · 完结连载中</div>
+      </div>
+    </a>
+    <a class="frame-card panel" href="#">
+      <div class="imgbox"><span class="num">第09话</span><img src="assets/covers/c2.webp" alt=""></div>
+      <div class="pad">
+        <div class="t">偶像大师本家CD整理聚合贴【2026年更新】</div>
+        <div class="m"><span class="cat">资源</span> 2026-02-22</div>
+      </div>
+    </a>
+    <a class="frame-card panel" href="#">
+      <div class="imgbox"><span class="num">第08话</span><img src="assets/covers/c3.webp" alt=""></div>
+      <div class="pad">
+        <div class="t">数据结构笔记 第三章 栈和队列</div>
+        <div class="m"><span class="cat">笔记</span> 2026-03-26</div>
+      </div>
+    </a>
+    <a class="frame-card panel" href="#">
+      <div class="imgbox"><span class="num">第07话</span><img src="assets/covers/c4.webp" alt=""></div>
+      <div class="pad">
+        <div class="t">基于中州韵输入法 + 雾凇拼音词库改善 Windows 输入方案</div>
+        <div class="m"><span class="cat">技术</span> 2026-02-22</div>
+      </div>
+    </a>
+  </div>
+
+  <section class="story panel">
+    <span class="kicker">✦ 本话试读 · 技术篇</span>
+    <h2>基于中州韵输入法 + 雾凇拼音词库改善 Windows 输入方案</h2>
+    <p>在此前我使用的是搜狗拼音输入法，这东西从小学四年级陪我到现在，已经记录了我很多年的输入习惯。虽然功能强大，但愈发严重的广告和隐私问题让我逐渐失去了兴趣。</p>
+    <blockquote>他们致力于让用户喜欢上打字，享受打字的乐趣，而不是被迫去适应输入法的各种限制和广告。</blockquote>
+    <p>中州韵的 Windows 客户端叫做<strong>小狼毫</strong>（Weasel）。这倒是个很有趣的名字。配置入口在 <code class="inline">default.custom.yaml</code>：</p>
+    <pre>patch:
+  "menu/page_size": 9</pre>
+    <div class="tone-divider"><span class="dots"></span><span class="word">回忆分割线</span><span class="dots"></span></div>
+    <div class="meta"><span>🗓 2026-02-22</span><span>📖 约 1.2k 字</span><span>🏷 Windows / 输入法</span></div>
+  </section>
+
+  <footer class="panel">
+    <span class="brand">© 2025–2026 芹菜P · SerinaP Comics</span>
+    <span class="tbc">つづく</span>
+  </footer>
+</div>
+</body>
+</html>

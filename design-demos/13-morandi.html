@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>13 · 莫兰迪水彩 Morandi — 设计 demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #ece9e3; --ink: #56514a; --sub: #8f887d;
+    --pink: #cbb3b5; --sage: #b3bfb4; --mist: #aeb6c2; --sand: #d6cbb8; --clay: #c2a8a0;
+  }
+  body { background: var(--bg); color: var(--ink); min-height: 100vh;
+    font-family: "Noto Serif SC", "Songti SC", serif; line-height: 1.9; padding-bottom: 60px; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+
+  /* 水彩雾面导航 */
+  nav { position: sticky; top: 0; z-index: 10; background: rgba(236,233,227,.82); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(140,130,115,.18); }
+  .nav-in { max-width: 920px; margin: 0 auto; padding: 16px 24px; display: flex; align-items: center; gap: 24px; }
+  .logo { font-size: 17px; letter-spacing: 3px; color: #6d675e; }
+  .nav-links { margin-left: auto; display: flex; gap: 26px; }
+  .nav-links a { color: var(--sub); text-decoration: none; font-size: 14px; letter-spacing: 2px; position: relative; }
+  .nav-links a.on::after, .nav-links a:hover::after { content: ""; position: absolute; left: 15%; right: 15%; bottom: -4px; height: 7px; background: var(--pink); border-radius: 99px; opacity: .6; z-index: -1; }
+
+  /* 柔雾 hero */
+  .hero { position: relative; text-align: center; padding: 96px 0 66px; }
+  .hero::before { content: ""; position: absolute; inset: -40px -20% auto; height: 420px; z-index: -1; opacity: .55; filter: blur(48px);
+    background:
+      radial-gradient(260px 190px at 30% 36%, var(--pink), transparent 70%),
+      radial-gradient(300px 210px at 62% 30%, var(--mist), transparent 70%),
+      radial-gradient(240px 170px at 80% 55%, var(--sand), transparent 70%),
+      radial-gradient(220px 170px at 15% 62%, var(--sage), transparent 70%); }
+  .blob-frame { width: 132px; height: 132px; margin: 0 auto 26px; padding: 14px 14px 14px 18px; }
+  .blob-frame img {
+    width: 100%; height: 100%; object-fit: cover;
+    border-radius: 58% 42% 55% 45% / 52% 55% 45% 48%;
+    box-shadow: 0 14px 34px rgba(120,105,90,.22);
+  }
+  h1 { font-size: 38px; font-weight: 300; letter-spacing: 10px; color: #6d675e; }
+  h1 b { font-weight: 600; }
+  .hero p { margin-top: 16px; color: var(--sub); font-size: 15px; letter-spacing: 3px; }
+  .hero .line { width: 56px; height: 3px; margin: 30px auto 0; border-radius: 99px;
+    background: linear-gradient(90deg, var(--pink), var(--mist), var(--sage)); }
+
+  /* 柔和文章卡 */
+  .sec-head { display: flex; align-items: baseline; gap: 16px; margin: 34px 0 22px; }
+  .sec-head h2 { font-size: 20px; font-weight: 600; letter-spacing: 4px; color: #6d675e; }
+  .sec-head span { color: var(--sub); font-size: 12.5px; letter-spacing: 2px; }
+  .posts { display: flex; flex-direction: column; gap: 16px; }
+  .post {
+    display: flex; align-items: center; gap: 22px; padding: 20px 26px; text-decoration: none;
+    background: rgba(255,255,255,.55); border-radius: 18px; box-shadow: 0 4px 18px rgba(120,105,90,.08);
+    transition: .22s; position: relative; overflow: hidden;
+  }
+  .post::before { content: ""; position: absolute; left: 0; top: 14%; bottom: 14%; width: 5px; border-radius: 99px; background: var(--spine, var(--pink)); }
+  .post:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(120,105,90,.14); background: rgba(255,255,255,.8); }
+  .post img { width: 72px; height: 72px; border-radius: 16px; object-fit: cover; flex-shrink: 0; filter: saturate(.82); }
+  .post .t { font-size: 16px; font-weight: 600; line-height: 1.65; color: #5d574e; }
+  .post .m { margin-top: 8px; font-size: 12.5px; color: var(--sub); letter-spacing: 1.5px; display: flex; gap: 12px; align-items: center; }
+  .post .m .cat { padding: 2px 12px; border-radius: 99px; background: var(--spine, var(--pink)); color: #fff; font-size: 11.5px; letter-spacing: 2px; }
+
+  /* 水彩文章示例 */
+  .article {
+    margin-top: 48px; background: rgba(255,255,255,.62); border-radius: 24px; padding: 52px 56px;
+    box-shadow: 0 8px 30px rgba(120,105,90,.1); position: relative; overflow: hidden;
+  }
+  @media (max-width: 640px) { .article { padding: 30px 24px; } }
+  .article::before { content: ""; position: absolute; top: -70px; right: -60px; width: 240px; height: 240px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 40%, rgba(203,179,181,.5), transparent 68%); filter: blur(28px); }
+  .article .kick { font-size: 12.5px; letter-spacing: 4px; color: #a8928f; }
+  .article h2 { font-size: 26px; font-weight: 600; letter-spacing: 1px; margin: 12px 0 24px; color: #5d574e; line-height: 1.6; }
+  .article p { font-size: 15.5px; margin-bottom: 18px; color: #645e54; text-align: justify; }
+  .article blockquote {
+    margin: 26px 0; padding: 22px 28px; border-radius: 18px;
+    background: linear-gradient(135deg, rgba(174,182,194,.28), rgba(179,191,180,.28));
+    color: #6d7570; font-size: 15px; position: relative;
+  }
+  .article code.inline { background: rgba(214,203,184,.4); border-radius: 6px; padding: 1.5px 9px; font-size: 13.5px; font-family: Consolas, monospace; color: #96705e; }
+  .article pre { background: #5d574e; color: #efece5; border-radius: 16px; padding: 20px 24px; font-family: Consolas, monospace; font-size: 13.5px; overflow-x: auto; margin: 18px 0 26px; line-height: 1.85; }
+  .article .meta { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-top: 28px; padding-top: 22px;
+    border-top: 1px solid rgba(140,130,115,.25); font-size: 13px; color: var(--sub); letter-spacing: 1.5px; }
+  .article .meta .wash { padding: 3px 14px; border-radius: 99px; background: rgba(203,179,181,.35); color: #8a6f6c; font-size: 12px; }
+
+  footer { text-align: center; margin-top: 66px; color: var(--sub); font-size: 13px; letter-spacing: 2px; }
+  footer .washline { display: flex; justify-content: center; gap: 10px; margin-bottom: 18px; }
+  footer .washline i { width: 34px; height: 8px; border-radius: 99px; opacity: .65; }
+
+  .back { position: fixed; left: 16px; top: 14px; z-index: 20; font-size: 12.5px; color: #7d766b; text-decoration: none;
+    background: rgba(255,255,255,.7); backdrop-filter: blur(8px); border-radius: 99px; padding: 6px 15px; letter-spacing: 1px; box-shadow: 0 2px 10px rgba(120,105,90,.12); }
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← 返回目录</a>
+
+<nav><div class="nav-in">
+  <span class="logo">芹菜P的部落阁</span>
+  <div class="nav-links"><a class="on" href="#">首页</a><a href="#">文章</a><a href="#">分类</a><a href="#">说说</a><a href="#">关于</a></div>
+</div></nav>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="blob-frame"><img src="assets/avatar.webp" alt="avatar"></div>
+    <h1><b>芹菜P</b>的部落阁</h1>
+    <p>偶像大师资源整理 × 学习笔记 × 生活碎片</p>
+    <div class="line"></div>
+  </header>
+
+  <div class="sec-head"><h2>最近写下的</h2><span>RECENT · 按时间</span></div>
+  <div class="posts">
+    <a class="post" href="#" style="--spine: var(--clay)">
+      <img src="assets/covers/c1.webp" alt=""><div>
+      <div class="t">偶像大师本家Hi-Res高解析度音频整理聚合贴【2026年更新】</div>
+      <div class="m"><span class="cat">资源</span> 2026-02-23 · 持续更新</div></div>
+    </a>
+    <a class="post" href="#" style="--spine: var(--mist)">
+      <img src="assets/covers/c2.webp" alt=""><div>
+      <div class="t">偶像大师本家CD整理聚合贴【2026年更新】</div>
+      <div class="m"><span class="cat">资源</span> 2026-02-22 · 持续更新</div></div>
+    </a>
+    <a class="post" href="#" style="--spine: var(--sage)">
+      <img src="assets/covers/c3.webp" alt=""><div>
+      <div class="t">数据结构笔记 第三章 栈和队列</div>
+      <div class="m"><span class="cat">笔记</span> 2026-03-26</div></div>
+    </a>
+    <a class="post" href="#" style="--spine: var(--sand)">
+      <img src="assets/covers/c4.webp" alt=""><div>
+      <div class="t">基于中州韵输入法 + 雾凇拼音词库改善 Windows 输入方案</div>
+      <div class="m"><span class="cat">技术</span> 2026-02-22</div></div>
+    </a>
+  </div>
+
+  <section class="article">
+    <div class="kick">技术 · 随笔</div>
+    <h2>基于中州韵输入法 + 雾凇拼音词库改善 Windows 输入方案</h2>
+    <p>在此前我使用的是搜狗拼音输入法，这东西从小学四年级陪我到现在，已经记录了我很多年的输入习惯。虽然功能强大，但愈发严重的广告和隐私问题让我逐渐失去了兴趣。</p>
+    <blockquote>他们致力于让用户喜欢上打字，享受打字的乐趣，而不是被迫去适应输入法的各种限制和广告。</blockquote>
+    <p>中州韵的 Windows 客户端叫做<strong>小狼毫</strong>（Weasel）。配置入口在 <code class="inline">default.custom.yaml</code>：</p>
+    <pre>patch:
+  "menu/page_size": 9</pre>
+    <div class="meta"><span>2026-02-22</span><span>约 1.2k 字</span><span>3 分钟</span><span class="wash">Windows</span><span class="wash" style="background:rgba(174,182,194,.35);color:#5f6b7d">输入法</span></div>
+  </section>
+</div>
+
+<footer>
+  <div class="washline"><i style="background:var(--pink)"></i><i style="background:var(--mist)"></i><i style="background:var(--sage)"></i><i style="background:var(--sand)"></i></div>
+  © 2025–2026 芹菜P · 愿一切温柔且有回响
+</footer>
+</body>
+</html>

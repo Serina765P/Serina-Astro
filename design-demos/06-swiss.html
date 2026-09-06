@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>06 · 瑞士国际主义 Swiss Grid — 设计 demo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --paper: #ffffff; --ink: #111111; --sub: #6b6b6b; --line: #e3e3e3; --red: #E30613; }
+  body {
+    background: var(--paper); color: var(--ink); min-height: 100vh;
+    font-family: "Helvetica Neue", Helvetica, Arial, "Microsoft YaHei", sans-serif;
+    line-height: 1.6; -webkit-font-smoothing: antialiased;
+  }
+  .frame { max-width: 1120px; margin: 0 auto; border-left: 1px solid var(--line); border-right: 1px solid var(--line); padding: 0 44px; }
+  @media (max-width: 640px) { .frame { padding: 0 20px; } }
+
+  /* 顶部元信息条 */
+  .topbar { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--sub); padding: 18px 0 14px; border-bottom: 2px solid var(--ink); }
+  .topbar .red { color: var(--red); }
+
+  /* 巨大标题区 */
+  .hero { display: grid; grid-template-columns: 1fr 220px; gap: 40px; padding: 60px 0 48px; border-bottom: 1px solid var(--line); }
+  @media (max-width: 860px) { .hero { grid-template-columns: 1fr; } }
+  h1 { font-size: clamp(64px, 10vw, 128px); font-weight: 700; letter-spacing: -0.03em; line-height: 0.98; }
+  h1 .dot { color: var(--red); }
+  .hero-sub { margin-top: 26px; font-size: 17px; max-width: 30em; color: var(--ink); }
+  .hero-meta { font-size: 12px; color: var(--sub); line-height: 2.1; letter-spacing: 1px; }
+  .hero-meta .big { font-size: 64px; font-weight: 700; color: var(--ink); line-height: 1.1; display: block; }
+  .hero-meta .sq { display: inline-block; width: 13px; height: 13px; background: var(--red); margin-right: 8px; }
+  .avatar-sw { width: 92px; height: 92px; border-radius: 0; object-fit: cover; filter: grayscale(1) contrast(1.05); margin-top: 22px; }
+
+  /* 大数字导航 */
+  .bignav { display: grid; grid-template-columns: repeat(5, 1fr); border-bottom: 2px solid var(--ink); }
+  @media (max-width: 760px) { .bignav { grid-template-columns: repeat(2, 1fr); } }
+  .bignav a {
+    text-decoration: none; color: var(--ink); padding: 20px 18px; border-right: 1px solid var(--line);
+    font-size: 14px; font-weight: 500; transition: .15s;
+  }
+  .bignav a:last-child { border-right: none; }
+  .bignav a span { display: block; font-size: 11px; color: var(--sub); letter-spacing: 2px; margin-bottom: 6px; }
+  .bignav a:hover, .bignav a.on { background: var(--red); color: #fff; }
+  .bignav a:hover span, .bignav a.on span { color: rgba(255,255,255,.75); }
+
+  .sec-label { display: flex; align-items: baseline; gap: 18px; padding: 34px 0 18px; }
+  .sec-label .no { font-size: 13px; color: var(--red); font-weight: 700; letter-spacing: 1px; }
+  .sec-label h2 { font-size: 21px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+  .sec-label .en { margin-left: auto; font-size: 11px; letter-spacing: 2.5px; color: var(--sub); text-transform: uppercase; }
+
+  /* 表格式文章列表 */
+  .plist { border-top: 2px solid var(--ink); }
+  .prow {
+    display: grid; grid-template-columns: 54px 1fr 90px 110px; gap: 20px; align-items: baseline;
+    padding: 19px 4px; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink); transition: .12s;
+  }
+  @media (max-width: 700px) { .prow { grid-template-columns: 40px 1fr; } .prow .pc, .prow .pd { display: none; } }
+  .prow:hover { background: var(--ink); color: #fff; }
+  .prow:hover .pn { color: rgba(255,255,255,.6); }
+  .prow:hover .pc { border-color: #fff; color: #fff; }
+  .prow:hover .pd { color: rgba(255,255,255,.7); }
+  .pn { font-size: 12px; color: var(--sub); letter-spacing: 1px; }
+  .pt { font-size: 16.5px; font-weight: 500; line-height: 1.5; }
+  .pc { font-size: 10.5px; letter-spacing: 2px; text-transform: uppercase; border: 1px solid var(--ink); padding: 3px 10px; text-align: center; color: var(--ink); }
+  .pd { font-size: 12px; color: var(--sub); text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* 文章：窄栏 + 红色边注 */
+  .article { display: grid; grid-template-columns: 110px 620px 1fr; gap: 30px; padding: 44px 0 60px; border-top: 2px solid var(--ink); }
+  @media (max-width: 900px) { .article { grid-template-columns: 1fr; } }
+  .a-notes { font-size: 11px; color: var(--sub); letter-spacing: 2px; line-height: 2; text-transform: uppercase; }
+  .a-notes .r { color: var(--red); font-size: 40px; font-weight: 700; letter-spacing: 0; line-height: 1.15; display: block; margin-bottom: 10px; }
+  .a-body h2 { font-size: 30px; font-weight: 700; line-height: 1.3; margin-bottom: 8px; letter-spacing: -0.01em; }
+  .a-credit { font-size: 12px; color: var(--sub); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 28px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+  .a-body p { font-size: 15px; line-height: 1.85; margin-bottom: 18px; max-width: 36em; }
+  .a-body blockquote { margin: 26px 0; padding-left: 20px; border-left: 3px solid var(--red); font-size: 16px; font-weight: 500; line-height: 1.8; max-width: 32em; }
+  .a-body code.inline { background: #f2f2f2; padding: 1px 7px; font-family: Consolas, monospace; font-size: 13.5px; }
+  .a-body pre { background: var(--ink); color: #f5f5f5; padding: 20px 24px; font-family: Consolas, monospace; font-size: 13px; overflow-x: auto; margin: 20px 0 26px; line-height: 1.8; max-width: 620px; }
+  .a-side { font-size: 12px; color: var(--sub); line-height: 2; }
+  .a-side h4 { color: var(--ink); font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 10px; border-bottom: 2px solid var(--ink); padding-bottom: 8px; }
+  .a-side .row { border-bottom: 1px solid var(--line); padding: 8px 0; display: flex; justify-content: space-between; }
+
+  footer { border-top: 2px solid var(--ink); }
+  .foot-in { display: flex; justify-content: space-between; padding: 26px 0 46px; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--sub); flex-wrap: wrap; gap: 8px; }
+  .foot-in .redsq { display: inline-block; width: 10px; height: 10px; background: var(--red); margin-right: 8px; }
+
+  .back { position: fixed; left: 16px; top: 14px; z-index: 20; font-size: 11px; letter-spacing: 2px; text-decoration: none;
+    background: #fff; border: 1px solid var(--ink); color: var(--ink); padding: 5px 13px; text-transform: uppercase; }
+  .back:hover { background: var(--red); border-color: var(--red); color: #fff; }
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← Index</a>
+
+<div class="frame">
+  <div class="topbar">
+    <span>SerinaP — Producer's Log</span>
+    <span class="red">■</span>
+    <span>Est. 2025 ·Tokyo Time 09:00</span>
+  </div>
+
+  <section class="hero">
+    <div>
+      <h1>芹菜P<br>部落阁<span class="dot">.</span></h1>
+      <p class="hero-sub">偶像大师资源整理 × 学习笔记 × 生活碎片。一座秩序井然的音频档案馆。</p>
+    </div>
+    <div class="hero-meta">
+      <span class="sq"></span>ARCHIVE
+      <span class="big">10</span>
+      Articles published<br>
+      247 covers · 44 notes<br>
+      since 2025
+      <img class="avatar-sw" src="assets/avatar.webp" alt="avatar">
+    </div>
+  </section>
+
+  <nav class="bignav">
+    <a class="on" href="#"><span>01</span>首页</a>
+    <a href="#"><span>02</span>文章</a>
+    <a href="#"><span>03</span>分类</a>
+    <a href="#"><span>04</span>说说</a>
+    <a href="#"><span>05</span>关于</a>
+  </nav>
+
+  <div class="sec-label"><span class="no">A/</span><h2>最新文章</h2><span class="en">Selected Works 2025–2026</span></div>
+  <div class="plist">
+    <a class="prow" href="#"><span class="pn">№ 10</span><span class="pt">偶像大师本家Hi-Res高解析度音频整理聚合贴【2026年更新】</span><span class="pc">资源</span><span class="pd">2026.02.23</span></a>
+    <a class="prow" href="#"><span class="pn">№ 09</span><span class="pt">偶像大师本家CD整理聚合贴【2026年更新】</span><span class="pc">资源</span><span class="pd">2026.02.22</span></a>
+    <a class="prow" href="#"><span class="pn">№ 08</span><span class="pt">数据结构笔记 第三章 栈和队列</span><span class="pc">笔记</span><span class="pd">2026.03.26</span></a>
+    <a class="prow" href="#"><span class="pn">№ 07</span><span class="pt">基于中州韵输入法 + 雾凇拼音词库改善 Windows 输入方案</span><span class="pc">技术</span><span class="pd">2026.02.22</span></a>
+    <a class="prow" href="#"><span class="pn">№ 01</span><span class="pt">小站建立</span><span class="pc">公告</span><span class="pd">2025.12.05</span></a>
+  </div>
+
+  <section class="article">
+    <aside class="a-notes"><span class="r">B/</span>Feature<br>Essay<br>Vol.07<br><br>Filed under<br>Technology</aside>
+    <div class="a-body">
+      <h2>基于中州韵输入法 + 雾凇拼音词库改善 Windows 输入方案</h2>
+      <div class="a-credit">Text 芹菜P · 2026.02.22 · 1.2k words · 3 min</div>
+      <p>在此前我使用的是搜狗拼音输入法，这东西从小学四年级陪我到现在，已经记录了我很多年的输入习惯。虽然功能强大，但愈发严重的广告和隐私问题让我逐渐失去了兴趣。</p>
+      <blockquote>他们致力于让用户喜欢上打字，享受打字的乐趣，而不是被迫去适应输入法的各种限制和广告。</blockquote>
+      <p>中州韵的 Windows 客户端叫做<strong>小狼毫</strong>（Weasel）。配置入口在 <code class="inline">default.custom.yaml</code>：</p>
+      <pre>patch:
+  "menu/page_size": 9</pre>
+    </div>
+    <aside class="a-side">
+      <h4>Data</h4>
+      <div class="row"><span>分类</span><span>技术</span></div>
+      <div class="row"><span>标签</span><span>Windows / 输入法</span></div>
+      <div class="row"><span>阅读</span><span>3 min</span></div>
+      <div class="row"><span>状态</span><span>Published</span></div>
+    </aside>
+  </section>
+
+  <footer><div class="foot-in">
+    <span><span class="redsq"></span>© 2025–2026 SerinaP</span>
+    <span>Set in Helvetica · Grid 12</span>
+    <span>GitHub / X / RSS</span>
+  </div></footer>
+</div>
+</body>
+</html>
