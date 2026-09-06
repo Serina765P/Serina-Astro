@@ -212,6 +212,8 @@ const searchOf = (r: (typeof all)[number]) =>
 </BaseLayout>
 
 <style>
+  @reference '../../styles/global.css';
+
   .badge {
     @apply inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[0.7rem] whitespace-nowrap text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800/80 dark:text-neutral-400;
   }
@@ -223,6 +225,7 @@ const searchOf = (r: (typeof all)[number]) =>
     if (!root || root.dataset.bound === 'true') return;
     root.dataset.bound = 'true';
 
+    const rootEl = root;
     const items = [...root.querySelectorAll<HTMLElement>('[data-item]')];
     const qInput = root.querySelector<HTMLInputElement>('#resource-q')!;
     const yearSelect = root.querySelector<HTMLSelectElement>('#resource-year')!;
@@ -249,7 +252,7 @@ const searchOf = (r: (typeof all)[number]) =>
         else if (key === 'year') yearSelect.value = value;
         else if (key === 'format') formatSelect.value = value;
       }
-      root.querySelectorAll<HTMLButtonElement>('[data-chip]').forEach((chip) => {
+      rootEl.querySelectorAll<HTMLButtonElement>('[data-chip]').forEach((chip) => {
         const key = chip.dataset.chip as keyof typeof state;
         chip.classList.toggle('chip-active', chip.dataset.value === state[key]);
       });
@@ -341,6 +344,8 @@ const searchOf = (r: (typeof all)[number]) =>
 </script>
 
 <style>
+  @reference '../../styles/global.css';
+
   .chip-active {
     @apply border-accent-400 bg-accent-50 font-medium text-accent-700 dark:border-accent-600 dark:bg-accent-900/60 dark:text-accent-300;
   }

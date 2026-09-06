@@ -108,6 +108,16 @@
     content: '↑ ';
   }
 
+  /* 代码块内的 code 不吃行内 code 的 chip 样式
+     （typography 的 prose-code:* 规则特异性更高，需用 important 压制） */
+  .prose pre code {
+    @apply bg-transparent! px-0! py-0! text-[1em]! text-inherit!;
+  }
+  .prose pre code::before,
+  .prose pre code::after {
+    content: none;
+  }
+
   /* 文章正文内的折叠面板（imas-hires / imas-cd 大量使用） */
   .prose details {
     @apply my-4 overflow-hidden rounded-xl border border-neutral-200 bg-white transition-colors dark:border-neutral-700/60 dark:bg-neutral-800/40;

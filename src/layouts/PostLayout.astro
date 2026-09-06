@@ -16,7 +16,7 @@ interface PostRef {
 interface Props {
   post: {
     id: string;
-    body: string;
+    body?: string;
     data: {
       title: string;
       date: Date;
@@ -24,9 +24,10 @@ interface Props {
       tags: string[];
       categories: string[];
       description?: string;
+      skin?: 'imas-album';
     };
   };
-  Content: import('astro').AstroComponentFactory;
+  Content: (...args: any[]) => any;
   headings: { depth: number; slug: string; text: string }[];
   /** 按日期排序后的相邻文章（newer 较新，older 较旧） */
   newer?: PostRef | null;
@@ -35,8 +36,8 @@ interface Props {
 
 const { post, Content, headings, newer = null, older = null } = Astro.props;
 const { data } = post;
-const words = wordcount(post.body);
-const minutes = readingTime(post.body);
+const words = wordcount(post.body ?? '');
+const minutes = readingTime(post.body ?? '');
 ---
 
 <BaseLayout title={`${data.title} · ${SITE.title}`} description={data.description} ogType="article" pathname={`/posts/${post.id}/`}>

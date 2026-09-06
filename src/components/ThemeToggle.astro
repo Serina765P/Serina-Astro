@@ -15,7 +15,7 @@ import { Icon } from 'astro-icon/components';
 <script>
   function applyTheme(dark: boolean) {
     document.documentElement.classList.toggle('dark', dark);
-    document.querySelectorAll('iframe.giscus-frame').forEach((frame) => {
+    document.querySelectorAll<HTMLIFrameElement>('iframe.giscus-frame').forEach((frame) => {
       frame.contentWindow?.postMessage(
         { giscus: { setConfig: { theme: dark ? 'dark' : 'light' } } },
         'https://giscus.app',
