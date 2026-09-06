@@ -19,9 +19,8 @@ description: 写作Hires，读作脑放
 **本页所有Hires资源均由wfhtony自购，感谢大佬！**
 
 # 下载链接
-[前往学园偶像大师 Hi-Res 资源索引](/resources/?franchise=学园偶像大师&type=Hi-Res)
-
-资源现已按专辑拆分，可在索引中搜索并按需保存。
+链接: [https://pan.baidu.com/s/1s0jVLa0cIBkYOpzLIHm-1w?pwd=imas](https://pan.baidu.com/s/1s0jVLa0cIBkYOpzLIHm-1w?pwd=imas)  
+提取码: imas
 
 
 # 文件目录

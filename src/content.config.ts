@@ -1,6 +1,5 @@
 import { defineCollection, z } from 'astro:content';
 import { glob, file } from 'astro/loaders';
-import { parseResourcesCsv } from './lib/resource-data.js';
 
 const posts = defineCollection({
   loader: glob({ pattern: '*.md', base: './src/content/posts' }),
@@ -17,29 +16,6 @@ const posts = defineCollection({
   }),
 });
 
-const resources = defineCollection({
-  loader: file('src/data/resources.csv', {
-    parser: (text) => parseResourcesCsv(text),
-  }),
-  schema: z.object({
-    id: z.string(),
-    企划: z.string(),
-    资源类型: z.string(),
-    系列: z.string(),
-    名称: z.string(),
-    别名: z.string(),
-    年份: z.string(),
-    格式: z.string(),
-    大小: z.string(),
-    网盘路径: z.string(),
-    分享链接: z.string(),
-    提取码: z.string(),
-    有效期: z.string(),
-    状态: z.enum(['可用', '待分享', '更新中', '已失效']),
-    更新时间: z.string(),
-    排序值: z.string(),
-  }),
-});
 
 const shuoshuo = defineCollection({
   loader: file('src/data/shuoshuo.json', {
@@ -68,4 +44,4 @@ const shuoshuo = defineCollection({
   }),
 });
 
-export const collections = { posts, resources, shuoshuo };
+export const collections = { posts, shuoshuo };

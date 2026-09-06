@@ -19,10 +19,12 @@
     text-align: center;
   }
 
-  /* 封面：正方形 + 加载后解除模糊（克制版的“点击放大”前奏） */
+  /* 封面：正方形 + 加载后解除模糊（克制版的“点击放大”前奏）
+     height:auto 必须显式声明：旧 HTML 的 height=140 属性提示会压过 aspect-ratio */
   .album-grid .album-item img {
     display: block;
     width: 100%;
+    height: auto;
     aspect-ratio: 1 / 1;
     object-fit: cover;
     border-radius: 0.5rem;

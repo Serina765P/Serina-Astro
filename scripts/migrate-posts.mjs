@@ -82,7 +82,6 @@ for (const entry of entries) {
   }
 }
 
-await cp(path.join(OLD_ROOT, 'source/_data/resources.csv'), new URL('resources.csv', NEW_DATA));
 await cp(path.join(OLD_ROOT, 'source/_data/shuoshuo.json'), new URL('shuoshuo.json', NEW_DATA));
 
-console.log(`完成: ${postCount} 篇文章 (${rewritten} 篇有改动), ${assetDirs} 个资源目录, resources.csv + shuoshuo.json`);
+console.log(`完成: ${postCount} 篇文章 (${rewritten} 篇有改动), ${assetDirs} 个资源目录, shuoshuo.json`);

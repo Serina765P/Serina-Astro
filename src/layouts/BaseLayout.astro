@@ -12,9 +12,18 @@ interface Props {
   keywords?: string[];
   ogType?: 'website' | 'article';
   pathname?: string;
+  /** 覆盖 main 容器的布局类（如首页/文章页需要全幅或自定义宽度时） */
+  mainClass?: string;
 }
 
-const { title, description, keywords, ogType, pathname } = Astro.props;
+const {
+  title,
+  description,
+  keywords,
+  ogType,
+  pathname,
+  mainClass = 'mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10',
+} = Astro.props;
 ---
 
 <!doctype html>
@@ -33,7 +42,7 @@ const { title, description, keywords, ogType, pathname } = Astro.props;
   </head>
   <body class="flex min-h-screen flex-col">
     <Header />
-    <main id="main" class="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
+    <main id="main" class:list={['mx-auto w-full flex-1', mainClass]}>
       <slot />
     </main>
     <Footer />

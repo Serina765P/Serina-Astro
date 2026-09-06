@@ -17,9 +17,7 @@ description: 偶像大师系列游戏的Hi-Res高解析度音频整理聚合贴�
 > **本页所有Hires资源均由wfhtony自购，感谢大佬！**
 
 ## 下载地址
-### [前往 765AS Hi-Res 资源索引](/resources/?franchise=765AS&type=Hi-Res)
-
-资源现已按专辑拆分，可在索引中搜索并按需保存。
+### [百度网盘链接](https://pan.baidu.com/s/1Ynkyn0LC6UrfrMRUS1aXRg?pwd=imas) 提取码: imas
 
 <!-- more -->
 

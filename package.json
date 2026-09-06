@@ -8,10 +8,7 @@
     "build": "astro build && pagefind --site dist",
     "preview": "astro preview",
     "check": "astro check",
-    "fetch:shuoshuo": "node scripts/fetch-bilibili-shuoshuo.mjs",
-    "resources:import": "node tools/import-baidu-directory.mjs",
-    "resources:apply-shares": "node tools/apply-share-results.mjs",
-    "resources:queue": "node tools/list-resource-share-queue.mjs"
+    "fetch:shuoshuo": "node scripts/fetch-bilibili-shuoshuo.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.0.0",
@@ -20,9 +17,7 @@
     "@iconify-json/material-symbols": "^1.2.0",
     "@iconify-json/simple-icons": "^1.2.0",
     "astro": "^7.3.1",
-    "astro-icon": "^1.2.0",
-    "csv-parse": "^7.0.2",
-    "csv-stringify": "^6.8.3"
+    "astro-icon": "^1.2.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",

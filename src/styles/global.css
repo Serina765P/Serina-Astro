@@ -41,6 +41,25 @@
     scroll-behavior: smooth;
   }
 
+  /* 页面切换：比默认交叉淡化更快、带轻微上浮入场 */
+  :root::view-transition-old(root) {
+    animation: 90ms ease-in both vt-fade-out;
+  }
+  :root::view-transition-new(root) {
+    animation: 210ms cubic-bezier(0.16, 1, 0.3, 1) both vt-slide-in;
+  }
+  @keyframes vt-fade-out {
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes vt-slide-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+  }
+
   body {
     @apply bg-neutral-50 font-sans text-neutral-800 antialiased dark:bg-neutral-900 dark:text-neutral-200;
   }
@@ -138,8 +157,20 @@
   .prose details[open] summary {
     @apply border-b border-neutral-200/80 dark:border-neutral-700/60;
   }
-  .prose details > *:not(summary) {
+  .prose details > *:not(summary):not(table) {
     @apply px-4;
+  }
+  /* 表格自身不吃容器 padding（prose 的 28px 外边距会在 summary 下留出空白带） */
+  .prose details > table {
+    @apply m-0 w-full p-0 pb-3 text-[0.9em];
+  }
+  .prose details table th:first-child,
+  .prose details table td:first-child {
+    @apply pl-4;
+  }
+  .prose details table th:last-child,
+  .prose details table td:last-child {
+    @apply pr-4;
   }
 
   /* 图片预览对话框 */

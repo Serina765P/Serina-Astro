@@ -22,7 +22,6 @@ export const NAV = [
   { label: '归档', icon: 'archive', href: '/archives/' },
   { label: '分类', icon: 'category', href: '/categories/' },
   { label: '标签', icon: 'label', href: '/tags/' },
-  { label: '资源索引', icon: 'library-music', href: '/resources/' },
   { label: '友链', icon: 'link', href: '/links/' },
   { label: '说说', icon: 'chat', href: '/shuoshuo/' },
   { label: '关于', icon: 'person', href: '/about/' },

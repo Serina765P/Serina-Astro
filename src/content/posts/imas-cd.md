@@ -27,10 +27,10 @@ description: 偶像大师本家 CD 整理聚合贴，包含了几乎全部的 CD
 
 为了防止百度网盘下载出现数据丢失，压缩包已内置5%冗余数据（所以体积会大一些），如果压缩包出现问题可以直接使用解压软件修复。  
   
-# 下载索引
-[前往 765AS CD 资源索引](/resources/?franchise=765AS&type=CD)
+# 百度网盘链接
 
-资源现已按专辑拆分，可按系列、年份和格式筛选后按需保存。  
+**[https://pan.baidu.com/s/5_HIVXT_v-bTS85n2v-Dx8A](https://pan.baidu.com/s/5_HIVXT_v-bTS85n2v-Dx8A)**  
+可以按需保存🌹  
   
 目前仍有极少数CD尚未收录，会尽快寻找的  
 如果有缺损文件请联系我换源  
