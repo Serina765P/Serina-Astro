@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>16 · 合成方案「雾粉手帖」— 13+09+07 融合预览</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #EDEAE4; --surface: #FAF8F4; --surface-2: #F3F0E9;
+    --ink: #4A443C; --body: #5C564D; --sub: #8F887D;
+    --line: rgba(93,84,72,.13);
+    --pink: #CBB3B5; --pink-deep: #A9807E;
+    --mist: #AEB6C2; --mist-deep: #7F8A9B;
+    --sage: #B3BFB4; --sage-deep: #7E9184;
+    --clay: #C2A8A0; --clay-deep: #9C7B72;
+    --sand: #D6CBB8; --sand-deep: #A5947A;
+    --code-bg: #4A443C; --code-ink: #F1EBE1;
+    --nav-bg: rgba(237,234,228,.82);
+    --shadow: 0 6px 24px rgba(120,105,90,.1);
+    --shadow-lift: 0 14px 34px rgba(120,105,90,.16);
+    --serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", serif;
+    --sans: "Segoe UI", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  }
+  :root.dark {
+    --bg: #262320; --surface: #302C27; --surface-2: #3A352F;
+    --ink: #EAE4D9; --body: #CDC5B8; --sub: #9C9485;
+    --line: rgba(234,228,217,.13);
+    --pink: #B09395; --pink-deep: #C7A6A4;
+    --mist: #93A0B0; --mist-deep: #A9B6C4;
+    --sage: #9AAB9E; --sage-deep: #AFC0B2;
+    --clay: #B3968C; --clay-deep: #C8ABA1;
+    --sand: #C0B39C; --sand-deep: #D2C6AE;
+    --code-bg: #1E1B18; --code-ink: #D8CFC0;
+    --nav-bg: rgba(38,35,32,.82);
+    --shadow: 0 6px 24px rgba(0,0,0,.22);
+    --shadow-lift: 0 14px 34px rgba(0,0,0,.3);
+  }
+  body { background: var(--bg); color: var(--body); min-height: 100vh; padding-bottom: 70px;
+    font-family: var(--sans); font-size: 15.5px; line-height: 1.85; transition: background .3s, color .3s; }
+  h1, h2, h3, .serif { font-family: var(--serif); color: var(--ink); }
+  a { color: var(--pink-deep); text-decoration: none; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* ── 磨砂导航（Apple 式） ── */
+  nav.top { position: sticky; top: 0; z-index: 30; background: var(--nav-bg);
+    backdrop-filter: saturate(160%) blur(18px); -webkit-backdrop-filter: saturate(160%) blur(18px);
+    border-bottom: 1px solid var(--line); }
+  .nav-in { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 60px; display: flex; align-items: center; gap: 26px; }
+  .logo { font-family: var(--serif); font-weight: 600; font-size: 17px; letter-spacing: 3px; color: var(--ink); display: flex; align-items: center; gap: 10px; }
+  .logo i { width: 9px; height: 9px; border-radius: 50%; background: var(--pink); box-shadow: 0 0 0 4px rgba(203,179,181,.3); }
+  .nav-links { margin-left: auto; display: flex; gap: 4px; }
+  .nav-links a { color: var(--sub); font-size: 14px; padding: 7px 14px; border-radius: 999px; }
+  .nav-links a:hover { color: var(--ink); background: var(--surface-2); }
+  .nav-links a.on { color: var(--ink); background: var(--surface); box-shadow: var(--shadow); }
+  .theme-btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface);
+    cursor: pointer; font-size: 15px; line-height: 1; color: var(--body); transition: .2s; }
+  .theme-btn:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+
+  /* ── 水彩 Hero（莫兰迪） ── */
+  .hero { position: relative; text-align: center; padding: 100px 24px 70px; overflow: hidden; }
+  .hero .wash { position: absolute; border-radius: 50%; filter: blur(52px); opacity: .5; pointer-events: none; }
+  .w1 { width: 420px; height: 320px; left: 6%; top: 20px; background: radial-gradient(closest-side, var(--pink), transparent 72%); animation: drift 22s ease-in-out infinite alternate; }
+  .w2 { width: 480px; height: 340px; right: 2%; top: -30px; background: radial-gradient(closest-side, var(--mist), transparent 72%); animation: drift 26s ease-in-out infinite alternate-reverse; }
+  .w3 { width: 360px; height: 280px; left: 32%; bottom: -80px; background: radial-gradient(closest-side, var(--sand), transparent 72%); opacity: .4; animation: drift 30s ease-in-out infinite alternate; }
+  .w4 { width: 260px; height: 220px; right: 24%; bottom: -60px; background: radial-gradient(closest-side, var(--sage), transparent 72%); opacity: .35; animation: drift 24s ease-in-out infinite alternate-reverse; }
+  @keyframes drift { to { transform: translate(46px, 26px) scale(1.07); } }
+  @media (prefers-reduced-motion: reduce) { .hero .wash { animation: none; } }
+  :root.dark .hero .wash { opacity: .3; }
+  .blob-wrap { position: relative; width: 148px; height: 148px; margin: 0 auto 28px; }
+  .blob-wrap::before { content: ""; position: absolute; inset: -14px 10px 10px -14px; border-radius: 55% 45% 48% 52% / 50% 56% 44% 50%;
+    background: linear-gradient(135deg, var(--pink), var(--mist)); opacity: .4; transform: rotate(-6deg); }
+  .blob-wrap img { position: relative; width: 100%; height: 100%; object-fit: cover;
+    border-radius: 58% 42% 55% 45% / 52% 55% 45% 48%; box-shadow: var(--shadow-lift); }
+  .hero h1 { font-size: clamp(32px, 5vw, 44px); font-weight: 600; letter-spacing: 10px; }
+  .hero .sub { margin-top: 14px; color: var(--sub); letter-spacing: 4px; font-size: 15px; }
+  .hero .stats { display: flex; justify-content: center; gap: 12px; margin-top: 30px; flex-wrap: wrap; }
+  .chip { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 7px 18px;
+    font-size: 13px; color: var(--sub); box-shadow: var(--shadow); }
+  .chip b { color: var(--ink); font-family: var(--serif); font-weight: 600; }
+
+  /* ── 便当盒信息区（Bento） ── */
+  .sec-head { display: flex; align-items: baseline; gap: 16px; margin: 40px 0 20px; }
+  .sec-head h2 { font-size: 21px; font-weight: 600; letter-spacing: 5px; }
+  .sec-head span { color: var(--sub); font-size: 12.5px; letter-spacing: 2px; }
+  .bento { display: grid; gap: 14px; grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: 150px 150px 205px 165px auto;
+    grid-template-areas: "s1 s2 covers covers" "s3 s4 covers covers" "say say say music" "cloud cloud quick quick"; }
+  @media (max-width: 880px) { .bento { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: none; } .bento > .cell { grid-area: auto; min-height: 100px; } }
+  .cell { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 20px;
+    box-shadow: var(--shadow); transition: .2s; overflow: hidden; display: flex; flex-direction: column; }
+  .cell:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
+  .ar-s1 { grid-area: s1; } .ar-s2 { grid-area: s2; } .ar-s3 { grid-area: s3; } .ar-s4 { grid-area: s4; }
+  .ar-covers { grid-area: covers; } .ar-say { grid-area: say; } .ar-music { grid-area: music; }
+  .ar-cloud { grid-area: cloud; } .ar-quick { grid-area: quick; }
+  .label { font-size: 11.5px; letter-spacing: 2.5px; color: var(--sub); display: flex; align-items: center; gap: 8px; }
+  .label .ico { width: 22px; height: 22px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: #fff; }
+  .stat { justify-content: center; gap: 2px; }
+  .stat .v { font-family: var(--serif); font-size: 34px; font-weight: 700; color: var(--ink); line-height: 1.2; }
+  .stat .v small { font-size: 14px; font-weight: 400; color: var(--sub); }
+  .stat .k { font-size: 12.5px; color: var(--sub); letter-spacing: 2px; }
+  .covers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; flex: 1; margin-top: 12px; }
+  .covers img { width: 100%; height: 100%; object-fit: cover; border-radius: 14px; aspect-ratio: 1; }
+  .say .bubble { background: var(--surface-2); border-radius: 18px 18px 18px 5px; padding: 14px 18px;
+    font-size: 14px; margin-top: 12px; color: var(--body); }
+  .say .time { font-size: 12px; color: var(--sub); margin-top: 10px; }
+  .ar-music .row { display: flex; gap: 12px; align-items: center; margin-top: 12px; }
+  .ar-music img { width: 52px; height: 52px; border-radius: 14px; object-fit: cover; }
+  .ar-music .t { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+  .ar-music .a { font-size: 12px; color: var(--sub); }
+  .bar { height: 5px; background: var(--surface-2); border-radius: 99px; margin-top: auto; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 62%; border-radius: 99px; background: linear-gradient(90deg, var(--pink), var(--mist)); }
+  .cloud { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 12px; align-content: flex-start; }
+  .cloud span { font-size: 12.5px; padding: 5px 15px; border-radius: 999px; background: var(--surface-2); color: var(--body); cursor: default; }
+  .cloud span:nth-child(1) { background: rgba(194,168,160,.3); color: var(--clay-deep); }
+  .cloud span:nth-child(2) { background: rgba(174,182,194,.3); color: var(--mist-deep); }
+  .cloud span:nth-child(4) { background: rgba(179,191,180,.32); color: var(--sage-deep); }
+  .cloud span:nth-child(6) { background: rgba(214,203,184,.4); color: var(--sand-deep); }
+  .quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; flex: 1; }
+  .quick a { border-radius: 14px; background: var(--surface-2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    color: var(--body); font-size: 12.5px; font-weight: 600; }
+  .quick a:hover { background: rgba(203,179,181,.22); color: var(--pink-deep); }
+  .quick .qi { font-size: 19px; }
+
+  /* ── 文章列表（spine 卡） ── */
+  .posts { display: flex; flex-direction: column; gap: 15px; }
+  .post { position: relative; display: flex; align-items: center; gap: 20px; padding: 19px 26px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 20px;
+    box-shadow: var(--shadow); transition: .2s; overflow: hidden; color: inherit; }
+  .post::before { content: ""; position: absolute; left: 0; top: 16%; bottom: 16%; width: 5px; border-radius: 99px; background: var(--spine, var(--pink)); }
+  .post:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
+  .post img { width: 68px; height: 68px; border-radius: 16px; object-fit: cover; flex-shrink: 0; filter: saturate(.85); }
+  .post .t { font-size: 15.5px; font-weight: 600; color: var(--ink); line-height: 1.65; }
+  .post .m { margin-top: 6px; font-size: 12.5px; color: var(--sub); letter-spacing: 1px; display: flex; gap: 12px; align-items: center; }
+  .cat { padding: 2px 13px; border-radius: 999px; color: #fff; font-size: 11.5px; letter-spacing: 2px; background: var(--spine, var(--pink)); }
+  .no-cover .ph { width: 68px; height: 68px; border-radius: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    font-family: var(--serif); font-size: 22px; color: rgba(255,255,255,.9); background: linear-gradient(135deg, var(--spine), transparent 130%), var(--spine); }
+
+  /* ── 文章页示例（Apple 式排版） ── */
+  .article { max-width: 760px; margin: 60px auto 0; background: var(--surface); border: 1px solid var(--line);
+    border-radius: 26px; padding: 50px 54px; box-shadow: var(--shadow); }
+  @media (max-width: 640px) { .article { padding: 30px 24px; } }
+  .article .kick { display: flex; gap: 12px; align-items: center; font-size: 13px; color: var(--sub); letter-spacing: 2px; }
+  .article h2 { font-size: 29px; font-weight: 600; letter-spacing: 1.5px; line-height: 1.55; margin: 14px 0 10px; }
+  .article .credit { font-size: 13px; color: var(--sub); letter-spacing: 1px; padding-bottom: 20px; margin-bottom: 26px; border-bottom: 1px solid var(--line); }
+  .article p { margin-bottom: 18px; }
+  .article p.lead { font-size: 17px; color: var(--ink); }
+  .article blockquote { margin: 26px 0; padding: 20px 26px; border-radius: 18px;
+    background: linear-gradient(135deg, rgba(174,182,194,.22), rgba(179,191,180,.22)); color: var(--body); font-size: 15px; }
+  .article code.inline { background: var(--surface-2); border: 1px solid var(--line); border-radius: 7px; padding: 1.5px 9px;
+    font-family: "Cascadia Code", Consolas, monospace; font-size: 13.5px; color: var(--clay-deep); }
+  .article pre { background: var(--code-bg); color: var(--code-ink); border-radius: 16px; padding: 20px 24px;
+    font-family: "Cascadia Code", Consolas, monospace; font-size: 13.5px; overflow-x: auto; margin: 18px 0 26px; line-height: 1.8; }
+  .callout { margin: 24px 0; padding: 16px 20px 16px 22px; border-radius: 16px; font-size: 14px; position: relative;
+    background: color-mix(in srgb, var(--c) 20%, var(--surface)); border-left: 4px solid var(--cd); color: var(--body); }
+  .callout b { color: var(--cd); }
+  .callout.warn { --c: var(--clay); --cd: var(--clay-deep); }
+  .callout.tip { --c: var(--mist); --cd: var(--mist-deep); }
+  .a-meta { display: flex; gap: 14px; align-items: center; margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--line);
+    font-size: 13px; color: var(--sub); flex-wrap: wrap; }
+  .a-meta img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+
+  footer { margin-top: 70px; text-align: center; color: var(--sub); font-size: 13px; letter-spacing: 2px; }
+  .washline { display: flex; justify-content: center; gap: 10px; margin-bottom: 18px; }
+  .washline i { width: 34px; height: 8px; border-radius: 99px; opacity: .65; }
+
+  .back { position: fixed; left: 16px; bottom: 16px; z-index: 40; font-size: 12px; color: var(--sub); text-decoration: none;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; box-shadow: var(--shadow); }
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← 返回目录</a>
+
+<nav class="top"><div class="nav-in">
+  <span class="logo"><i></i>芹菜P的部落阁</span>
+  <div class="nav-links">
+    <a class="on" href="#">首页</a><a href="#">文章</a><a href="#">分类</a><a href="#">说说</a><a href="#">关于</a>
+  </div>
+  <button class="theme-btn" id="theme" title="切换深浅色">🌙</button>
+</div></nav>
+
+<header class="hero">
+  <div class="wash w1"></div><div class="wash w2"></div><div class="wash w3"></div><div class="wash w4"></div>
+  <div class="blob-wrap"><img src="assets/avatar.webp" alt="avatar"></div>
+  <h1>芹菜P的部落阁</h1>
+  <p class="sub">偶像大师资源整理 × 学习笔记 × 生活碎片</p>
+  <div class="stats">
+    <span class="chip">📄 <b>10</b> 篇文章</span>
+    <span class="chip">🎵 <b>247</b> 张封面</span>
+    <span class="chip">💬 <b>44</b> 条说说</span>
+    <span class="chip">📅 since 2025</span>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="sec-head"><h2>小站速览</h2><span>BENTO · 便当盒</span></div>
+  <div class="bento">
+    <div class="cell ar-s1 stat"><div class="v">10<small> 篇</small></div><div class="k">文章</div></div>
+    <div class="cell ar-s2 stat"><div class="v">44<small> 条</small></div><div class="k">说说</div></div>
+    <div class="cell ar-s3 stat"><div class="v">247<small> 张</small></div><div class="k">专辑封面</div></div>
+    <div class="cell ar-s4 stat"><div class="v">365<small> 天</small></div><div class="k">持续更新</div></div>
+
+    <div class="cell ar-covers">
+      <div class="label"><span class="ico" style="background:var(--clay)">♫</span>封面墙 · 247</div>
+      <div class="covers">
+        <img src="assets/covers/c1.webp" alt=""><img src="assets/covers/c2.webp" alt=""><img src="assets/covers/c3.webp" alt="">
+        <img src="assets/covers/c4.webp" alt=""><img src="assets/covers/c5.webp" alt=""><img src="assets/covers/c6.webp" alt="">
+      </div>
+    </div>
+
+    <div class="cell ar-say">
+      <div class="label"><span class="ico" style="background:var(--sand)">💬</span>最近的说说</div>
+      <div class="bubble">今天把本家 CD 全部整理完了！247 张封面一张张核对真是个大工程，不过听到《THE IDOLM@STER》黑胶版音源的那一刻，一切都值了 ♪</div>
+      <div class="time">2026-02-22 · 来自哔哩哔哩</div>
+    </div>
+
+    <div class="cell ar-music">
+      <div class="label"><span class="ico" style="background:var(--sage)">▶</span>正在循环</div>
+      <div class="row">
+        <img src="assets/covers/c6.webp" alt="">
+        <div><div class="t">THE IDOLM@STER</div><div class="a">765PRO ALLSTARS</div></div>
+      </div>
+      <div class="bar"><i></i></div>
+    </div>
+
+    <div class="cell ar-cloud">
+      <div class="label"><span class="ico" style="background:var(--mist)">◈</span>标签云</div>
+      <div class="cloud">
+        <span>资源整理</span><span>Hi-Res</span><span>数据结构</span><span>Windows</span><span>输入法</span><span>偶像大师</span><span>学园偶像大师</span><span>日常</span><span>公告</span>
+      </div>
+    </div>
+
+    <div class="cell ar-quick">
+      <div class="label"><span class="ico" style="background:var(--pink)">⚡</span>快捷入口</div>
+      <div class="quick">
+        <a href="#"><span class="qi">🔍</span>搜索</a>
+        <a href="#"><span class="qi">📮</span>留言板</a>
+        <a href="#"><span class="qi">📡</span>RSS</a>
+        <a href="#"><span class="qi">🐙</span>GitHub</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-head"><h2>最近写下的</h2><span>RECENT · 按时间</span></div>
+  <div class="posts">
+    <a class="post" href="#" style="--spine: var(--clay)">
+      <img src="assets/covers/c1.webp" alt=""><div>
+      <div class="t">偶像大师本家Hi-Res高解析度音频整理聚合贴【2026年更新】</div>
+      <div class="m"><span class="cat">资源</span> 2026-02-23 · 持续更新</div></div>
+    </a>
+    <a class="post" href="#" style="--spine: var(--clay)">
+      <img src="assets/covers/c2.webp" alt=""><div>
+      <div class="t">偶像大师本家CD整理聚合贴【2026年更新】</div>
+      <div class="m"><span class="cat">资源</span> 2026-02-22 · 持续更新</div></div>
+    </a>
+    <a class="post no-cover" href="#" style="--spine: var(--sage)">
+      <span class="ph">栈</span><div>
+      <div class="t">数据结构笔记 第三章 栈和队列</div>
+      <div class="m"><span class="cat">笔记</span> 2026-03-26</div></div>
+    </a>
+    <a class="post no-cover" href="#" style="--spine: var(--mist)">
+      <span class="ph">码</span><div>
+      <div class="t">基于中州韵输入法 + 雾凇拼音词库改善 Windows 输入方案</div>
+      <div class="m"><span class="cat">技术</span> 2026-02-22</div></div>
+    </a>
+    <a class="post no-cover" href="#" style="--spine: var(--sand)">
+      <span class="ph">始</span><div>
+      <div class="t">小站建立</div>
+      <div class="m"><span class="cat">公告</span> 2025-12-05</div></div>
+    </a>
+  </div>
+
+  <section class="article">
+    <div class="kick"><span class="cat" style="--spine: var(--mist); background: var(--mist)">技术</span><span>2026-02-22 · 约 1.2k 字 · 3 分钟</span></div>
+    <h2>基于中州韵输入法 + 雾凇拼音词库改善 Windows 输入方案</h2>
+    <div class="credit">文 ／ 芹菜P</div>
+    <p class="lead">在此前我使用的是搜狗拼音输入法，这东西从小学四年级陪我到现在，已经记录了我很多年的输入习惯。</p>
+    <p>虽然功能强大，但愈发严重的广告和隐私问题让我逐渐失去了兴趣。在折腾 Linux 的那几天，我发现了中州韵输入法和雾凇拼音词库的组合，经过一段时间的使用，我觉得这是一个非常不错的替代方案。</p>
+    <div class="callout tip"><b>提示</b> · 小狼毫（Weasel）是中州韵的 Windows 客户端，安装后右上角托盘图标可以自由更换配色方案。</div>
+    <blockquote>他们致力于让用户喜欢上打字，享受打字的乐趣，而不是被迫去适应输入法的各种限制和广告。</blockquote>
+    <p>用户配置的入口在 <code class="inline">default.custom.yaml</code>，比如调整候选词数量：</p>
+    <pre>patch:
+  "menu/page_size": 9
+  "switches": [ [@full_shape] ]</pre>
+    <div class="callout warn"><b>注意</b> · 修改配置文件后需要在托盘菜单里「重新部署」才会生效；升级小狼毫前记得备份用户文件夹。</div>
+    <div class="a-meta"><img src="assets/avatar.webp" alt=""><span>芹菜P</span><span>·</span><span>标签：Windows / 输入法 / 教程</span><span style="margin-left:auto"><a href="#">上一篇</a> · <a href="#">下一篇</a></span></div>
+  </section>
+</div>
+
+<footer>
+  <div class="washline"><i style="background:var(--pink)"></i><i style="background:var(--mist)"></i><i style="background:var(--sage)"></i><i style="background:var(--sand)"></i></div>
+  © 2025–2026 芹菜P · SerinaP's Blog · 愿一切温柔且有回响
+</footer>
+
+<script>
+  const btn = document.getElementById('theme');
+  const root = document.documentElement;
+  function apply(dark) {
+    root.classList.toggle('dark', dark);
+    btn.textContent = dark ? '☀️' : '🌙';
+    localStorage.setItem('demo16dark', dark ? '1' : '');
+  }
+  btn.addEventListener('click', () => apply(!root.classList.contains('dark')));
+  const saved = localStorage.getItem('demo16dark');
+  apply(saved ? saved === '1' : matchMedia('(prefers-color-scheme: dark)').matches);
+</script>
+</body>
+</html>

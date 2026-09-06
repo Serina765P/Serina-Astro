@@ -20,7 +20,13 @@
   .howto span { font-size: 13px; color: var(--sub); background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 6px 16px; }
   .howto span b { color: var(--accent); font-weight: 700; }
 
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 22px; margin-top: 34px; }
+  .synth { display: block; margin-top: 24px; padding: 15px 22px; border-radius: 14px; text-decoration: none;
+    background: linear-gradient(135deg, rgba(203,179,181,.3), rgba(174,182,194,.28)); border: 1.5px solid rgba(169,128,126,.45);
+    color: #8a5a56; font-weight: 650; font-size: 14px; transition: .18s; }
+  .synth:hover { box-shadow: 0 10px 26px rgba(169,128,126,.22); transform: translateY(-2px); }
+  .synth b { color: #7a4a46; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 22px; margin-top: 26px; }
   .card { background: #fff; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; transition: .18s; display: flex; flex-direction: column; }
   .card:hover { transform: translateY(-4px); box-shadow: 0 16px 36px rgba(20,20,40,.1); }
   .card.picked { border: 2px solid var(--accent); box-shadow: 0 10px 30px rgba(214,72,110,.16); }
@@ -74,6 +80,8 @@
       <span>💡 可以混搭：比如「03 的版式 + 11 的配色」</span>
     </div>
   </header>
+
+  <a class="synth" href="16-synthesis.html" target="_blank" rel="noopener">★ 你已选出 Top3（13 莫兰迪 / 09 Apple / 07 Bento）——<b>合成方案「雾粉手帖」已出</b>：融合后的完整首页预览，含暗色模式切换，点此查看 →</a>
 
   <div class="grid" id="grid"></div>
 
