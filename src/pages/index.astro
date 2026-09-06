@@ -1,103 +1,276 @@
 ---
 import { getCollection } from 'astro:content';
+import { readdirSync } from 'node:fs';
 import { Icon } from 'astro-icon/components';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PostCard from '../components/PostCard.astro';
-import SidebarCard from '../components/SidebarCard.astro';
-import { HERO, SITE } from '../site.config';
+import { HERO, SITE, tagSlug } from '../site.config';
 
 const posts = (await getCollection('posts')).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
 );
-const recent = posts.slice(0, 10);
+const recent = posts.slice(0, 6);
+
+// 专辑封面墙：取 public/images/imas/covers 前 6 张（排序稳定，构建期确定）
+const coverFiles = readdirSync('./public/images/imas/covers').filter((f) => f.endsWith('.webp'));
+const wallCovers = coverFiles.sort().slice(0, 6);
+
+// 最近一条说说（截断展示，完整内容在 /shuoshuo/）
+const latestSay = (await getCollection('shuoshuo')).sort(
+  (a, b) => b.data.published_at.valueOf() - a.data.published_at.valueOf(),
+)[0];
+
+// 高频标签
+const tagCount = new Map<string, number>();
+for (const post of posts) for (const t of post.data.tags) tagCount.set(t, (tagCount.get(t) ?? 0) + 1);
+const topTags = [...tagCount.entries()].sort((a, b) => b[1] - a[1]).slice(0, 9);
+
+// 建站天数：以最早一篇文章的日期起算
+const oldest = posts[posts.length - 1]?.data.date;
+const days = oldest ? Math.max(1, Math.ceil((Date.now() - oldest.valueOf()) / 86400000)) : 1;
+
+const shuoshuoCount = (await getCollection('shuoshuo')).length;
+const sayText = latestSay
+  ? latestSay.data.content.replace(/\s+/g, ' ').slice(0, 88) + (latestSay.data.content.length > 88 ? '…' : '')
+  : '';
+const sayTime = latestSay ? latestSay.data.published_at.toLocaleDateString('zh-CN') : '';
 ---
 
-<BaseLayout
-  title={`${SITE.title} · ${SITE.subtitle}`}
-  description={SITE.description}
-  pathname="/"
-  mainClass="w-full"
->
-  <!-- 全幅 hero：底图铺满视口，中央头像光晕 + 渐变标题（呼应个人主页 serinap.top） -->
-  <section
-    class="relative flex h-[400px] items-center justify-center overflow-hidden sm:h-[460px]"
-  >
-    <img
-      src={HERO.image}
-      alt=""
-      aria-hidden="true"
-      class="absolute inset-0 h-full w-full scale-105 object-cover"
-    />
-    <div
-      class="absolute inset-0 bg-gradient-to-b from-neutral-50/40 via-neutral-50/75 to-neutral-50 dark:from-neutral-900/40 dark:via-neutral-900/75 dark:to-neutral-900"
-    >
-    </div>
-    <div
-      aria-hidden="true"
-      class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-neutral-50 to-transparent dark:from-neutral-900"
-    >
-    </div>
+<BaseLayout title={`${SITE.title} · ${SITE.subtitle}`} description={SITE.description} pathname="/" mainClass="w-full">
+  <!-- 水彩 hero：莫兰迪晕染 + 有机 blob 头像 + 圆体大标题 -->
+  <section class="relative overflow-hidden px-6 pt-24 pb-16 text-center sm:pt-28">
+    <div class="wash absolute h-72 w-96 left-[4%] top-2 bg-wash-pink" aria-hidden="true"></div>
+    <div class="wash absolute h-80 w-[28rem] right-0 -top-8 bg-wash-mist" aria-hidden="true"></div>
+    <div class="wash absolute h-64 w-80 left-[30%] -bottom-24 bg-wash-sand" aria-hidden="true"></div>
+    <div class="wash absolute h-52 w-60 right-[22%] -bottom-16 bg-wash-sage" aria-hidden="true"></div>
 
-    <div class="relative flex flex-col items-center px-6 text-center">
-      <div class="relative">
-        <div
-          aria-hidden="true"
-          class="absolute -inset-2 rounded-full bg-gradient-to-tr from-accent-400/50 via-fuchsia-400/40 to-purple-400/50 blur-lg"
-        >
-        </div>
-        <img
-          src={HERO.avatar}
-          alt={`${SITE.author} 的头像`}
-          class="relative size-24 rounded-full object-cover shadow-xl sm:size-28"
-        />
-      </div>
-      <h1 class="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">
-        <span
-          class="bg-gradient-to-r from-accent-500 via-fuchsia-500 to-purple-500 bg-clip-text text-transparent dark:from-accent-400 dark:via-fuchsia-400 dark:to-purple-400"
-        >
-          {SITE.title}
-        </span>
-      </h1>
-      <p
-        class="mt-3 text-xs font-medium tracking-[0.4em] text-neutral-500 sm:text-sm dark:text-neutral-400"
-      >
-        {SITE.subtitle}
-      </p>
-      <p class="mt-4 max-w-xl text-sm text-neutral-600 dark:text-neutral-300">
-        {SITE.description}
-      </p>
-      <div class="mt-5 flex items-center gap-2 text-xs text-neutral-400 dark:text-neutral-500">
-        <Icon name="material-symbols:article" class="size-4" />
-        <span>{posts.length} 篇文章 · 持续更新中</span>
-      </div>
+    <div class="blob-wrap relative mx-auto mb-7 size-36 sm:size-40">
+      <img src={HERO.avatar} alt={`${SITE.author} 的头像`} class="relative size-full object-cover shadow-card-hover" />
+    </div>
+    <h1 class="text-4xl text-ink tracking-[0.22em] [text-indent:0.22em] sm:text-5xl">{SITE.subtitle}</h1>
+    <p class="mt-4 text-sm tracking-[0.3em] text-sub [text-indent:0.3em]">{SITE.description}</p>
+
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <span class="chip">📄 <b>{posts.length}</b> 篇文章</span>
+      <span class="chip">🎵 <b>{coverFiles.length}</b> 张封面</span>
+      <span class="chip">💬 <b>{shuoshuoCount}</b> 条说说</span>
+      <span class="chip">📅 <b>{days}</b> 天 · since 2025</span>
     </div>
   </section>
 
-  <div class="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6">
-    <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
-      <section aria-labelledby="recent-heading">
-        <h2
-          id="recent-heading"
-          class="text-lg font-semibold text-neutral-900 dark:text-neutral-100"
-        >
-          最近文章
-        </h2>
-        <div class="mt-4 space-y-4">
-          {recent.map((post) => <PostCard post={post} />)}
-        </div>
-        {
-          posts.length > recent.length && (
-            <a
-              href="/archives/"
-              class="mt-6 inline-block text-sm text-accent-600 transition-colors hover:text-accent-500 dark:text-accent-400 dark:hover:text-accent-300"
-            >
-              查看全部 {posts.length} 篇 →
-            </a>
-          )
-        }
-      </section>
-
-      <SidebarCard />
+  <div class="mx-auto w-full max-w-5xl px-4 pb-16 sm:px-6">
+    <!-- 便当盒信息区 -->
+    <div class="sec-head">
+      <h2>小站速览</h2>
+      <span>BENTO · 一格一格装满日常</span>
     </div>
+    <div class="bento">
+      <div class="cell stat"><div class="v">{posts.length}<small> 篇</small></div><div class="k">文章</div></div>
+      <div class="cell stat"><div class="v">{shuoshuoCount}<small> 条</small></div><div class="k">说说</div></div>
+      <div class="cell stat"><div class="v">{coverFiles.length}<small> 张</small></div><div class="k">专辑封面</div></div>
+      <div class="cell stat"><div class="v">{days}<small> 天</small></div><div class="k">持续更新</div></div>
+
+      <div class="cell covers-cell">
+        <div class="label"><span class="ico bg-wash-clay">♫</span>封面墙 · {coverFiles.length}</div>
+        <div class="covers">
+          {
+            wallCovers.map((file) => (
+              <img src={`/images/imas/covers/${file}`} alt="专辑封面" loading="lazy" decoding="async" />
+            ))
+          }
+        </div>
+      </div>
+
+      {
+        latestSay && (
+          <div class="cell say-cell">
+            <div class="label">
+              <span class="ico bg-wash-sand">💬</span>最近的说说
+              <a href="/shuoshuo/" class="more">全部 →</a>
+            </div>
+            <div class="bubble">{sayText}</div>
+            <div class="time">{sayTime} · 来自哔哩哔哩</div>
+          </div>
+        )
+      }
+
+      <div class="cell cloud-cell">
+        <div class="label"><span class="ico bg-wash-mist">◈</span>标签云</div>
+        <div class="mt-3 flex flex-wrap content-start gap-2">
+          {
+            topTags.map(([name]) => (
+              <a href={`/tags/${tagSlug(name)}/`} class="rounded-full bg-surface-2 px-3.5 py-1 text-xs text-body transition-colors hover:bg-accent-100 hover:text-accent-700">
+                {name}
+              </a>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="cell quick-cell">
+        <div class="label"><span class="ico bg-wash-pink">⚡</span>快捷入口</div>
+        <div class="mt-3 grid flex-1 grid-cols-4 gap-2.5">
+          <a href="/search/" class="quick"><Icon name="material-symbols:search" class="size-5" />搜索</a>
+          <a href="/shuoshuo/" class="quick"><Icon name="material-symbols:chat" class="size-5" />说说</a>
+          <a href="/atom.xml" class="quick"><Icon name="material-symbols:send" class="size-5" />RSS</a>
+          <a href="https://github.com/Serina765P" target="_blank" rel="noopener" class="quick"><Icon name="simple-icons:github" class="size-5" />GitHub</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 最近文章（spine 卡） -->
+    <div class="sec-head mt-12">
+      <h2>最近写下的</h2>
+      <span>RECENT · 按时间</span>
+    </div>
+    <div class="space-y-4">
+      {recent.map((post) => <PostCard post={post} />)}
+    </div>
+    {
+      posts.length > recent.length && (
+        <a
+          href="/archives/"
+          class="mt-7 inline-block text-sm text-wash-pink-deep transition-colors hover:text-accent-500"
+        >
+          查看全部 {posts.length} 篇 →
+        </a>
+      )
+    }
   </div>
 </BaseLayout>
+
+<style>
+  @reference '../styles/global.css';
+
+  /* 水彩晕染：极慢漂移，reduced-motion 时由全局规则降级 */
+  .wash {
+    pointer-events: none;
+    border-radius: 9999px;
+    filter: blur(52px);
+    opacity: 0.5;
+    animation: wash-drift 26s ease-in-out infinite alternate;
+  }
+  .wash:nth-of-type(2) {
+    animation-duration: 32s;
+    animation-direction: alternate-reverse;
+  }
+  .wash:nth-of-type(3) {
+    opacity: 0.4;
+    animation-duration: 38s;
+  }
+  .wash:nth-of-type(4) {
+    opacity: 0.35;
+    animation-duration: 30s;
+    animation-direction: alternate-reverse;
+  }
+  :global(.dark) .wash {
+    opacity: 0.34;
+  }
+
+  /* 有机 blob 头像：背景色块与图像同一形状、居中对齐 */
+  .blob-wrap::before {
+    content: '';
+    position: absolute;
+    inset: -13px;
+    border-radius: 58% 42% 55% 45% / 52% 55% 45% 48%;
+    background: linear-gradient(135deg, var(--wash-pink), var(--wash-mist));
+    opacity: 0.45;
+  }
+  .blob-wrap img {
+    border-radius: 58% 42% 55% 45% / 52% 55% 45% 48%;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-4.5 py-1.5 text-xs text-sub shadow-card;
+  }
+  .chip b {
+    @apply text-ink;
+  }
+
+  .sec-head {
+    @apply mb-5 flex items-baseline gap-4;
+  }
+  .sec-head h2 {
+    @apply text-xl tracking-[0.3em] text-ink;
+  }
+  .sec-head span {
+    @apply text-xs tracking-[0.2em] text-sub;
+  }
+
+  /* 便当盒 */
+  .bento {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: 150px 150px auto auto auto;
+    grid-template-areas:
+      's1 s2 covers covers'
+      's3 s4 covers covers'
+      'say say say say'
+      'cloud cloud quick quick';
+  }
+  .bento > .cell {
+    @apply rounded-3xl border border-line bg-surface p-5 shadow-card transition-all hover:-translate-y-0.5 hover:shadow-card-hover;
+    min-height: 0;
+  }
+  .cell:nth-of-type(1) { grid-area: s1; }
+  .cell:nth-of-type(2) { grid-area: s2; }
+  .cell:nth-of-type(3) { grid-area: s3; }
+  .cell:nth-of-type(4) { grid-area: s4; }
+  .covers-cell { grid-area: covers; }
+  .cloud-cell { grid-area: cloud; }
+  .quick-cell { grid-area: quick; }
+
+  .stat {
+    @apply flex flex-col justify-center gap-0.5 text-center;
+  }
+  .stat .v {
+    @apply text-4xl text-ink;
+  }
+  .stat .v small {
+    @apply text-sm text-sub;
+  }
+  .stat .k {
+    @apply text-xs tracking-[0.3em] text-sub;
+  }
+
+  .label {
+    @apply flex items-center gap-2 text-[11px] tracking-[0.25em] text-sub;
+  }
+  .label .ico {
+    @apply grid size-5.5 shrink-0 place-items-center rounded-lg text-[11px] text-white;
+  }
+  .label .more {
+    @apply ml-auto text-xs text-wash-pink-deep tracking-normal;
+  }
+  .covers {
+    @apply mt-3 grid flex-1 grid-cols-3 grid-rows-2 gap-2.5;
+  }
+  .covers img {
+    @apply size-full rounded-2xl object-cover;
+  }
+  .say-cell { grid-area: say; }
+  .say-cell .bubble {
+    @apply mt-3 rounded-3xl rounded-bl-lg bg-surface-2 px-5 py-3.5 text-sm leading-relaxed text-body;
+  }
+  .say-cell .time {
+    @apply mt-2.5 text-xs text-sub;
+  }
+  .quick {
+    @apply flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-surface-2 px-2 py-3.5 text-xs font-medium text-body transition-colors hover:bg-accent-100 hover:text-accent-700;
+  }
+
+  @media (max-width: 880px) {
+    .bento {
+      grid-template-columns: 1fr;
+      grid-template-rows: none;
+      grid-template-areas: none;
+    }
+    .bento > .cell {
+      grid-area: auto;
+    }
+    .covers {
+      max-width: 26rem;
+    }
+  }
+</style>

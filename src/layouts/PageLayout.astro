@@ -16,7 +16,7 @@ const { title, description, showComments = false } = Astro.props;
 <BaseLayout title={`${title} · ${SITE.title}`} description={description} pathname={Astro.url.pathname}>
   <div class="mx-auto max-w-3xl">
     <header class="mb-8">
-      <h1 class="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl dark:text-neutral-50">{title}</h1>
+      <h1 class="text-3xl tracking-[0.15em] text-ink">{title}</h1>
     </header>
 
     <Prose>

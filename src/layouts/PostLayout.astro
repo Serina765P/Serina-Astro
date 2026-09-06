@@ -5,7 +5,7 @@ import Prose from '../components/Prose.astro';
 import Toc from '../components/Toc.astro';
 import Giscus from '../components/Giscus.astro';
 import ImasAlbum from '../components/skins/ImasAlbum.astro';
-import { categorySlug, tagSlug, SITE } from '../site.config';
+import { categoryColor, categorySlug, tagSlug, SITE } from '../site.config';
 import { formatDate, formatCount, readingTime, wordcount } from '../lib/utils';
 
 interface PostRef {
@@ -38,6 +38,7 @@ const { post, Content, headings, newer = null, older = null } = Astro.props;
 const { data } = post;
 const words = wordcount(post.body ?? '');
 const minutes = readingTime(post.body ?? '');
+const category = data.categories[0];
 ---
 
 <BaseLayout
@@ -53,78 +54,78 @@ const minutes = readingTime(post.body ?? '');
 
   <div class="relative">
     <article class="min-w-0">
-      <header class="mb-8">
-        {
-          data.categories.length > 0 && (
-            <nav class="mb-3 flex flex-wrap gap-1.5" aria-label="分类">
-              {data.categories.map((category) => (
-                <a
-                  href={`/categories/${categorySlug(category)}/`}
-                  class="inline-flex items-center rounded-full bg-accent-100 px-2.5 py-0.5 text-xs font-medium text-accent-700 transition-colors hover:bg-accent-200 dark:bg-accent-900/50 dark:text-accent-300 dark:hover:bg-accent-900"
-                >
-                  {category}
-                </a>
-              ))}
-            </nav>
-          )
-        }
-        <h1 class="text-2xl leading-tight font-bold tracking-tight text-neutral-900 sm:text-3xl dark:text-neutral-50">
-          {data.title}
-        </h1>
-
-        <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-neutral-500 dark:text-neutral-400">
-          <span class="inline-flex items-center gap-1">
-            <Icon name="material-symbols:calendar-month" class="size-3.5" />
-            <time datetime={data.date.toISOString()}>发布于 {formatDate(data.date)}</time>
-          </span>
+      <!-- 文章面板：Apple 式大标题 + 舒适栏宽 -->
+      <div class="rounded-3xl border border-line bg-surface p-6 shadow-card sm:p-10 lg:p-12">
+        <header class="mb-9">
           {
-            data.updated && data.updated.getTime() !== data.date.getTime() && (
-              <span class="inline-flex items-center gap-1">
-                <Icon name="material-symbols:article" class="size-3.5" />
-                <time datetime={data.updated.toISOString()}>更新于 {formatDate(data.updated)}</time>
-              </span>
+            category && (
+              <a
+                href={`/categories/${categorySlug(category)}/`}
+                class="inline-flex items-center rounded-full px-3.5 py-1 text-xs text-white transition-opacity hover:opacity-85"
+                style={`background:${categoryColor(category)}`}
+              >
+                {category}
+              </a>
             )
           }
-          <span class="inline-flex items-center gap-1">
-            <Icon name="material-symbols:schedule" class="size-3.5" />
-            约 {minutes} 分钟 · {formatCount(words)} 字
-          </span>
-        </div>
+          <h1 class="mt-4 text-2xl leading-snug tracking-[0.04em] text-ink sm:text-[2rem]">
+            {data.title}
+          </h1>
 
-        {
-          data.tags.length > 0 && (
-            <ul class="mt-4 flex flex-wrap gap-1.5" aria-label="标签">
-              {data.tags.map((tag) => (
-                <li>
-                  <a
-                    href={`/tags/${tagSlug(tag)}/`}
-                    class="inline-flex items-center rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs text-neutral-600 transition-colors hover:bg-accent-100 hover:text-accent-600 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-accent-900/50 dark:hover:text-accent-300"
-                  >
-                    # {tag}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )
-        }
-      </header>
+          <div class="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-sub">
+            <span class="inline-flex items-center gap-1">
+              <Icon name="material-symbols:calendar-month" class="size-3.5" />
+              <time datetime={data.date.toISOString()}>发布于 {formatDate(data.date)}</time>
+            </span>
+            {
+              data.updated && data.updated.getTime() !== data.date.getTime() && (
+                <span class="inline-flex items-center gap-1">
+                  <Icon name="material-symbols:article" class="size-3.5" />
+                  <time datetime={data.updated.toISOString()}>更新于 {formatDate(data.updated)}</time>
+                </span>
+              )
+            }
+            <span class="inline-flex items-center gap-1">
+              <Icon name="material-symbols:schedule" class="size-3.5" />
+              约 {minutes} 分钟 · {formatCount(words)} 字
+            </span>
+          </div>
 
-      <Prose>
-        <Content />
-      </Prose>
+          {
+            data.tags.length > 0 && (
+              <ul class="mt-5 flex flex-wrap gap-1.5" aria-label="标签">
+                {data.tags.map((tag) => (
+                  <li>
+                    <a
+                      href={`/tags/${tagSlug(tag)}/`}
+                      class="inline-flex items-center rounded-full bg-surface-2 px-2.5 py-0.5 text-xs text-sub transition-colors hover:bg-accent-100 hover:text-accent-700"
+                    >
+                      # {tag}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )
+          }
+        </header>
 
-      <nav class="mt-10 grid gap-3 sm:grid-cols-2" aria-label="上一篇下一篇">
+        <Prose>
+          <Content />
+        </Prose>
+      </div>
+
+      <nav class="mt-6 grid gap-3 sm:grid-cols-2" aria-label="上一篇下一篇">
         {
           older ? (
             <a
               href={`/posts/${older.id}/`}
-              class="group rounded-xl border border-neutral-200/70 bg-white p-4 transition-shadow hover:shadow-card dark:border-neutral-800 dark:bg-neutral-800/40"
+              class="group rounded-3xl border border-line bg-surface p-4 transition-all hover:-translate-y-0.5 hover:shadow-card"
             >
-              <span class="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+              <span class="flex items-center gap-1 text-xs text-sub">
                 <Icon name="material-symbols:keyboard-arrow-left" class="size-4" />
                 上一篇
               </span>
-              <span class="mt-1 line-clamp-1 block text-sm font-medium text-neutral-800 group-hover:text-accent-600 dark:text-neutral-200 dark:group-hover:text-accent-400">
+              <span class="mt-1 line-clamp-1 block text-sm text-ink group-hover:text-wash-pink-deep">
                 {older.data.title}
               </span>
             </a>
@@ -136,13 +137,13 @@ const minutes = readingTime(post.body ?? '');
           newer && (
             <a
               href={`/posts/${newer.id}/`}
-              class="group rounded-xl border border-neutral-200/70 bg-white p-4 text-right transition-shadow hover:shadow-card dark:border-neutral-800 dark:bg-neutral-800/40"
+              class="group rounded-3xl border border-line bg-surface p-4 text-right transition-all hover:-translate-y-0.5 hover:shadow-card"
             >
-              <span class="flex items-center justify-end gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+              <span class="flex items-center justify-end gap-1 text-xs text-sub">
                 下一篇
                 <Icon name="material-symbols:keyboard-arrow-right" class="size-4" />
               </span>
-              <span class="mt-1 line-clamp-1 block text-sm font-medium text-neutral-800 group-hover:text-accent-600 dark:text-neutral-200 dark:group-hover:text-accent-400">
+              <span class="mt-1 line-clamp-1 block text-sm text-ink group-hover:text-wash-pink-deep">
                 {newer.data.title}
               </span>
             </a>

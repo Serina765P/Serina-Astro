@@ -38,6 +38,9 @@ const {
       })();
     </script>
     <BaseHead title={title} description={description} keywords={keywords} ogType={ogType} pathname={pathname} />
+    <!-- 霞鹜975圆体 SC（OFL-1.1）：ZeoSeven FontsAPI 分片加载，全局字体见 global.css -->
+    <link rel="preconnect" href="https://fontsapi.zeoseven.com" crossorigin />
+    <link rel="stylesheet" href="https://fontsapi.zeoseven.com/184/main/result.css" />
     <ClientRouter />
   </head>
   <body class="flex min-h-screen flex-col">

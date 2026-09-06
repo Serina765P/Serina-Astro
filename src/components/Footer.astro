@@ -3,18 +3,22 @@ import { SIDEBAR, SITE } from '../site.config';
 
 const year = new Date().getFullYear();
 const range = year > SITE.since ? `${SITE.since} - ${year}` : String(SITE.since);
+const washes = ['var(--wash-pink)', 'var(--wash-mist)', 'var(--wash-sage)', 'var(--wash-sand)'];
 ---
 
-<footer class="border-t border-neutral-200/70 py-8 dark:border-neutral-800">
-  <div class="mx-auto max-w-5xl px-4 text-center text-sm text-neutral-500 sm:px-6 dark:text-neutral-400">
+<footer class="pb-10 pt-4">
+  <div class="mx-auto max-w-5xl px-4 text-center text-sm text-sub sm:px-6">
+    <div class="mb-5 flex justify-center gap-2.5" aria-hidden="true">
+      {washes.map((color) => <i class="h-2 w-8 rounded-full opacity-65" style={`background:${color}`} />)}
+    </div>
     <p>
       © {range}
-      <a href="/" class="text-accent-600 transition-colors hover:text-accent-500 dark:text-accent-400 dark:hover:text-accent-300">{SITE.author}</a>
+      <a href="/" class="text-wash-pink-deep transition-colors hover:text-accent-500">{SITE.author}</a>
       · Powered by
-      <a href="https://astro.build" target="_blank" rel="noopener" class="transition-colors hover:text-accent-500 dark:hover:text-accent-300">Astro</a>
+      <a href="https://astro.build" target="_blank" rel="noopener" class="transition-colors hover:text-wash-pink-deep">Astro</a>
     </p>
-    <p class="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
-      {SITE.description}
+    <p class="mt-1 text-xs text-sub opacity-80">
+      {SIDEBAR.description.split('\n')[0]} · 愿一切温柔且有回响
     </p>
   </div>
 </footer>

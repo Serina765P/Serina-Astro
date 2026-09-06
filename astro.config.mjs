@@ -54,8 +54,9 @@ export default defineConfig({
   ],
   markdown: {
     shikiConfig: {
+      // 亮/暗都用暗色 token：底色由 global.css 按模式切换为暖炭（亮 #4a443c / 暗 #1e1b18）
       themes: {
-        light: 'one-light',
+        light: 'github-dark-dimmed',
         dark: 'github-dark-dimmed',
       },
     },

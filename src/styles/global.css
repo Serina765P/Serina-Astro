@@ -4,29 +4,110 @@
 /* class 策略暗色模式（html.dark），由 ThemeToggle 控制 */
 @custom-variant dark (&:where(.dark, .dark *));
 
-@theme {
-  /* 765 系樱粉 —— 强调色，克制使用 */
-  --color-accent-50: #fdf3f7;
-  --color-accent-100: #fbe4ec;
-  --color-accent-200: #f8cddf;
-  --color-accent-300: #f3a7c6;
-  --color-accent-400: #ea76a4;
-  --color-accent-500: #dd4f89;
-  --color-accent-600: #c63571;
-  --color-accent-700: #a42559;
-  --color-accent-800: #86204b;
-  --color-accent-900: #711e44;
-  --color-accent-950: #470a26;
+/* ── 「雾粉手帖」语义色：亮/暗两套，随 .dark 切换 ── */
+:root {
+  --bg: #edeae4;
+  --surface: #faf8f4;
+  --surface-2: #f1ede5;
+  --ink: #45403a;
+  --body: #5c564d;
+  --sub: #8f887d;
+  --line: rgba(93, 84, 72, 0.14);
+  --nav-bg: rgba(237, 234, 228, 0.82);
+  --code-bg: #4a443c;
+  --code-ink: #f1ebe1;
 
-  /* 系统字体栈：不引入 CJK webfont，保持轻量 */
+  --wash-pink: #cbb3b5;
+  --wash-pink-deep: #9e6e6b;
+  --wash-mist: #a9b4c0;
+  --wash-mist-deep: #7f8a9b;
+  --wash-sage: #afc0b1;
+  --wash-sage-deep: #6f8273;
+  --wash-sand: #d6cbb8;
+  --wash-sand-deep: #93826a;
+  --wash-clay: #c2a8a0;
+  --wash-clay-deep: #96685e;
+  --wash-rose: #ce918a;
+  --wash-rose-deep: #a65b52;
+}
+
+:root.dark {
+  --bg: #262320;
+  --surface: #302c27;
+  --surface-2: #3a352f;
+  --ink: #eae4d9;
+  --body: #cdc5b8;
+  --sub: #9c9485;
+  --line: rgba(234, 228, 217, 0.13);
+  --nav-bg: rgba(38, 35, 32, 0.82);
+  --code-bg: #1e1b18;
+  --code-ink: #d8cfc0;
+
+  --wash-pink: #b09395;
+  --wash-pink-deep: #c7a6a4;
+  --wash-mist: #93a0b0;
+  --wash-mist-deep: #a9b6c4;
+  --wash-sage: #9aab9e;
+  --wash-sage-deep: #afc0b2;
+  --wash-sand: #b8ab94;
+  --wash-sand-deep: #cfc3ab;
+  --wash-clay: #b3968c;
+  --wash-clay-deep: #c8aba1;
+  --wash-rose: #a97f79;
+  --wash-rose-deep: #c49b94;
+}
+
+@theme {
+  /* 霞鹜975圆体 SC 全局字体（CDN: ZeoSeven FontsAPI，见 BaseLayout；回退圆体/黑体栈） */
   --font-sans:
-    system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Noto Sans CJK SC',
-    'Source Han Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    'LXGW 975 Yuan SC 400W', 'Yuanti SC', 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', system-ui,
+    sans-serif;
+
+  /* 莫兰迪灰粉 —— 强调色阶（旧 accent-* 类全部沿用新值） */
+  --color-accent-50: #faf5f5;
+  --color-accent-100: #f3e7e7;
+  --color-accent-200: #e5d0d1;
+  --color-accent-300: #d5babc;
+  --color-accent-400: #c4a2a4;
+  --color-accent-500: #ae8889;
+  --color-accent-600: #9e6e6b;
+  --color-accent-700: #835a58;
+  --color-accent-800: #6a4948;
+  --color-accent-900: #583d3c;
+  --color-accent-950: #33211f;
+
+  --shadow-card: 0 6px 24px rgb(120 105 90 / 0.1);
+  --shadow-card-hover: 0 14px 34px rgb(120 105 90 / 0.16);
+
   --font-mono:
     ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, 'Courier New', monospace;
+}
 
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 2px 8px rgb(0 0 0 / 0.04);
-  --shadow-card-hover: 0 2px 4px rgb(0 0 0 / 0.05), 0 8px 24px rgb(0 0 0 / 0.08);
+/* 语义色注册为 Tailwind 工具类（inline 引用变量，暗色自动跟随） */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-body: var(--body);
+  --color-sub: var(--sub);
+  --color-line: var(--line);
+  --color-nav: var(--nav-bg);
+  --color-code-bg: var(--code-bg);
+  --color-code-ink: var(--code-ink);
+
+  --color-wash-pink: var(--wash-pink);
+  --color-wash-pink-deep: var(--wash-pink-deep);
+  --color-wash-mist: var(--wash-mist);
+  --color-wash-mist-deep: var(--wash-mist-deep);
+  --color-wash-sage: var(--wash-sage);
+  --color-wash-sage-deep: var(--wash-sage-deep);
+  --color-wash-sand: var(--wash-sand);
+  --color-wash-sand-deep: var(--wash-sand-deep);
+  --color-wash-clay: var(--wash-clay);
+  --color-wash-clay-deep: var(--wash-clay-deep);
+  --color-wash-rose: var(--wash-rose);
+  --color-wash-rose-deep: var(--wash-rose-deep);
 }
 
 @layer base {
@@ -41,12 +122,12 @@
     scroll-behavior: smooth;
   }
 
-  /* 页面切换：比默认交叉淡化更快、带轻微上浮入场 */
+  /* 页面切换：安静的上浮入场 */
   :root::view-transition-old(root) {
     animation: 90ms ease-in both vt-fade-out;
   }
   :root::view-transition-new(root) {
-    animation: 210ms cubic-bezier(0.16, 1, 0.3, 1) both vt-slide-in;
+    animation: 200ms cubic-bezier(0.16, 1, 0.3, 1) both vt-slide-in;
   }
   @keyframes vt-fade-out {
     to {
@@ -56,12 +137,13 @@
   @keyframes vt-slide-in {
     from {
       opacity: 0;
-      transform: translateY(14px);
+      transform: translateY(8px);
     }
   }
 
+  /* 霞鹜975圆体 SC 全局应用（正文与标题同一字体，圆体自带字重，展示层不额外加粗） */
   body {
-    @apply bg-neutral-50 font-sans text-neutral-800 antialiased dark:bg-neutral-900 dark:text-neutral-200;
+    @apply bg-bg font-sans text-body antialiased transition-colors duration-300;
   }
 
   ::selection {
@@ -73,16 +155,20 @@
     scroll-margin-top: 5.5rem;
   }
 
-  /* Shiki 双主题：亮色用内联默认，暗色切到 --shiki-dark 变量 */
-  .dark .astro-code,
-  .dark .astro-code span {
-    color: var(--shiki-dark) !important;
-    background-color: var(--shiki-dark-bg) !important;
-    font-style: var(--shiki-dark-font-style) !important;
-    font-weight: var(--shiki-dark-font-weight) !important;
-  }
+  /* Shiki 代码块：单暗色主题（github-dark-dimmed），底色按亮/暗切换为暖炭 */
   .astro-code {
-    @apply overflow-x-auto rounded-xl border border-neutral-200/80 text-sm dark:border-neutral-700/60;
+    @apply overflow-x-auto rounded-2xl border border-transparent text-sm;
+    background-color: var(--code-bg) !important;
+  }
+  .astro-code code {
+    color: var(--code-ink);
+  }
+
+  /* 水彩晕染漂移（首页 hero 背景氛围） */
+  @keyframes wash-drift {
+    to {
+      transform: translate(46px, 26px) scale(1.07);
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -99,21 +185,40 @@
 }
 
 @layer components {
-  /* 旧文章依赖的 callout 提示框（callout-warning / danger / success / callout-center） */
+  /* 旧文章依赖的 callout 提示框 —— 莫兰迪四色（warning 陶土 / danger 豆沙 / success 灰绿） */
   .callout {
-    @apply my-5 rounded-xl border-l-4 px-4 py-3 text-[0.95em];
+    @apply my-5 rounded-2xl border-l-4 px-5 py-3.5 text-[0.95em];
+    background: color-mix(in srgb, var(--wash-sand) 20%, var(--surface));
   }
   .callout p {
     @apply m-0;
   }
   .callout-warning {
-    @apply border-amber-400 bg-amber-50 text-amber-900 dark:border-amber-500 dark:bg-amber-950/40 dark:text-amber-200;
+    border-color: var(--wash-clay-deep);
+    background: color-mix(in srgb, var(--wash-clay) 20%, var(--surface));
+  }
+  .callout-warning > :first-child::before {
+    content: '注意 · ';
+    font-weight: 600;
+    color: var(--wash-clay-deep);
   }
   .callout-danger {
-    @apply border-red-400 bg-red-50 text-red-900 dark:border-red-500 dark:bg-red-950/40 dark:text-red-200;
+    border-color: var(--wash-rose-deep);
+    background: color-mix(in srgb, var(--wash-rose) 20%, var(--surface));
+  }
+  .callout-danger > :first-child::before {
+    content: '重要 · ';
+    font-weight: 600;
+    color: var(--wash-rose-deep);
   }
   .callout-success {
-    @apply border-emerald-400 bg-emerald-50 text-emerald-900 dark:border-emerald-500 dark:bg-emerald-950/40 dark:text-emerald-200;
+    border-color: var(--wash-sage-deep);
+    background: color-mix(in srgb, var(--wash-sage) 22%, var(--surface));
+  }
+  .callout-success > :first-child::before {
+    content: '提示 · ';
+    font-weight: 600;
+    color: var(--wash-sage-deep);
   }
   .callout-center {
     @apply text-center;
@@ -121,7 +226,7 @@
 
   /* 旧文章 imas-hires 中的“返回顶部”锚点 */
   .back-top {
-    @apply block text-right text-sm text-neutral-400 transition-colors hover:text-accent-500 dark:hover:text-accent-300;
+    @apply block text-right text-sm text-sub transition-colors hover:text-wash-pink-deep;
   }
   .back-top::before {
     content: '↑ ';
@@ -130,32 +235,77 @@
   /* 代码块内的 code 不吃行内 code 的 chip 样式
      （typography 的 prose-code:* 规则特异性更高，需用 important 压制） */
   .prose pre code {
-    @apply bg-transparent! px-0! py-0! text-[1em]! text-inherit!;
+    @apply bg-transparent! border-0! px-0! py-0! text-[1em]! text-inherit!;
   }
   .prose pre code::before,
   .prose pre code::after {
     content: none;
   }
 
+  /* 文章正文整体色（typography 的 prose-neutral 灰 → 暖调） */
+  .prose {
+    color: var(--body);
+  }
+  .prose :is(h1, h2, h3, h4, h5, h6) {
+    color: var(--ink);
+    font-weight: normal;
+    letter-spacing: 0.02em;
+  }
+  /* 正文引用：雾蓝水彩 */
+  .prose blockquote {
+    border-left-color: var(--wash-mist-deep);
+    background: color-mix(in srgb, var(--wash-mist) 18%, var(--surface));
+    border-radius: 0 1rem 1rem 0;
+    padding-block: 0.5rem;
+    padding-right: 1.25rem;
+    color: var(--body);
+    font-style: normal;
+  }
+  .prose blockquote p:first-of-type::before,
+  .prose blockquote p:last-of-type::after {
+    content: none;
+  }
+  /* 行内 code：暖沙 chip */
+  .prose code {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 0.375rem;
+    padding: 0.125rem 0.375rem;
+    font-weight: normal;
+    color: var(--wash-clay-deep);
+  }
+  .prose hr {
+    border-color: var(--line);
+  }
+  .prose thead th {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  .prose tbody tr {
+    border-color: var(--line);
+  }
+
   /* 文章正文内的折叠面板（imas-hires / imas-cd 大量使用） */
   .prose details {
-    @apply my-4 overflow-hidden rounded-xl border border-neutral-200 bg-white transition-colors dark:border-neutral-700/60 dark:bg-neutral-800/40;
+    @apply my-4 overflow-hidden rounded-2xl border bg-surface transition-colors;
+    border-color: var(--line);
   }
   .prose details summary {
-    @apply m-0 cursor-pointer list-none select-none px-4 py-3 font-medium;
+    @apply m-0 cursor-pointer list-none select-none px-4 py-3 font-medium text-ink;
   }
   .prose details summary::-webkit-details-marker {
     display: none;
   }
   .prose details summary::before {
     content: '▸';
-    @apply mr-2 inline-block text-accent-500 transition-transform duration-200 dark:text-accent-400;
+    @apply mr-2 inline-block text-wash-pink-deep transition-transform duration-200;
   }
   .prose details[open] summary::before {
     transform: rotate(90deg);
   }
   .prose details[open] summary {
-    @apply border-b border-neutral-200/80 dark:border-neutral-700/60;
+    @apply border-b;
+    border-color: var(--line);
   }
   .prose details > *:not(summary):not(table) {
     @apply px-4;
@@ -178,6 +328,6 @@
     @apply m-auto max-w-[92vw] max-h-[92vh] bg-transparent p-0 backdrop:bg-black/80 backdrop:backdrop-blur-sm;
   }
   .lightbox-dialog img {
-    @apply max-h-[92vh] max-w-[92vw] rounded-lg object-contain shadow-2xl;
+    @apply max-h-[92vh] max-w-[92vw] rounded-2xl object-contain shadow-2xl;
   }
 }

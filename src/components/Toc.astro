@@ -20,15 +20,15 @@ const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
       aria-label="目录"
       class="hidden text-sm xl:block"
     >
-      <p class="mb-3 font-semibold text-neutral-500 dark:text-neutral-400">目录</p>
-      <ul class="space-y-1.5 border-l border-neutral-200 dark:border-neutral-700">
+      <p class="mb-3 tracking-[0.3em] text-sub">目录</p>
+      <ul class="space-y-1.5 border-l border-line">
         {toc.map((heading) => (
           <li>
             <a
               href={`#${heading.slug}`}
               data-toc-link
               class:list={[
-                '-ml-px block border-l-2 border-transparent py-0.5 transition-colors hover:text-accent-600 dark:hover:text-accent-300',
+                '-ml-px block border-l-2 border-transparent py-0.5 text-sub transition-colors hover:text-wash-pink-deep',
                 heading.depth === 2 ? 'pl-3' : heading.depth === 3 ? 'pl-6 text-[0.9em]' : 'pl-9 text-[0.85em]',
               ]}
             >
@@ -45,7 +45,7 @@ const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
   @reference '../styles/global.css';
 
   [data-toc-link].toc-active {
-    @apply border-accent-400 font-medium text-accent-600 dark:border-accent-500 dark:text-accent-300;
+    @apply border-wash-pink-deep font-medium text-ink;
   }
 </style>
 

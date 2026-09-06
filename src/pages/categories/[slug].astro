@@ -28,9 +28,9 @@ const sorted = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf(
 
 <BaseLayout title={`分类：${name} · ${SITE.title}`} description={`分类「${name}」下的文章`} pathname={`/categories/${categorySlug(name)}/`}>
   <header class="mb-8">
-    <p class="text-sm text-neutral-500 dark:text-neutral-400">分类</p>
-    <h1 class="mt-1 text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl dark:text-neutral-50">{name}</h1>
-    <p class="mt-2 text-sm text-neutral-500 dark:text-neutral-400">共 {sorted.length} 篇文章</p>
+    <p class="text-sm tracking-[0.2em] text-sub">分类</p>
+    <h1 class="mt-1 text-3xl tracking-[0.1em] text-ink">{name}</h1>
+    <p class="mt-2 text-sm text-sub">共 {sorted.length} 篇文章</p>
   </header>
 
   <div class="space-y-4">

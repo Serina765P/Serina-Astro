@@ -85,6 +85,19 @@ export function categorySlug(name: string): string {
   return CATEGORY_SLUGS[name] ?? name;
 }
 
+// 分类 → 莫兰迪 wash 色（文章卡色条、分类胶囊、封面占位块共用）
+// 取值为 global.css 中的 CSS 变量，亮/暗自动跟随
+export const CATEGORY_COLORS: Record<string, string> = {
+  资源分享: 'var(--wash-clay)',
+  技术分享: 'var(--wash-mist)',
+  学习笔记: 'var(--wash-sage)',
+  公告: 'var(--wash-sand)',
+};
+
+export function categoryColor(name: string): string {
+  return CATEGORY_COLORS[name] ?? 'var(--wash-pink)';
+}
+
 export function tagSlug(name: string): string {
   return TAG_SLUGS[name] ?? name;
 }

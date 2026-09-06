@@ -11,15 +11,11 @@ const isActive = (href: string) => {
 };
 ---
 
-<header
-  class="sticky top-0 z-40 border-b border-neutral-200/70 bg-neutral-50/85 backdrop-blur-md dark:border-neutral-800 dark:bg-neutral-900/85"
->
+<header class="sticky top-0 z-40 border-b border-line bg-nav backdrop-blur-md backdrop-saturate-150">
   <div class="flex h-16 w-full items-center justify-between gap-4 px-4 sm:px-6 lg:px-10">
-    <a href="/" class="flex min-w-0 items-center gap-2.5 rounded-lg py-1 pr-2">
-      <img src="/images/fav.webp" alt="" class="size-8 shrink-0 rounded-full" />
-      <span class="truncate font-semibold tracking-tight text-neutral-800 dark:text-neutral-100">
-        {SITE.title}
-      </span>
+    <a href="/" class="flex min-w-0 items-center gap-2.5 rounded-full py-1 pr-2">
+      <img src="/images/fav.webp" alt="" class="size-8 shrink-0 rounded-full shadow-card" />
+      <span class="truncate tracking-[0.12em] text-ink">{SITE.title}</span>
     </a>
 
     <nav class="hidden items-center gap-1 lg:flex" aria-label="主导航">
@@ -29,10 +25,10 @@ const isActive = (href: string) => {
             href={item.href}
             aria-current={isActive(item.href) ? 'page' : undefined}
             class:list={[
-              'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-colors',
+              'flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm transition-colors',
               isActive(item.href)
-                ? 'bg-accent-100 font-medium text-accent-700 dark:bg-accent-900/50 dark:text-accent-300'
-                : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100',
+                ? 'bg-surface font-medium text-ink shadow-card'
+                : 'text-sub hover:bg-surface-2 hover:text-ink',
             ]}
           >
             <Icon name={`material-symbols:${item.icon}`} class="size-4" />
@@ -46,7 +42,7 @@ const isActive = (href: string) => {
       <a
         href="/search/"
         aria-label="搜索"
-        class="grid size-9 place-items-center rounded-full text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-accent-500 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-accent-300"
+        class="grid size-9 place-items-center rounded-full text-sub transition-colors hover:bg-surface-2 hover:text-wash-pink-deep"
       >
         <Icon name="material-symbols:search" class="size-5" />
       </a>
@@ -56,7 +52,7 @@ const isActive = (href: string) => {
         type="button"
         aria-label="打开菜单"
         aria-expanded="false"
-        class="grid size-9 place-items-center rounded-full text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-accent-500 lg:hidden dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-accent-300"
+        class="grid size-9 place-items-center rounded-full text-sub transition-colors hover:bg-surface-2 hover:text-wash-pink-deep lg:hidden"
       >
         <Icon name="material-symbols:menu" class="menu-open-icon size-5" />
         <Icon name="material-symbols:close" class="menu-close-icon hidden size-5" />
@@ -67,7 +63,7 @@ const isActive = (href: string) => {
   <nav
     id="mobile-menu"
     hidden
-    class="border-t border-neutral-200/70 px-4 pb-4 pt-2 lg:hidden dark:border-neutral-800"
+    class="border-t border-line px-4 pb-4 pt-2 lg:hidden"
     aria-label="移动端导航"
   >
     <ul class="grid grid-cols-2 gap-1">
@@ -78,10 +74,10 @@ const isActive = (href: string) => {
               href={item.href}
               aria-current={isActive(item.href) ? 'page' : undefined}
               class:list={[
-                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors',
+                'flex items-center gap-2 rounded-2xl px-3 py-2 text-sm transition-colors',
                 isActive(item.href)
-                  ? 'bg-accent-100 font-medium text-accent-700 dark:bg-accent-900/50 dark:text-accent-300'
-                  : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800',
+                  ? 'bg-surface font-medium text-ink shadow-card'
+                  : 'text-sub hover:bg-surface-2',
               ]}
             >
               <Icon name={`material-symbols:${item.icon}`} class="size-4" />
