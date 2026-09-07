@@ -24,11 +24,6 @@ const fontSize = (count: number) => {
   const t = (count - min) / (max - min);
   return `${(0.95 + t * 0.85).toFixed(2)}rem`;
 };
-const opacity = (count: number) => {
-  if (max === min) return 1;
-  const t = (count - min) / (max - min);
-  return 0.65 + t * 0.35;
-};
 ---
 
 <BaseLayout title={`标签 · ${SITE.title}`} description="文章标签" pathname="/tags/">
@@ -42,11 +37,11 @@ const opacity = (count: number) => {
         <li>
           <a
             href={`/tags/${tagSlug(name)}/`}
-            class="inline-flex items-baseline gap-1.5 text-accent-600 transition-colors hover:text-accent-500 dark:text-accent-400 dark:hover:text-accent-300"
-            style={`font-size: ${fontSize(count)}; opacity: ${opacity(count)};`}
+            class="inline-flex items-baseline gap-1.5 text-wash-pink-deep transition-colors hover:text-wash-rose-deep"
+            style={`font-size: ${fontSize(count)};`}
           >
             <span class="font-medium"># {name}</span>
-            <span class="text-xs text-neutral-400 tabular-nums dark:text-neutral-500">{count}</span>
+            <span class="text-xs text-sub tabular-nums">{count}</span>
           </a>
         </li>
       ))

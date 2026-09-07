@@ -1,9 +1,50 @@
 ---
+import { Icon } from 'astro-icon/components';
 import PageLayout from '../../layouts/PageLayout.astro';
+import { SIDEBAR } from '../../site.config';
 ---
 
 <PageLayout title="友情链接" description="这里是我的朋友们，欢迎交换友链" showComments>
   <p>这里是我的朋友们，欢迎交换友链 ✨</p>
+
+  <ul class="not-prose mt-6 grid gap-3 sm:grid-cols-2">
+    {
+      SIDEBAR.friendLinks.map((link) => (
+        <li>
+          <a
+            href={link.href}
+            target="_blank"
+            rel="noopener"
+            class="flex items-center gap-2.5 rounded-3xl border border-line bg-surface px-5 py-4 shadow-card transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card-hover"
+          >
+            <Icon name="material-symbols:link" class="size-4 shrink-0 text-sub" />
+            <span class="text-body">{link.name}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+
+  <h2>找到我</h2>
+  <ul class="not-prose mt-4 flex flex-wrap gap-2">
+    {
+      SIDEBAR.social.map((s) => (
+        <li>
+          <a
+            href={s.href}
+            target="_blank"
+            rel="noopener"
+            class="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-3.5 py-1.5 text-xs text-body transition-colors hover:bg-accent-100 hover:text-accent-700"
+          >
+            <Icon name={s.icon} class="size-4" />
+            {s.name}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+
+  <h2>交换友链</h2>
   <p>如果你想添加友链，请在评论区留言，格式如下：</p>
   <pre><code>名称：xxx
 链接：https://xxx.com

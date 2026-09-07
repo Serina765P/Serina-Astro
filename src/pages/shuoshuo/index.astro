@@ -12,7 +12,7 @@ const items = (await getCollection('shuoshuo')).sort(
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const linkify = (s: string) =>
-  escapeHtml(s).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener nofollow" class="text-accent-600 dark:text-accent-400">$1</a>');
+  escapeHtml(s).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener nofollow" class="text-wash-pink-deep hover:text-wash-rose-deep">$1</a>');
 
 const formatDateTime = (date: Date) =>
   date.toLocaleString('zh-CN', {
@@ -55,10 +55,10 @@ const formatDateTime = (date: Date) =>
                   item.data.images.length === 1 ? 'max-w-sm grid-cols-1' : 'grid-cols-3',
                 ]}
               >
-                {item.data.images.slice(0, 9).map((img) => (
+                {item.data.images.slice(0, 9).map((img, i) => (
                   <img
                     src={img.url}
-                    alt=""
+                    alt={`动态配图 ${i + 1}`}
                     loading="lazy"
                     decoding="async"
                     referrerpolicy="no-referrer"
@@ -81,7 +81,7 @@ const formatDateTime = (date: Date) =>
                 href={item.data.link}
                 target="_blank"
                 rel="noopener"
-                class="inline-flex items-center gap-1 transition-colors hover:text-accent-500 dark:hover:text-accent-300"
+                class="inline-flex items-center gap-1 transition-colors hover:text-wash-pink-deep"
               >
                 <Icon name="simple-icons:bilibili" class="size-3.5" />
                 原动态

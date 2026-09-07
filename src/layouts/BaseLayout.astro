@@ -29,23 +29,54 @@ const {
 <!doctype html>
 <html lang="zh-CN">
   <head>
-    <meta charset="utf-8" />
     <script is:inline>
       (function () {
-        var stored = localStorage.getItem('theme');
-        var dark = stored ? stored === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
-        document.documentElement.classList.toggle('dark', dark);
+        function applyTheme() {
+          var stored = null;
+          try {
+            stored = localStorage.getItem('theme');
+          } catch (e) {
+            /* 隐私模式等 storage 不可用时回退到系统偏好 */
+          }
+          var dark = stored ? stored === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.classList.toggle('dark', dark);
+          // 与 global.css 的 --bg 亮/暗值保持一致
+          var themeColor = document.querySelector('meta[name="theme-color"]');
+          if (themeColor) themeColor.setAttribute('content', dark ? '#262320' : '#edeae4');
+        }
+        applyTheme();
+        // ClientRouter 换页会换掉 <html> 的 class，换页后必须重新应用主题
+        document.addEventListener('astro:after-swap', applyTheme);
+        // smooth 会让换页回顶变成动画，动画期间视口停在内容之外（页面下方出现大量空白）
+        document.addEventListener('astro:before-swap', function () {
+          document.documentElement.style.scrollBehavior = 'auto';
+        });
+        document.addEventListener('astro:page-load', function () {
+          document.documentElement.style.scrollBehavior = '';
+        });
       })();
     </script>
     <BaseHead title={title} description={description} keywords={keywords} ogType={ogType} pathname={pathname} />
-    <!-- 霞鹜975圆体 SC（OFL-1.1）：ZeoSeven FontsAPI 分片加载，全局字体见 global.css -->
+    <!-- 字体（均走 ZeoSeven CDN，OFL-1.1）：
+         正文 IBM Plex Sans SC（item 389，同族四档字重：Regular400 默认 / Medium500 / SemiBold600 加粗与小标题 / Bold700 大标题）；
+         首页 hero 朝华标题明朝体（item 2101，单字重 Bold，家族 ZhaohuaMinA Bold，global.css --font-hero） -->
     <link rel="preconnect" href="https://fontsapi.zeoseven.com" crossorigin />
-    <link rel="stylesheet" href="https://fontsapi.zeoseven.com/184/main/result.css" />
+    <link rel="stylesheet" href="https://fontsapi.zeoseven.com/389/main/result.css" />
+    <link rel="stylesheet" href="https://fontsapi.zeoseven.com/389/medium/result.css" />
+    <link rel="stylesheet" href="https://fontsapi.zeoseven.com/389/semi-bold/result.css" />
+    <link rel="stylesheet" href="https://fontsapi.zeoseven.com/389/bold/result.css" />
+    <link rel="stylesheet" href="https://fontsapi.zeoseven.com/2101/main/result.css" />
     <ClientRouter />
   </head>
   <body class="flex min-h-screen flex-col">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-full focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:text-ink focus:shadow-card"
+    >
+      跳到正文
+    </a>
     <Header />
-    <main id="main" class:list={['mx-auto w-full flex-1', mainClass]}>
+    <main id="main" tabindex="-1" class:list={['mx-auto w-full flex-1', mainClass]}>
       <slot />
     </main>
     <Footer />

@@ -52,6 +52,7 @@ const isActive = (href: string) => {
         type="button"
         aria-label="打开菜单"
         aria-expanded="false"
+        aria-controls="mobile-menu"
         class="grid size-9 place-items-center rounded-full text-sub transition-colors hover:bg-surface-2 hover:text-wash-pink-deep lg:hidden"
       >
         <Icon name="material-symbols:menu" class="menu-open-icon size-5" />
@@ -92,17 +93,38 @@ const isActive = (href: string) => {
 
 <script>
   // 事件委托绑定在 document 上：ClientRouter 换页后依然生效
+  function setMenuOpen(open: boolean) {
+    const button = document.querySelector<HTMLButtonElement>('#mobile-menu-button');
+    const menu = document.querySelector<HTMLElement>('#mobile-menu');
+    if (!button || !menu) return;
+    button.setAttribute('aria-expanded', String(open));
+    button.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
+    menu.hidden = !open;
+    button.querySelector('.menu-open-icon')?.classList.toggle('hidden', open);
+    button.querySelector('.menu-close-icon')?.classList.toggle('hidden', !open);
+    if (open) button.dataset.menuOpen = 'true';
+    else delete button.dataset.menuOpen;
+  }
+
   document.addEventListener('click', (event) => {
     const target = event.target as HTMLElement | null;
     const button = target?.closest<HTMLButtonElement>('#mobile-menu-button');
-    if (!button) return;
+    if (button) {
+      setMenuOpen(button.getAttribute('aria-expanded') !== 'true');
+      return;
+    }
+    // 菜单展开时：点击菜单外任意处关闭
     const menu = document.querySelector<HTMLElement>('#mobile-menu');
-    if (!menu) return;
-    const expanded = button.getAttribute('aria-expanded') === 'true';
-    button.setAttribute('aria-expanded', String(!expanded));
-    button.setAttribute('aria-label', expanded ? '打开菜单' : '关闭菜单');
-    menu.hidden = expanded;
-    button.querySelector('.menu-open-icon')?.classList.toggle('hidden', !expanded);
-    button.querySelector('.menu-close-icon')?.classList.toggle('hidden', expanded);
+    if (menu && !menu.hidden && !target?.closest('#mobile-menu')) setMenuOpen(false);
+  });
+
+  // Esc 关闭并把焦点还给按钮
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    const button = document.querySelector<HTMLButtonElement>('#mobile-menu-button');
+    if (button?.dataset.menuOpen === 'true') {
+      setMenuOpen(false);
+      button.focus();
+    }
   });
 </script>

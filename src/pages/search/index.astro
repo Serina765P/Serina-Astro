@@ -18,9 +18,12 @@ import { SITE } from '../../site.config';
       <input
         id="search-input"
         type="search"
+        name="q"
         placeholder="搜索文章与资源…"
+        aria-label="搜索全站"
+        enterkeyhint="search"
         autofocus
-        class="w-full rounded-full border border-line bg-surface py-2.5 pr-4 pl-11 text-sm text-ink outline-none transition-colors placeholder:text-sub focus:border-wash-pink-deep"
+        class="w-full rounded-full border border-line bg-surface py-2.5 pr-4 pl-11 text-sm text-ink transition-colors placeholder:text-sub focus:border-wash-pink-deep"
       />
     </div>
 
@@ -31,6 +34,10 @@ import { SITE } from '../../site.config';
 
 <script is:inline>
   (function () {
+    // ClientRouter 换页会重跑本脚本；防重复绑定导致监听器累积（与 Giscus 同一模式）
+    if (window.__searchBound) return;
+    window.__searchBound = true;
+
     var pagefind = null;
 
     function getPagefind() {
@@ -51,25 +58,39 @@ import { SITE } from '../../site.config';
       var resultsEl = root.querySelector('#search-results');
       var statusEl = root.querySelector('#search-status');
       var timer;
+      var seq = 0; // 请求序号：仅最新一次请求可写 DOM，防先发后至覆盖新结果
+
+      function syncUrl(query) {
+        var url = new URL(location.href);
+        if (query) url.searchParams.set('q', query);
+        else url.searchParams.delete('q');
+        history.replaceState(null, '', url);
+      }
 
       function run() {
         var query = input.value.trim();
+        var current = ++seq;
         resultsEl.innerHTML = '';
+        syncUrl(query);
         if (!query) {
           statusEl.hidden = true;
           return;
         }
+        statusEl.hidden = false;
+        statusEl.textContent = '搜索中…';
+
         getPagefind()
           .then(function (pf) {
             return pf.search(query);
           })
           .then(function (search) {
-            statusEl.hidden = false;
+            if (current !== seq) return;
             statusEl.textContent = '共 ' + search.results.length + ' 个结果';
             var top = search.results.slice(0, 20);
             return Promise.all(top.map(function (r) { return r.data(); }));
           })
           .then(function (results) {
+            if (!results || current !== seq) return;
             results.forEach(function (result) {
               var li = document.createElement('li');
               li.className =
@@ -87,10 +108,11 @@ import { SITE } from '../../site.config';
               resultsEl.appendChild(li);
             });
             if (results.length === 0) {
-              statusEl.textContent = '没有找到相关内容 (´･_･`)';
+              statusEl.textContent = '没有找到相关内容 (´･_･`) 试试换个关键词，或去标签页逛逛';
             }
           })
           .catch(function () {
+            if (current !== seq) return;
             statusEl.hidden = false;
             statusEl.textContent = '搜索索引仅在构建后可用（npm run build 后预览）';
           });
@@ -100,6 +122,29 @@ import { SITE } from '../../site.config';
         clearTimeout(timer);
         timer = setTimeout(run, 200);
       });
+
+      // 从 ?q= 恢复查询（刷新/分享/前进后退均可用）
+      function restore() {
+        var q = new URLSearchParams(location.search).get('q') || '';
+        if (q && q !== input.value) {
+          input.value = q;
+          run();
+        }
+      }
+      restore();
+      // popstate 只绑一次；回调内实时查当前页的输入框，避免引用已脱离文档的旧元素
+      if (!window.__searchPopBound) {
+        window.__searchPopBound = true;
+        window.addEventListener('popstate', function () {
+          var current = document.getElementById('search-input');
+          if (!current) return;
+          var q = new URLSearchParams(location.search).get('q') || '';
+          if (q && q !== current.value) {
+            current.value = q;
+            current.dispatchEvent(new Event('input'));
+          }
+        });
+      }
     }
 
     document.addEventListener('astro:page-load', initSearch);

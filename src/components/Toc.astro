@@ -65,12 +65,20 @@ const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
     const byId = new Map(links.map((a) => [a.getAttribute('href')!.slice(1), a]));
 
     observer?.disconnect();
+    // 跨回调持续维护可见集：entries 只含状态变化的元素，每次重建会丢状态导致高亮乱跳
+    const visible = new Set<string>();
     observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          const link = byId.get(entry.target.id);
-          if (link) link.classList.toggle('toc-active', entry.isIntersecting);
+          if (entry.isIntersecting) visible.add(entry.target.id);
+          else visible.delete(entry.target.id);
         }
+        if (visible.size === 0) return;
+        // 单一高亮：取当前可见标题中最靠近视口顶部的一个（实时取位置，排序才准确）
+        const top = [...visible]
+          .map((id) => [id, document.getElementById(id)?.getBoundingClientRect().top ?? Infinity] as const)
+          .sort((a, b) => a[1] - b[1])[0][0];
+        for (const [id, link] of byId) link.classList.toggle('toc-active', id === top);
       },
       { rootMargin: '-80px 0px -70% 0px' },
     );

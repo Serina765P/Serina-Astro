@@ -15,6 +15,10 @@ import { Icon } from 'astro-icon/components';
 <script>
   function applyTheme(dark: boolean) {
     document.documentElement.classList.toggle('dark', dark);
+    // 浏览器 chrome 底色跟随手动切换（与 BaseLayout 启动脚本同一套值）
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', dark ? '#262320' : '#edeae4');
     document.querySelectorAll<HTMLIFrameElement>('iframe.giscus-frame').forEach((frame) => {
       frame.contentWindow?.postMessage(
         { giscus: { setConfig: { theme: dark ? 'dark' : 'light' } } },

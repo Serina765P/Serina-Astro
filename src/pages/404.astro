@@ -6,12 +6,12 @@ import { SITE } from '../site.config';
 
 <BaseLayout title={`404 · ${SITE.title}`} description="页面不存在" pathname="/404.html">
   <div class="flex min-h-[55vh] flex-col items-center justify-center py-10 text-center">
-    <img src="/images/fav.webp" alt="" class="size-24 rounded-[58%_42%_55%_45%/52%_55%_45%_48%] shadow-card" />
+    <img src="/images/fav.webp" alt="" class="blob size-24 shadow-card" />
     <p class="mt-6 text-6xl tracking-[0.15em] text-wash-pink-deep [text-indent:0.15em]">404</p>
     <p class="mt-3 text-sub">（´・ω・｀） 页面好像走丢了…</p>
     <a
       href="/"
-      class="mt-8 inline-flex items-center gap-1.5 rounded-full bg-wash-pink-deep px-5 py-2 text-sm text-white transition-all hover:-translate-y-0.5 hover:shadow-card"
+      class="mt-8 inline-flex items-center gap-1.5 rounded-full bg-accent-700 px-5 py-2 text-sm text-white transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card dark:bg-accent-300 dark:text-accent-950"
     >
       <Icon name="material-symbols:home" class="size-4" />
       回到首页

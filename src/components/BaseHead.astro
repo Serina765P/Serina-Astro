@@ -12,7 +12,7 @@ interface Props {
 
 const { title, description = SITE.description, pathname = '', keywords = SITE.keywords, ogType = 'website' } = Astro.props;
 const canonical = new URL(pathname, Astro.site);
-const ogImage = new URL('/images/fav.webp', Astro.site);
+const ogImage = new URL('/images/og.png', Astro.site);
 const rssUrl = new URL('/atom.xml', Astro.site);
 ---
 
@@ -25,6 +25,8 @@ const rssUrl = new URL('/atom.xml', Astro.site);
 <meta name="author" content={SITE.author} />
 <link rel="canonical" href={canonical} />
 <link rel="icon" href="/images/fav.webp" />
+<!-- 导航底色延伸到浏览器 chrome；content 由主题脚本随手动切换同步（media 写法只跟系统偏好） -->
+<meta name="theme-color" content="#edeae4" />
 <link rel="alternate" type="application/atom+xml" title={SITE.title} href={rssUrl} />
 <link rel="sitemap" href="/sitemap-index.xml" />
 
@@ -33,5 +35,8 @@ const rssUrl = new URL('/atom.xml', Astro.site);
 <meta property="og:description" content={description} />
 <meta property="og:url" content={canonical} />
 <meta property="og:image" content={ogImage} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content={SITE.title} />
 <meta property="og:site_name" content={SITE.title} />
-<meta name="twitter:card" content="summary" />
+<meta name="twitter:card" content="summary_large_image" />

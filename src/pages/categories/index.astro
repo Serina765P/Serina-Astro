@@ -28,7 +28,7 @@ const sorted = [...categories.values()].sort((a, b) => b.count - a.count);
         <li>
           <a
             href={`/categories/${categorySlug(name)}/`}
-            class="flex items-center justify-between rounded-3xl border border-line bg-surface px-5 py-4 shadow-card transition-all hover:-translate-y-0.5 hover:shadow-card-hover"
+            class="flex items-center justify-between rounded-3xl border border-line bg-surface px-5 py-4 shadow-card transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card-hover"
           >
             <span class="flex items-center gap-2.5 text-body">
               <span aria-hidden="true" class="size-2.5 rounded-full" style={`background:${categoryColor(name)}`}></span>

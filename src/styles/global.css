@@ -11,24 +11,27 @@
   --surface-2: #f1ede5;
   --ink: #45403a;
   --body: #5c564d;
-  --sub: #8f887d;
+  /* 6f675b：加深后的次级文字（scripts/contrast-audit.mjs 核算 ≥4.5:1） */
+  --sub: #6f675b;
+  /* 压在 wash 淡彩底上的「墨色」（分类胶囊/ico），与 wash 底配对核算达标 */
+  --on-wash: #2a2724;
   --line: rgba(93, 84, 72, 0.14);
   --nav-bg: rgba(237, 234, 228, 0.82);
   --code-bg: #4a443c;
   --code-ink: #f1ebe1;
 
   --wash-pink: #cbb3b5;
-  --wash-pink-deep: #9e6e6b;
+  --wash-pink-deep: #835a58;
   --wash-mist: #a9b4c0;
   --wash-mist-deep: #7f8a9b;
   --wash-sage: #afc0b1;
-  --wash-sage-deep: #6f8273;
+  --wash-sage-deep: #55675a;
   --wash-sand: #d6cbb8;
   --wash-sand-deep: #93826a;
   --wash-clay: #c2a8a0;
-  --wash-clay-deep: #96685e;
+  --wash-clay-deep: #7f574e;
   --wash-rose: #ce918a;
-  --wash-rose-deep: #a65b52;
+  --wash-rose-deep: #8f4a42;
 }
 
 :root.dark {
@@ -37,7 +40,8 @@
   --surface-2: #3a352f;
   --ink: #eae4d9;
   --body: #cdc5b8;
-  --sub: #9c9485;
+  --sub: #a89f90;
+  --on-wash: #1e1b18;
   --line: rgba(234, 228, 217, 0.13);
   --nav-bg: rgba(38, 35, 32, 0.82);
   --code-bg: #1e1b18;
@@ -58,10 +62,13 @@
 }
 
 @theme {
-  /* 霞鹜975圆体 SC 全局字体（CDN: ZeoSeven FontsAPI，见 BaseLayout；回退圆体/黑体栈） */
+  /* 正文字体：IBM Plex Sans SC（OFL-1.1，ZeoSeven item 389，CDN 分字重 CSS 见 BaseLayout）。
+     同一 font-family 五档真实字重（300/400/500/600/700），字重层级见 @layer base 与 .prose 规则 */
   --font-sans:
-    'LXGW 975 Yuan SC 400W', 'Yuanti SC', 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', system-ui,
-    sans-serif;
+    'IBM Plex Sans SC', 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', system-ui, sans-serif;
+
+  /* 首页 hero 大标题：朝华标题明朝体（item 2101，单字重 Bold 700） */
+  --font-hero: 'ZhaohuaMinA Bold', 'Songti SC', 'SimSun', serif;
 
   /* 莫兰迪灰粉 —— 强调色阶（旧 accent-* 类全部沿用新值） */
   --color-accent-50: #faf5f5;
@@ -91,6 +98,7 @@
   --color-ink: var(--ink);
   --color-body: var(--body);
   --color-sub: var(--sub);
+  --color-on-wash: var(--on-wash);
   --color-line: var(--line);
   --color-nav: var(--nav-bg);
   --color-code-bg: var(--code-bg);
@@ -120,6 +128,14 @@
 
   html {
     scroll-behavior: smooth;
+    /* 同族五档字重均为真实 face；禁止合成以防中间字重（如 450）被伪造 */
+    font-synthesis-weight: none;
+  }
+
+  /* 主题化焦点环：豆沙色（亮暗两套 --wash-rose-deep 均达标），替代默认黑框 */
+  :focus-visible {
+    outline: 2px solid var(--wash-rose-deep);
+    outline-offset: 2px;
   }
 
   /* 页面切换：安静的上浮入场 */
@@ -141,7 +157,15 @@
     }
   }
 
-  /* 霞鹜975圆体 SC 全局应用（正文与标题同一字体，圆体自带字重，展示层不额外加粗） */
+  /* 霞鹜文楷全局应用：正文 400，强调交给真字重，标题保持不加粗 */
+  /* 标题字重层级：大标题 Bold(700) / 小标题 SemiBold(600)，正文默认 Regular(400) */
+  h1 {
+    font-weight: 700;
+  }
+  :is(h2, h3, h4, h5, h6) {
+    font-weight: 600;
+  }
+
   body {
     @apply bg-bg font-sans text-body antialiased transition-colors duration-300;
   }
@@ -175,50 +199,47 @@
     html {
       scroll-behavior: auto;
     }
+    /* * 选择器匹配不到 ::view-transition-*，页面切换动画需单独关闭 */
+    :root::view-transition-old(root),
+    :root::view-transition-new(root) {
+      animation: none !important;
+    }
     *,
     *::before,
     *::after {
       animation-duration: 0.01ms !important;
+      /* 无限循环动画（如首页 wash-drift）只跑一轮即静止 */
+      animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
   }
 }
 
 @layer components {
+  /* 有机 blob 形状：首页头像 + 404 等处共用 */
+  .blob {
+    border-radius: 58% 42% 55% 45% / 52% 55% 45% 48%;
+  }
+
   /* 旧文章依赖的 callout 提示框 —— 莫兰迪四色（warning 陶土 / danger 豆沙 / success 灰绿） */
   .callout {
     @apply my-5 rounded-2xl border-l-4 px-5 py-3.5 text-[0.95em];
-    background: color-mix(in srgb, var(--wash-sand) 20%, var(--surface));
+    background: color-mix(in srgb, var(--wash-sand) 12%, var(--surface));
   }
   .callout p {
     @apply m-0;
   }
   .callout-warning {
     border-color: var(--wash-clay-deep);
-    background: color-mix(in srgb, var(--wash-clay) 20%, var(--surface));
-  }
-  .callout-warning > :first-child::before {
-    content: '注意 · ';
-    font-weight: 600;
-    color: var(--wash-clay-deep);
+    background: color-mix(in srgb, var(--wash-clay) 12%, var(--surface));
   }
   .callout-danger {
     border-color: var(--wash-rose-deep);
-    background: color-mix(in srgb, var(--wash-rose) 20%, var(--surface));
-  }
-  .callout-danger > :first-child::before {
-    content: '重要 · ';
-    font-weight: 600;
-    color: var(--wash-rose-deep);
+    background: color-mix(in srgb, var(--wash-rose) 12%, var(--surface));
   }
   .callout-success {
     border-color: var(--wash-sage-deep);
-    background: color-mix(in srgb, var(--wash-sage) 22%, var(--surface));
-  }
-  .callout-success > :first-child::before {
-    content: '提示 · ';
-    font-weight: 600;
-    color: var(--wash-sage-deep);
+    background: color-mix(in srgb, var(--wash-sage) 12%, var(--surface));
   }
   .callout-center {
     @apply text-center;
@@ -248,8 +269,20 @@
   }
   .prose :is(h1, h2, h3, h4, h5, h6) {
     color: var(--ink);
-    font-weight: normal;
     letter-spacing: 0.02em;
+  }
+  /* 小标题 SemiBold(600)、文章内大标题 Bold(700)；
+     ! 必需 —— typography 自带字重阶（h2 700/h1 800）且特异性更高 */
+  .prose h1 {
+    font-weight: 700 !important;
+  }
+  .prose :is(h2, h3, h4, h5, h6) {
+    font-weight: 600 !important;
+  }
+  /* 正文加粗统一 SemiBold(600)：! 必需 —— typography 的
+     .prose :where(strong):not([class~=not-prose]…) 特异性 (0,2,0) 更高 */
+  .prose :is(strong, b, th, dt) {
+    font-weight: 600 !important;
   }
   /* 正文引用：雾蓝水彩 */
   .prose blockquote {
@@ -307,12 +340,19 @@
     @apply border-b;
     border-color: var(--line);
   }
+  /* 面板内容四边留白：album-grid 等内容不再顶在框线上 */
   .prose details > *:not(summary):not(table) {
     @apply px-4;
   }
-  /* 表格自身不吃容器 padding（prose 的 28px 外边距会在 summary 下留出空白带） */
+  .prose details > summary + *:not(table) {
+    @apply pt-3;
+  }
+  .prose details > :not(summary):not(table):last-child {
+    @apply pb-4;
+  }
+  /* 表格自身不吃容器 px（单元格首尾已带 pl-4/pr-4），上下由表格补齐 */
   .prose details > table {
-    @apply m-0 w-full p-0 pb-3 text-[0.9em];
+    @apply m-0 w-full pt-3 pb-4 text-[0.9em];
   }
   .prose details table th:first-child,
   .prose details table td:first-child {
@@ -323,11 +363,74 @@
     @apply pr-4;
   }
 
+  /* 正文内容图可点击放大：与专辑图一致的 zoom-in 光标提示（链接内图片除外） */
+  .prose img:not(a img),
+  .shuoshuo-images img {
+    cursor: zoom-in;
+  }
+
   /* 图片预览对话框 */
   .lightbox-dialog {
     @apply m-auto max-w-[92vw] max-h-[92vh] bg-transparent p-0 backdrop:bg-black/80 backdrop:backdrop-blur-sm;
   }
   .lightbox-dialog img {
     @apply max-h-[92vh] max-w-[92vw] rounded-2xl object-contain shadow-2xl;
+  }
+
+  /* TOC 长目录：容器内滚轮浏览，细滚动条（PostLayout .toc-scroll） */
+  .toc-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--wash-mist) transparent;
+  }
+  .toc-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+  .toc-scroll::-webkit-scrollbar-thumb {
+    background: var(--wash-mist);
+    border-radius: 9999px;
+  }
+  .toc-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* 代码块超高自动折叠（CodeFold.astro 注入）：渐隐只盖代码区，不盖按钮 */
+  .code-fold .code-clip {
+    position: relative;
+  }
+  .code-fold.is-collapsed .code-clip {
+    max-height: 22.5rem;
+    overflow: hidden;
+  }
+  .code-fold.is-collapsed .code-clip::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 6rem;
+    background: linear-gradient(to bottom, transparent, var(--code-bg));
+    border-radius: 0 0 1rem 1rem;
+    pointer-events: none;
+  }
+  .code-fold-btn {
+    @apply mx-auto mt-2.5 block rounded-full bg-surface-2 px-4 py-1.5 text-xs text-body transition-colors hover:bg-accent-100 hover:text-accent-700;
+  }
+
+  /* 代码块复制按钮（CodeCopy.astro 注入）：GitHub 式右上角图标，常显但低对比不抢戏 */
+  .code-copy-wrap {
+    position: relative;
+  }
+  .code-copy-btn {
+    @apply absolute top-2.5 right-2.5 z-10 grid size-8 place-items-center rounded-lg border-0 bg-transparent p-0 transition-colors;
+    color: color-mix(in srgb, var(--code-ink) 55%, transparent);
+  }
+  .code-copy-btn svg {
+    display: block;
+  }
+  .code-copy-btn:hover {
+    color: var(--code-ink);
+    background: color-mix(in srgb, var(--code-ink) 12%, transparent);
+  }
+  /* 成功态：代码块底色恒为暗色，用浅灰绿保证两套主题下都醒目 */
+  .code-copy-btn.is-copied {
+    color: var(--wash-sage);
   }
 }

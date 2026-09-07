@@ -1,5 +1,12 @@
 <dialog id="lightbox" class="lightbox-dialog" closedby="any">
   <img src="" alt="" referrerpolicy="no-referrer" />
+  <button
+    type="button"
+    aria-label="关闭预览"
+    class="fixed top-4 right-4 grid size-10 cursor-pointer place-items-center rounded-full bg-black/50 text-xl leading-none text-white transition-colors hover:bg-black/70"
+  >
+    ×
+  </button>
 </dialog>
 
 <script>
@@ -7,16 +14,56 @@
   const dialog = document.querySelector<HTMLDialogElement>('#lightbox');
   const previewImg = dialog?.querySelector('img');
 
+  const closeBtn = dialog?.querySelector('button');
+
+  function openLightbox(img: HTMLImageElement) {
+    if (!dialog || !previewImg) return;
+    previewImg.src = img.getAttribute('src') ?? '';
+    previewImg.alt = img.alt;
+    if (!dialog.open) dialog.showModal();
+  }
+
+  closeBtn?.addEventListener('click', () => dialog?.close());
+
+  // 给正文/说说/专辑里的内容图补键盘入口（tabindex + button 语义）
+  function enhanceImages() {
+    document
+      .querySelectorAll<HTMLImageElement>('.prose img, .album-grid img, .shuoshuo-images img')
+      .forEach((img) => {
+        if (img.closest('a') || img.closest('dialog')) return;
+        if (img.getAttribute('role') === 'button') return;
+        img.setAttribute('role', 'button');
+        img.setAttribute('tabindex', '0');
+        img.setAttribute('aria-label', `放大查看：${img.alt || '图片'}`);
+      });
+  }
+
+  document.addEventListener('astro:page-load', enhanceImages);
+
   document.addEventListener('click', (event) => {
     if (!dialog || !previewImg) return;
+    // closedby="any" 仅 Chromium 134+ 支持：点 dialog 空白处关闭作为兜底
+    if (event.target === dialog) {
+      dialog.close();
+      return;
+    }
     const target = event.target as HTMLElement | null;
     const img = target?.closest('img');
     if (!img || !img.closest('.prose, .album-grid, .shuoshuo-images')) return;
     if (img.closest('a')) return;
     if (img.closest('dialog')) return;
     event.preventDefault();
-    previewImg.src = img.getAttribute('src') ?? '';
-    previewImg.alt = img.alt;
-    if (!dialog.open) dialog.showModal();
+    openLightbox(img);
+  });
+
+  // 键盘可达：Enter/Space 触发放大
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    const target = event.target as HTMLElement | null;
+    const img = target instanceof HTMLImageElement ? target : null;
+    if (!img || img.getAttribute('role') !== 'button') return;
+    if (!img.closest('.prose, .album-grid, .shuoshuo-images')) return;
+    event.preventDefault();
+    openLightbox(img);
   });
 </script>

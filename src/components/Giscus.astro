@@ -2,9 +2,13 @@
 import { GISCUS } from '../site.config';
 ---
 
-<section class="mt-12 border-t border-line pt-8" aria-label="评论">
-  <div id="giscus-root" class="giscus min-h-40"></div>
-</section>
+{
+  GISCUS.enable && (
+    <section class="mt-12 border-t border-line pt-8" aria-label="评论">
+      <div id="giscus-root" class="giscus min-h-40"></div>
+    </section>
+  )
+}
 
 <script
   is:inline

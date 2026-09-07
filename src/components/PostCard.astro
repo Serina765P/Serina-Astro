@@ -25,7 +25,7 @@ const spine = categoryColor(category ?? '');
 ---
 
 <article
-  class="group relative overflow-hidden rounded-3xl border border-line bg-surface py-5 pr-5 pl-6 shadow-card transition-all hover:-translate-y-0.5 hover:shadow-card-hover sm:py-6 sm:pr-6 sm:pl-7"
+  class="group relative overflow-hidden rounded-3xl border border-line bg-surface py-5 pr-5 pl-6 shadow-card transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card-hover sm:py-6 sm:pr-6 sm:pl-7"
 >
   <span
     aria-hidden="true"
@@ -44,7 +44,7 @@ const spine = categoryColor(category ?? '');
   <div class="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-sub">
     {
       category && (
-        <span class="rounded-full px-3 py-0.5 text-white" style={`background:${spine}`}>
+        <span class="rounded-full px-3 py-0.5 text-on-wash" style={`background:${spine}`}>
           {category}
         </span>
       )
@@ -65,7 +65,7 @@ const spine = categoryColor(category ?? '');
 
   {
     post.data.description && (
-      <p class="mt-3 line-clamp-2 text-sm leading-relaxed text-sub">{post.data.description}</p>
+      <p class="relative mt-3 line-clamp-2 text-sm leading-relaxed text-sub">{post.data.description}</p>
     )
   }
 

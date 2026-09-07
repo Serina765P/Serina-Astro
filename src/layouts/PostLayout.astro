@@ -5,6 +5,8 @@ import Prose from '../components/Prose.astro';
 import Toc from '../components/Toc.astro';
 import Giscus from '../components/Giscus.astro';
 import ImasAlbum from '../components/skins/ImasAlbum.astro';
+import CodeFold from '../components/CodeFold.astro';
+import CodeCopy from '../components/CodeCopy.astro';
 import { categoryColor, categorySlug, tagSlug, SITE } from '../site.config';
 import { formatDate, formatCount, readingTime, wordcount } from '../lib/utils';
 
@@ -46,14 +48,16 @@ const category = data.categories[0];
   description={data.description}
   ogType="article"
   pathname={`/posts/${post.id}/`}
-  mainClass="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-10"
+  mainClass="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10"
 >
   {
     data.skin === 'imas-album' && <ImasAlbum />
   }
+  <CodeFold />
+  <CodeCopy />
 
-  <div class="relative">
-    <article class="min-w-0">
+  <div class="flex w-full justify-center gap-10">
+    <article class="min-w-0 max-w-4xl flex-1">
       <!-- 文章面板：Apple 式大标题 + 舒适栏宽 -->
       <div class="rounded-3xl border border-line bg-surface p-6 shadow-card sm:p-10 lg:p-12">
         <header class="mb-9">
@@ -61,7 +65,7 @@ const category = data.categories[0];
             category && (
               <a
                 href={`/categories/${categorySlug(category)}/`}
-                class="inline-flex items-center rounded-full px-3.5 py-1 text-xs text-white transition-opacity hover:opacity-85"
+                class="inline-flex items-center rounded-full px-3.5 py-1 text-xs text-on-wash transition-opacity hover:opacity-85"
                 style={`background:${categoryColor(category)}`}
               >
                 {category}
@@ -119,7 +123,7 @@ const category = data.categories[0];
           older ? (
             <a
               href={`/posts/${older.id}/`}
-              class="group rounded-3xl border border-line bg-surface p-4 transition-all hover:-translate-y-0.5 hover:shadow-card"
+              class="group rounded-3xl border border-line bg-surface p-4 transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card"
             >
               <span class="flex items-center gap-1 text-xs text-sub">
                 <Icon name="material-symbols:keyboard-arrow-left" class="size-4" />
@@ -137,7 +141,7 @@ const category = data.categories[0];
           newer && (
             <a
               href={`/posts/${newer.id}/`}
-              class="group rounded-3xl border border-line bg-surface p-4 text-right transition-all hover:-translate-y-0.5 hover:shadow-card"
+              class="group rounded-3xl border border-line bg-surface p-4 text-right transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card"
             >
               <span class="flex items-center justify-end gap-1 text-xs text-sub">
                 下一篇
@@ -154,11 +158,11 @@ const category = data.categories[0];
       <Giscus />
     </article>
 
-    <!-- TOC 悬浮在文章容器外侧（≥1536px 视口），不挤占正文宽度 -->
-    <div class="hidden 2xl:block absolute top-0 bottom-0 left-full ml-10 w-56">
-      <div class="sticky top-24">
+    <!-- TOC：≥xl 双栏；吸顶但容器自身可滚轮浏览长目录，随文章容器结束而结束 -->
+    <aside class="hidden w-56 shrink-0 xl:block">
+      <div class="toc-scroll sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto overscroll-contain">
         <Toc headings={headings} />
       </div>
-    </div>
+    </aside>
   </div>
 </BaseLayout>

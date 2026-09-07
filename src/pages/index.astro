@@ -1,19 +1,15 @@
 ---
 import { getCollection } from 'astro:content';
-import { readdirSync } from 'node:fs';
 import { Icon } from 'astro-icon/components';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PostCard from '../components/PostCard.astro';
+import { formatDate } from '../lib/utils';
 import { HERO, SITE, tagSlug } from '../site.config';
 
 const posts = (await getCollection('posts')).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
 );
 const recent = posts.slice(0, 6);
-
-// 专辑封面墙：取 public/images/imas/covers 前 6 张（排序稳定，构建期确定）
-const coverFiles = readdirSync('./public/images/imas/covers').filter((f) => f.endsWith('.webp'));
-const wallCovers = coverFiles.sort().slice(0, 6);
 
 // 最近一条说说（截断展示，完整内容在 /shuoshuo/）
 const latestSay = (await getCollection('shuoshuo')).sort(
@@ -30,10 +26,10 @@ const oldest = posts[posts.length - 1]?.data.date;
 const days = oldest ? Math.max(1, Math.ceil((Date.now() - oldest.valueOf()) / 86400000)) : 1;
 
 const shuoshuoCount = (await getCollection('shuoshuo')).length;
-const sayText = latestSay
-  ? latestSay.data.content.replace(/\s+/g, ' ').slice(0, 88) + (latestSay.data.content.length > 88 ? '…' : '')
-  : '';
-const sayTime = latestSay ? latestSay.data.published_at.toLocaleDateString('zh-CN') : '';
+// 先压缩空白再统一截断与判断（原文换行多时长度会虚高，导致误加省略号）
+const sayPlain = latestSay ? latestSay.data.content.replace(/\s+/g, ' ') : '';
+const sayText = sayPlain.slice(0, 88) + (sayPlain.length > 88 ? '…' : '');
+const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
 ---
 
 <BaseLayout title={`${SITE.title} · ${SITE.subtitle}`} description={SITE.description} pathname="/" mainClass="w-full">
@@ -44,18 +40,16 @@ const sayTime = latestSay ? latestSay.data.published_at.toLocaleDateString('zh-C
     <div class="wash absolute h-64 w-80 left-[30%] -bottom-24 bg-wash-sand" aria-hidden="true"></div>
     <div class="wash absolute h-52 w-60 right-[22%] -bottom-16 bg-wash-sage" aria-hidden="true"></div>
 
-    <div class="blob-wrap relative mx-auto mb-7 size-36 sm:size-40">
-      <img src={HERO.avatar} alt={`${SITE.author} 的头像`} class="relative size-full object-cover shadow-card-hover" />
+    <div class="blob-wrap blob relative mx-auto mb-7 size-36 sm:size-40">
+      <img
+        src={HERO.avatar}
+        alt={`${SITE.author} 的头像`}
+        fetchpriority="high"
+        class="blob relative size-full object-cover shadow-card-hover"
+      />
     </div>
-    <h1 class="text-4xl text-ink tracking-[0.22em] [text-indent:0.22em] sm:text-5xl">{SITE.subtitle}</h1>
+    <h1 class="font-hero text-4xl text-ink tracking-[0.22em] [text-indent:0.22em] sm:text-5xl">{SITE.subtitle}</h1>
     <p class="mt-4 text-sm tracking-[0.3em] text-sub [text-indent:0.3em]">{SITE.description}</p>
-
-    <div class="mt-8 flex flex-wrap justify-center gap-3">
-      <span class="chip">📄 <b>{posts.length}</b> 篇文章</span>
-      <span class="chip">🎵 <b>{coverFiles.length}</b> 张封面</span>
-      <span class="chip">💬 <b>{shuoshuoCount}</b> 条说说</span>
-      <span class="chip">📅 <b>{days}</b> 天 · since 2025</span>
-    </div>
   </section>
 
   <div class="mx-auto w-full max-w-5xl px-4 pb-16 sm:px-6">
@@ -67,25 +61,14 @@ const sayTime = latestSay ? latestSay.data.published_at.toLocaleDateString('zh-C
     <div class="bento">
       <div class="cell stat"><div class="v">{posts.length}<small> 篇</small></div><div class="k">文章</div></div>
       <div class="cell stat"><div class="v">{shuoshuoCount}<small> 条</small></div><div class="k">说说</div></div>
-      <div class="cell stat"><div class="v">{coverFiles.length}<small> 张</small></div><div class="k">专辑封面</div></div>
       <div class="cell stat"><div class="v">{days}<small> 天</small></div><div class="k">持续更新</div></div>
-
-      <div class="cell covers-cell">
-        <div class="label"><span class="ico bg-wash-clay">♫</span>封面墙 · {coverFiles.length}</div>
-        <div class="covers">
-          {
-            wallCovers.map((file) => (
-              <img src={`/images/imas/covers/${file}`} alt="专辑封面" loading="lazy" decoding="async" />
-            ))
-          }
-        </div>
-      </div>
+      <div class="cell stat"><div class="v">{tagCount.size}<small> 个</small></div><div class="k">标签</div></div>
 
       {
         latestSay && (
           <div class="cell say-cell">
             <div class="label">
-              <span class="ico bg-wash-sand">💬</span>最近的说说
+              <span class="ico bg-wash-sand" aria-hidden="true">💬</span>最近的说说
               <a href="/shuoshuo/" class="more">全部 →</a>
             </div>
             <div class="bubble">{sayText}</div>
@@ -94,8 +77,8 @@ const sayTime = latestSay ? latestSay.data.published_at.toLocaleDateString('zh-C
         )
       }
 
-      <div class="cell cloud-cell">
-        <div class="label"><span class="ico bg-wash-mist">◈</span>标签云</div>
+      <div class="cell cloud-cell lift">
+        <div class="label"><span class="ico bg-wash-mist" aria-hidden="true">◈</span>标签云</div>
         <div class="mt-3 flex flex-wrap content-start gap-2">
           {
             topTags.map(([name]) => (
@@ -107,8 +90,8 @@ const sayTime = latestSay ? latestSay.data.published_at.toLocaleDateString('zh-C
         </div>
       </div>
 
-      <div class="cell quick-cell">
-        <div class="label"><span class="ico bg-wash-pink">⚡</span>快捷入口</div>
+      <div class="cell quick-cell lift">
+        <div class="label"><span class="ico bg-wash-pink" aria-hidden="true">⚡</span>快捷入口</div>
         <div class="mt-3 grid flex-1 grid-cols-4 gap-2.5">
           <a href="/search/" class="quick"><Icon name="material-symbols:search" class="size-5" />搜索</a>
           <a href="/shuoshuo/" class="quick"><Icon name="material-symbols:chat" class="size-5" />说说</a>
@@ -128,12 +111,12 @@ const sayTime = latestSay ? latestSay.data.published_at.toLocaleDateString('zh-C
     </div>
     {
       posts.length > recent.length && (
-        <a
-          href="/archives/"
-          class="mt-7 inline-block text-sm text-wash-pink-deep transition-colors hover:text-accent-500"
-        >
-          查看全部 {posts.length} 篇 →
-        </a>
+          <a
+            href="/archives/"
+            class="mt-7 inline-block text-sm text-wash-pink-deep transition-colors hover:text-wash-rose-deep"
+          >
+            查看全部 {posts.length} 篇 →
+          </a>
       )
     }
   </div>
@@ -167,24 +150,14 @@ const sayTime = latestSay ? latestSay.data.published_at.toLocaleDateString('zh-C
     opacity: 0.34;
   }
 
-  /* 有机 blob 头像：背景色块与图像同一形状、居中对齐 */
+  /* 有机 blob 头像：背景色块与图像同一形状（.blob 工具类）、居中对齐 */
   .blob-wrap::before {
     content: '';
     position: absolute;
     inset: -13px;
-    border-radius: 58% 42% 55% 45% / 52% 55% 45% 48%;
+    border-radius: inherit;
     background: linear-gradient(135deg, var(--wash-pink), var(--wash-mist));
     opacity: 0.45;
-  }
-  .blob-wrap img {
-    border-radius: 58% 42% 55% 45% / 52% 55% 45% 48%;
-  }
-
-  .chip {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-4.5 py-1.5 text-xs text-sub shadow-card;
-  }
-  .chip b {
-    @apply text-ink;
   }
 
   .sec-head {
@@ -202,22 +175,24 @@ const sayTime = latestSay ? latestSay.data.published_at.toLocaleDateString('zh-C
     display: grid;
     gap: 14px;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    grid-template-rows: 150px 150px auto auto auto;
+    grid-template-rows: auto auto auto;
     grid-template-areas:
-      's1 s2 covers covers'
-      's3 s4 covers covers'
+      's1 s2 s3 s4'
       'say say say say'
       'cloud cloud quick quick';
   }
+  /* 抬升只给可交互的格子（标签云/快捷入口），非交互格子保持安静 —— 可供性要诚实 */
   .bento > .cell {
-    @apply rounded-3xl border border-line bg-surface p-5 shadow-card transition-all hover:-translate-y-0.5 hover:shadow-card-hover;
+    @apply rounded-3xl border border-line bg-surface p-5 shadow-card;
     min-height: 0;
+  }
+  .bento > .cell.lift {
+    @apply transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card-hover;
   }
   .cell:nth-of-type(1) { grid-area: s1; }
   .cell:nth-of-type(2) { grid-area: s2; }
   .cell:nth-of-type(3) { grid-area: s3; }
   .cell:nth-of-type(4) { grid-area: s4; }
-  .covers-cell { grid-area: covers; }
   .cloud-cell { grid-area: cloud; }
   .quick-cell { grid-area: quick; }
 
@@ -238,16 +213,10 @@ const sayTime = latestSay ? latestSay.data.published_at.toLocaleDateString('zh-C
     @apply flex items-center gap-2 text-[11px] tracking-[0.25em] text-sub;
   }
   .label .ico {
-    @apply grid size-5.5 shrink-0 place-items-center rounded-lg text-[11px] text-white;
+    @apply grid size-5.5 shrink-0 place-items-center rounded-lg text-[11px] text-on-wash;
   }
   .label .more {
     @apply ml-auto text-xs text-wash-pink-deep tracking-normal;
-  }
-  .covers {
-    @apply mt-3 grid flex-1 grid-cols-3 grid-rows-2 gap-2.5;
-  }
-  .covers img {
-    @apply size-full rounded-2xl object-cover;
   }
   .say-cell { grid-area: say; }
   .say-cell .bubble {
@@ -268,9 +237,6 @@ const sayTime = latestSay ? latestSay.data.published_at.toLocaleDateString('zh-C
     }
     .bento > .cell {
       grid-area: auto;
-    }
-    .covers {
-      max-width: 26rem;
     }
   }
 </style>
