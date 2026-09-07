@@ -28,7 +28,7 @@ export const NAV = [
 ];
 
 export const SIDEBAR = {
-  description: '这里是芹菜P，偶像大师新人制作人，\n涉猎广而不精的业余爱好者。\n写博客记录生活和学习的点滴。',
+  description: '这里是芹菜P，偶像大师新人制作人，涉猎广而不精的业余爱好者。写博客记录生活和学习的点滴。',
   social: [
     { name: 'GitHub', icon: 'simple-icons:github', href: 'https://github.com/Serina765P' },
     {
