@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { formatDate } from '../../lib/utils';
+import { formatDate, yearInShanghai } from '../../lib/utils';
 import { SITE } from '../../site.config';
 
 const posts = (await getCollection('posts')).sort(
@@ -10,7 +10,7 @@ const posts = (await getCollection('posts')).sort(
 
 const byYear = new Map<number, typeof posts>();
 for (const post of posts) {
-  const year = post.data.date.getFullYear();
+  const year = yearInShanghai(post.data.date);
   const list = byYear.get(year) ?? [];
   list.push(post);
   byYear.set(year, list);

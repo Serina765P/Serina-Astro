@@ -1,7 +1,8 @@
 ---
 import { SIDEBAR, SITE } from '../site.config';
+import { yearInShanghai } from '../lib/utils';
 
-const year = new Date().getFullYear();
+const year = yearInShanghai(new Date());
 const range = year > SITE.since ? `${SITE.since} - ${year}` : String(SITE.since);
 const washes = ['var(--wash-pink)', 'var(--wash-mist)', 'var(--wash-sage)', 'var(--wash-sand)'];
 ---
