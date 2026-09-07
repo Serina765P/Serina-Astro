@@ -1,0 +1,31 @@
+{
+  "categorySlugs": {
+    "公告": "notice",
+    "资源分享": "resources",
+    "技术分享": "tech",
+    "学习笔记": "notes"
+  },
+  "tagSlugs": {
+    "站务": "site",
+    "偶像大师": "idolmaster",
+    "学园偶像大师": "gakumas",
+    "765AS": "765as",
+    "Hi-Res": "hi-res",
+    "CD": "cd",
+    "音乐资源": "music",
+    "音频处理": "audio",
+    "FFmpeg": "ffmpeg",
+    "Windows": "windows",
+    "输入法": "input-method",
+    "Rime": "rime",
+    "数据结构": "data-structure",
+    "课堂笔记": "lecture-notes",
+    "题库": "question-bank"
+  },
+  "categoryColors": {
+    "资源分享": "var(--wash-clay)",
+    "技术分享": "var(--wash-mist)",
+    "学习笔记": "var(--wash-sage)",
+    "公告": "var(--wash-sand)"
+  }
+}

@@ -1,5 +1,10 @@
 // 站点配置：菜单、侧栏、页脚、评论、分类/标签 slug 映射等集中于此。
 // 结构沿用旧主题配置文件（MD3 风格 Hexo 主题 _config.yml），图标名为 Material Symbols。
+// 标签/分类映射与侧栏文案抽到了 src/data/*.json（本地工作台 Astro-WebUI 直接读写 JSON，
+// 不碰 TS），这里按原导出名 re-export，消费方无感。
+
+import taxonomy from './data/taxonomy.json';
+import siteInfo from './data/site-info.json';
 
 export const SITE = {
   title: "SerinaP's Blog",
@@ -27,21 +32,6 @@ export const NAV = [
   { label: '关于', icon: 'person', href: '/about/' },
 ];
 
-export const SIDEBAR = {
-  description: '这里是芹菜P，偶像大师新人制作人，涉猎广而不精的业余爱好者。写博客记录生活和学习的点滴。',
-  social: [
-    { name: 'GitHub', icon: 'simple-icons:github', href: 'https://github.com/Serina765P' },
-    {
-      name: 'QQ',
-      icon: 'simple-icons:tencentqq',
-      href: 'http://wpa.qq.com/msgrd?v=3&uin=2241439211&site=qq&menu=yes',
-    },
-    { name: 'X', icon: 'simple-icons:x', href: 'https://x.com/Serina765P' },
-    { name: '邮箱', icon: 'material-symbols:mail', href: 'mailto:serinap@qq.com' },
-  ],
-  friendLinks: [{ name: '偶像大师中文维基', href: 'https://wikimas.org' }],
-};
-
 export const GISCUS = {
   enable: true,
   repo: 'Serina765P/Serina-Astro',
@@ -55,31 +45,16 @@ export const GISCUS = {
   lang: 'zh-CN',
 };
 
-// 中文分类/标签 → URL slug（沿用旧站 _config.yml 的映射，保证 URL 不变）
-export const CATEGORY_SLUGS: Record<string, string> = {
-  公告: 'notice',
-  资源分享: 'resources',
-  技术分享: 'tech',
-  学习笔记: 'notes',
+export const SIDEBAR = {
+  description: siteInfo.description,
+  social: siteInfo.social,
+  friendLinks: siteInfo.friendLinks,
 };
 
-export const TAG_SLUGS: Record<string, string> = {
-  站务: 'site',
-  偶像大师: 'idolmaster',
-  学园偶像大师: 'gakumas',
-  '765AS': '765as',
-  'Hi-Res': 'hi-res',
-  CD: 'cd',
-  音乐资源: 'music',
-  音频处理: 'audio',
-  FFmpeg: 'ffmpeg',
-  Windows: 'windows',
-  输入法: 'input-method',
-  Rime: 'rime',
-  数据结构: 'data-structure',
-  课堂笔记: 'lecture-notes',
-  题库: 'question-bank',
-};
+// 中文分类/标签 → URL slug（沿用旧站 _config.yml 的映射，保证 URL 不变）
+export const CATEGORY_SLUGS: Record<string, string> = taxonomy.categorySlugs;
+
+export const TAG_SLUGS: Record<string, string> = taxonomy.tagSlugs;
 
 export function categorySlug(name: string): string {
   return CATEGORY_SLUGS[name] ?? name;
@@ -87,12 +62,7 @@ export function categorySlug(name: string): string {
 
 // 分类 → 莫兰迪 wash 色（文章卡色条、分类胶囊、封面占位块共用）
 // 取值为 global.css 中的 CSS 变量，亮/暗自动跟随
-export const CATEGORY_COLORS: Record<string, string> = {
-  资源分享: 'var(--wash-clay)',
-  技术分享: 'var(--wash-mist)',
-  学习笔记: 'var(--wash-sage)',
-  公告: 'var(--wash-sand)',
-};
+export const CATEGORY_COLORS: Record<string, string> = taxonomy.categoryColors;
 
 export function categoryColor(name: string): string {
   return CATEGORY_COLORS[name] ?? 'var(--wash-pink)';
