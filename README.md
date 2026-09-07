@@ -67,7 +67,7 @@ Cloudflare Pages 连接本仓库自动构建：
 - 环境变量：`NODE_VERSION = 22`
 - 自定义域 `blog.serinap.top` 在 Pages 项目的 Custom domains 里绑定
 
-旧站（Hexo 静态产物）仓库已归档为 archive，评论（giscus）仍挂在旧仓库的 Discussions 上，仓库改名后 GitHub 会自动重定向，评论数据不丢。
+旧站（Hexo 静态产物）仓库已归档为 archive，不再维护；评论（giscus）已切换到本仓库的 Discussions（General 分类）。首次部署后若评论区加载失败，需在 https://github.com/apps/giscus 给本仓库安装一次 giscus App。
 
 ## 字体
 

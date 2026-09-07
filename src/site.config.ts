@@ -44,10 +44,10 @@ export const SIDEBAR = {
 
 export const GISCUS = {
   enable: true,
-  repo: 'Serina765P/SerinaP-Blog',
-  repoId: 'R_kgDOQi6hvw',
-  category: 'Announcements',
-  categoryId: 'DICkwDOQi6hv84CzbAr',
+  repo: 'Serina765P/Serina-Astro',
+  repoId: 'R_kgDOUQxXBQ',
+  category: 'General',
+  categoryId: 'DIC_kwDOUQxXBc4DFC6S',
   mapping: 'pathname',
   strict: '0',
   reactionsEnabled: '1',
