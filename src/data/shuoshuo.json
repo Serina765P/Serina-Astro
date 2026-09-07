@@ -1,9 +1,19 @@
 {
   "host_mid": "1726354044",
-  "source": "https://api.bilibili.com/x/polymer/web-dynamic/v1/opus/feed/space",
-  "fetched_at": "2026-07-16T03:30:39.304Z",
-  "count": 44,
+  "source": "mail-to-github",
+  "fetched_at": "2026-09-07T06:27:35.478Z",
+  "count": 45,
   "items": [
+    {
+      "id": "tencent_D4E13FF812216ACEA3654DA9360AFF88C10A@qq.com",
+      "title": "这是一个测试说说",
+      "type": "MAIL",
+      "content": "测试一下",
+      "images": [],
+      "link": "",
+      "like": 0,
+      "published_at": "2026-09-07T06:27:32.000Z"
+    },
     {
       "id": "1225076186411958297",
       "title": "全部流媒体了",
