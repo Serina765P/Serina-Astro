@@ -1,5 +1,5 @@
 {
-  "name": "astro-blog",
+  "name": "serina-astro",
   "version": "1.0.0",
   "type": "module",
   "private": true,
@@ -8,7 +8,7 @@
     "build": "astro build && pagefind --site dist",
     "preview": "astro preview",
     "check": "astro check",
-    "fetch:shuoshuo": "node scripts/fetch-bilibili-shuoshuo.mjs"
+    "contrast": "node scripts/contrast-audit.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.0.0",

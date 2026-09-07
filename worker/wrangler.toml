@@ -1,0 +1,14 @@
+name = "shuoshuo-mailer"
+main = "src/index.js"
+compatibility_date = "2026-08-01"
+
+[vars]
+# 目标仓库与数据文件路径（公开信息，可明文）
+GITHUB_REPO = "Serina765P/Serina-Astro"
+GITHUB_BRANCH = "main"
+FILE_PATH = "src/data/shuoshuo.json"
+
+# 以下三项为 secret，用 `wrangler secret put <NAME>` 配置，切勿写进本文件：
+#   GITHUB_TOKEN     —— fine-grained PAT，仅授予本仓库 Contents: Read and write
+#   ALLOWED_SENDERS  —— 逗号分隔的发件人白名单，如 "me@qq.com,me@example.com"
+#   SUBJECT_TOKEN    —— 主题口令（可选，不配置则只靠白名单）

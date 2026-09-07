@@ -28,18 +28,23 @@ const shuoshuo = defineCollection({
   }),
   schema: z.object({
     id: z.string(),
-    title: z.string(),
-    type: z.string(),
+    /** 邮件来源的条目可以没有标题 */
+    title: z.string().default(''),
+    /** OPUS = B 站动态（历史数据），MAIL = 邮件发布 */
+    type: z.string().default('OPUS'),
     content: z.string(),
-    images: z.array(
-      z.object({
-        url: z.string(),
-        width: z.number(),
-        height: z.number(),
-      }),
-    ),
-    link: z.string(),
-    like: z.number(),
+    images: z
+      .array(
+        z.object({
+          url: z.string(),
+          width: z.number(),
+          height: z.number(),
+        }),
+      )
+      .default([]),
+    /** 空字符串 = 无外链（邮件条目），说说页不渲染「原动态」 */
+    link: z.string().default(''),
+    like: z.number().default(0),
     published_at: z.coerce.date(),
   }),
 });

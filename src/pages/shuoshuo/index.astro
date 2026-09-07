@@ -28,7 +28,7 @@ const formatDateTime = (date: Date) =>
 <BaseLayout title={`说说 · ${SITE.title}`} description="B 站动态时间线" pathname="/shuoshuo/">
   <header class="mx-auto max-w-2xl">
     <h1 class="text-3xl tracking-[0.15em] text-ink">说说</h1>
-    <p class="mt-2 text-sm text-sub">来自 B 站的动态，共 {items.length} 条</p>
+    <p class="mt-2 text-sm text-sub">共 {items.length} 条说说，随时给自己发封邮件就能更新</p>
   </header>
 
   <ol class="mx-auto mt-8 max-w-2xl space-y-6 border-l-2 border-line pl-5">
@@ -77,15 +77,19 @@ const formatDateTime = (date: Date) =>
                   {item.data.like}
                 </span>
               )}
-              <a
-                href={item.data.link}
-                target="_blank"
-                rel="noopener"
-                class="inline-flex items-center gap-1 transition-colors hover:text-wash-pink-deep"
-              >
-                <Icon name="simple-icons:bilibili" class="size-3.5" />
-                原动态
-              </a>
+              {
+                item.data.link && (
+                  <a
+                    href={item.data.link}
+                    target="_blank"
+                    rel="noopener"
+                    class="inline-flex items-center gap-1 transition-colors hover:text-wash-pink-deep"
+                  >
+                    <Icon name="simple-icons:bilibili" class="size-3.5" />
+                    原动态
+                  </a>
+                )
+              }
             </footer>
           </article>
         </li>

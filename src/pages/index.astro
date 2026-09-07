@@ -72,7 +72,7 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
               <a href="/shuoshuo/" class="more">全部 →</a>
             </div>
             <div class="bubble">{sayText}</div>
-            <div class="time">{sayTime} · 来自哔哩哔哩</div>
+            <div class="time">{sayTime} · {latestSay.data.type === 'MAIL' ? '来自邮件' : '来自哔哩哔哩'}</div>
           </div>
         )
       }
