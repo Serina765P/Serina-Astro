@@ -183,6 +183,9 @@ const TOKENS = {
   chipBgHover: '--chip-bg-hover',
   chipFgHover: '--chip-fg-hover',
   catOn: '--cat-on',
+  onAccent: '--on-accent',
+  accent300: '--color-accent-300',
+  accent700: '--color-accent-700',
   catFillPink: '--cat-fill-pink',
   catFillMist: '--cat-fill-mist',
   catFillSage: '--cat-fill-sage',
@@ -252,6 +255,13 @@ for (const [mode, T] of Object.entries(tables)) {
   // hover chip 配对（亮色 = accent-100/700；暗色 = wash 揉进 surface / ink）——
   // 取代旧的静态 accent-100/accent-700 直配（S4 后已无消费点）
   check(mode, 'chip-fg-hover / chip-bg-hover（hover chip）', T.chipFgHover, T.chipBgHover, 4.5);
+  // 404 回首页按钮（S16）：文字走 --on-accent，实底随模式换档
+  // 亮 = 白字压玫瑰深底；暗 = 深字压玫瑰浅底。故配对随模式切换。
+  if (mode === 'light') {
+    check(mode, 'on-accent / accent-700（404 按钮）', T.onAccent, T.accent700, 4.5);
+  } else {
+    check(mode, 'on-accent / accent-300（404 按钮）', T.onAccent, T.accent300, 4.5);
+  }
   // 分类胶囊：cat-on 压每种 wash 底（亮色 = wash 原色；暗色 = wash 揉进 surface）
   for (const w of ['catFillPink', 'catFillMist', 'catFillSage', 'catFillSand', 'catFillClay', 'catFillRose']) {
     check(mode, `cat-on / ${w}（分类胶囊）`, T.catOn, T[w], 4.5);
