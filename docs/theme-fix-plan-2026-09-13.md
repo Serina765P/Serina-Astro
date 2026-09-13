@@ -809,4 +809,75 @@ S17 验收当天连续 6 次构建全部丢 CSS（此前记录的失败率约 1/
 
 ---
 
+## 十四、S18 实施记录（P1-10 typography 改走 `--tw-prose-*`）
+
+### 先说一个重要发现：此前的手写 prose 颜色规则全是死规则
+
+`@tailwindcss/typography` 的规则产出在 **utilities 层**，而 `global.css` 里 `.prose` 相关手写
+规则在 components 层 —— **层序压过特异性**，所以 `color: var(--body)`、标题 `--ink`、行内 code
+`--wash-clay-deep`、引用 `font-style: normal` 这些声明从未生效过。实测（playwright 读计算样式）
+改动前的正文渲染值：正文 `#374151`（typography 默认 gray-600）、标题 `#111827`、行内 code
+`#111827` 且字重 600、**引用是斜体**（typography 的 `font-style: italic` 压掉了我们的 normal）。
+本步因此不是纯重构，而是把设计意图真正落到渲染（计划口径里的「预期差异」由此而来）。
+
+### 做法
+
+- **颜色全量变量化**：`@layer utilities` 里新增 `.prose.prose` 块，显式声明全部 17 个
+  `--tw-prose-*` 变量，值全部引用主题 token。亮暗翻转跟随 `:root.dark` 换值；
+  双类 (0,2,0) 用于压过插件写在同层的 `.prose` 默认调色板 (0,1,0)。
+  对应地，`Prose.astro` 移除 `prose-neutral dark:prose-invert`（灰阶调色板与反色重映射
+  `.dark\:prose-invert` (0,2,0) 同特异性，不删会靠源序翻回来）与 `prose-a:text-wash-pink-deep`
+  （链接色走 `--tw-prose-links`）；保留 `prose-a:decoration-wash-pink`（下划线浅粉 ≠ 链接深色，
+  有意区分）、`underline-offset-4`、`hover:text-wash-rose-deep` 与 `prose-img:*`。
+- **字重 `!` 归零**：h1 700 / h2–h6 600 / strong,b,th,dt 600 / 行内 code 400 搬进同层，
+  靠 (0,1,1) > (0,1,0) 的特异性取胜，不再用 `!important`。
+- **引用修正**：`font-style: normal` 与「去装饰引号」（`blockquote p:first/last::before/after
+  content:none`）同样搬进 utilities 层 —— 此前 `content: none` 也是死规则，引用两端一直渲染着
+  typography 的弯引号。
+- **删除整块冗余**：`.prose pre code` 的 5 个 `!`（bg/border/padding/字号/颜色）—— 产物里
+  typography 自带等价的 pre code 重置（color/font-size inherit、background `#0000`、border 0、
+  `::before/::after content: none`），该块连同 `::before/::after` 一并删除。
+  `.prose hr` / `.prose tbody tr` 两规则删除（改由 `--tw-prose-hr` / `--tw-prose-td-borders`）；
+  `.prose thead th` 只留 background（typography 不管表头底色），color 交还 `--tw-prose-headings`。
+- **保留的 `!`**：`.astro-code` 的 `background-color: var(--code-bg) !important`（压 shiki 的
+  内联 style，与 typography 无关）与 reduced-motion 四处（计划明确保留）。
+  全文件 `!important` 计数 6 处（4 条规则），无一属于 `.prose`。
+
+### 一个实现期的坑（留档）
+
+Tailwind 的源扫描**连注释也扫**：第一版注释里写了 `prose-neutral` / `dark:prose-invert` 字面量，
+产物里这两个类又被生成回来。注释措辞改为「灰阶调色板与反色修饰类」后消失 —— 以后写注释
+描述「已删除的类」时不要写出类名字面量。
+
+### 验收
+
+| 闸门 | 结果 |
+|---|---|
+| `astro check` / `contrast-audit` | 0 error；66 项全过 |
+| 产物 CSS | `.prose.prose{--tw-prose-body:var(--body)…}` 17 变量就位；`.prose h1{font-weight:700}`（无 `!`）；`.dark\:prose-invert` 重映射与 `.prose-neutral` 归零；BaseLayout.css 62.1 → 60.6 kB |
+| 计算样式实测（light/dark） | 正文 `#5c564d`/`#cdc5b8` = `--body`；标题 `#45403a`/`#eae4d9` = `--ink`（600）；行内 code `#7f574e`/`#c8aba1` = clay-deep（400）；引用非斜体、边线 `#7f8a9b` = mist-deep；链接 `#835a58` = pink-deep；表头底 `--surface-2`；pre 底 `--code-bg` |
+| 截图（1440px） | 稳定图新增差异 3 张：`about.light/dark`、`links.dark` —— 全部是有 Prose 正文的页，像素带为文字形状（多行段落重着色），无布局位移；`home/category-tech/tag-idolmaster.dark` 3 张为 S5 既有差异。post 两张在已知抖动名单内（人工走查：暗色文章页表格/折叠/代码块/TOC 结构完好） |
+
+### 预期视觉差异清单（逐处理由）
+
+| 元素 | 改前（typography 默认灰） | 改后（token） | 理由 |
+|---|---|---|---|
+| 正文 | `#374151` 冷灰 / 暗 `#d1d5db` | `--body` 暖灰 | 恢复设计意图（原死规则） |
+| 标题 | `#111827` / `#fff` | `--ink` | 同上 |
+| 行内 code 色/字重 | `#111827` 600 / `#fff` 600 | clay-deep 400 | 原 chip 设计为常规字重暖沙色 |
+| 引用 | 斜体 + 两端弯引号 | 正体、无引号 | 原死规则；中文斜体本就不该用 |
+| 加粗 | `#111827` / `#fff` | `--ink` | 强调与标题同色阶（新决策，值随 token 暖化） |
+| hr / 表格边线 | gray-200 系 | `--line` | 与全站边线 token 统一 |
+| 列表计数/圆点/figcaption | gray-500/400 系 | `--sub` / `--line` | 同语义 token 化 |
+| kbd 文字色 | gray-900 系 | `--ink` | 同上 |
+| 链接 | pink-deep（prose-a 修饰） | 不变（改由 `--tw-prose-links` 驱动） | 仅换驱动方式 |
+
+### 遗留
+
+- `--tw-prose-kbd-shadows` 未显式声明（kbd 阴影为固定半透明深色，亮暗观感均可，暂留默认）。
+- prose 相关截图基线自此需要「心里换基线」：后续步骤对比时应把 about/links/post 的文字色差异
+  视为 S18 的新常态（本记录即为依据）。
+
+---
+
 *本计划基于 2026-09-13 工作区快照与源码逐处核对；行号以该快照为准。*

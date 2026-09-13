@@ -8,10 +8,13 @@ const { class: className = '' } = Astro.props;
 
 <div
   class:list={[
-    'prose prose-neutral dark:prose-invert max-w-none',
+    // S18：prose 颜色全部由 --tw-prose-* 变量驱动（global.css 的 @layer utilities 块），
+    // 亮暗跟随主题 token 换值，不再需要 typography 的灰阶调色板与反色修饰类。
     // 标题的锚点偏移统一由 global.css 的 [id] 派生（calc(--header-h + 1.5rem)），
-    // 这里不要再写 prose-headings:scroll-mt-*，否则会以更高层叠序覆盖成第二套取值（S15）
-    'prose-a:text-wash-pink-deep prose-a:decoration-wash-pink prose-a:underline-offset-4 prose-a:hover:text-wash-rose-deep',
+    // 这里不要再写 prose-headings:scroll-mt-*，否则会以更高层叠序覆盖成第二套取值（S15）。
+    // 这里只保留 typography 变量表达不了的修饰：下划线偏移、下划线色（浅粉，非链接深色）、hover。
+    'prose max-w-none',
+    'prose-a:decoration-wash-pink prose-a:underline-offset-4 prose-a:hover:text-wash-rose-deep',
     'prose-img:rounded-2xl prose-img:shadow-card',
     className,
   ]}

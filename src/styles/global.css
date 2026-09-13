@@ -434,69 +434,30 @@
     content: '↑ ';
   }
 
-  /* 代码块内的 code 不吃行内 code 的 chip 样式
-     （typography 的 prose-code:* 规则特异性更高，需用 important 压制） */
-  .prose pre code {
-    @apply bg-transparent! border-0! px-0! py-0! text-[1em]! text-inherit!;
-  }
-  .prose pre code::before,
-  .prose pre code::after {
-    content: none;
-  }
-
-  /* 文章正文整体色（typography 的 prose-neutral 灰 → 暖调） */
-  .prose {
-    color: var(--body);
-  }
+  /* 文章正文（S18）：颜色全部由 typography 变量驱动（见下方 @layer utilities 的 .prose.prose 块）。
+     此前这里的 color 声明全在 components 层，而 @tailwindcss/typography 产出在 utilities 层 ——
+     层序压过特异性，颜色声明一直是死规则。现在只保留 typography 不管的属性。 */
   .prose :is(h1, h2, h3, h4, h5, h6) {
-    color: var(--ink);
     letter-spacing: 0.02em;
   }
-  /* 小标题 SemiBold(600)、文章内大标题 Bold(700)；
-     ! 必需 —— typography 自带字重阶（h2 700/h1 800）且特异性更高 */
-  .prose h1 {
-    font-weight: 700 !important;
-  }
-  .prose :is(h2, h3, h4, h5, h6) {
-    font-weight: 600 !important;
-  }
-  /* 正文加粗统一 SemiBold(600)：! 必需 —— typography 的
-     .prose :where(strong):not([class~=not-prose]…) 特异性 (0,2,0) 更高 */
-  .prose :is(strong, b, th, dt) {
-    font-weight: 600 !important;
-  }
-  /* 正文引用：雾蓝水彩 */
+  /* 正文引用：雾蓝水彩（background/radius/padding 是 typography 不管的部分；
+     font-style 与装饰引号的去除在 utilities 层靠特异性生效） */
   .prose blockquote {
-    border-left-color: var(--wash-mist-deep);
     background: color-mix(in srgb, var(--wash-mist) 18%, var(--surface));
     border-radius: 0 1rem 1rem 0;
     padding-block: 0.5rem;
     padding-right: 1.25rem;
-    color: var(--body);
-    font-style: normal;
   }
-  .prose blockquote p:first-of-type::before,
-  .prose blockquote p:last-of-type::after {
-    content: none;
-  }
-  /* 行内 code：暖沙 chip */
+  /* 行内 code：暖沙 chip（颜色/字重由 --tw-prose-code 与 utilities 层的规则驱动）。
+     pre 内的重置（去 chip、去装饰引号、继承字号颜色）typography 自带，无需再写 */
   .prose code {
     background: var(--surface-2);
     border: 1px solid var(--line);
     border-radius: 0.375rem;
     padding: 0.125rem 0.375rem;
-    font-weight: normal;
-    color: var(--wash-clay-deep);
-  }
-  .prose hr {
-    border-color: var(--line);
   }
   .prose thead th {
     background: var(--surface-2);
-    color: var(--ink);
-  }
-  .prose tbody tr {
-    border-color: var(--line);
   }
 
   /* 文章正文内的折叠面板（imas-hires / imas-cd 大量使用） */
@@ -614,5 +575,55 @@
   /* 成功态：代码块底色恒为暗色，用浅灰绿保证两套主题下都醒目 */
   .code-copy-btn.is-copied {
     color: var(--wash-sage);
+  }
+}
+
+/* ── S18：prose 的 typography 变量与字重阶 ──
+   @tailwindcss/typography 的规则产出在 utilities 层，components 层的手写颜色/字重压不过它
+   （此前它们全是死规则：正文一直渲染的是 typography 默认灰）。现在颜色改由 --tw-prose-* 变量
+   驱动，值全部引用主题 token —— 亮暗翻转跟随 :root.dark 换值，不再依赖 typography 的反色机制
+   （组件上原有的灰阶调色板类已随之移除）。`.prose.prose` 双类 (0,2,0) 压过插件写在同层的
+   `.prose` 默认调色板 (0,1,0)；字重/引用不正体同理靠特异性取胜，.prose 相关 !important 归零
+   （.astro-code 的 bg ! 保留 —— 那是压 shiki 内联样式的，与 typography 无关）。 */
+@layer utilities {
+  .prose.prose {
+    --tw-prose-body: var(--body);
+    --tw-prose-headings: var(--ink);
+    --tw-prose-lead: var(--sub);
+    --tw-prose-links: var(--wash-pink-deep);
+    --tw-prose-bold: var(--ink);
+    --tw-prose-counters: var(--sub);
+    --tw-prose-bullets: var(--line);
+    --tw-prose-hr: var(--line);
+    --tw-prose-quotes: var(--body);
+    --tw-prose-quote-borders: var(--wash-mist-deep);
+    --tw-prose-captions: var(--sub);
+    --tw-prose-kbd: var(--ink);
+    --tw-prose-code: var(--wash-clay-deep);
+    --tw-prose-pre-code: var(--code-ink);
+    --tw-prose-pre-bg: var(--code-bg);
+    --tw-prose-th-borders: var(--line);
+    --tw-prose-td-borders: var(--line);
+  }
+  /* 字重阶：大标题 700 / 小标题 600 / 强调 600 / 行内 code 400 / 引用不正体。
+     值与此前 !important 版本一致，只是换用特异性（(0,1,1) > typography 的 (0,1,0)） */
+  .prose h1 {
+    font-weight: 700;
+  }
+  .prose :is(h2, h3, h4, h5, h6) {
+    font-weight: 600;
+  }
+  .prose :is(strong, b, th, dt) {
+    font-weight: 600;
+  }
+  .prose code {
+    font-weight: 400;
+  }
+  .prose blockquote {
+    font-style: normal;
+  }
+  .prose blockquote p:first-of-type::before,
+  .prose blockquote p:last-of-type::after {
+    content: none;
   }
 }
