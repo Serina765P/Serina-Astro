@@ -58,6 +58,9 @@
   --paint-clay-deep: #7f574e;
   --paint-rose: #ce918a;
   --paint-rose-deep: #8f4a42;
+
+  /* 压在强调色实底上的文字（404 按钮）：亮色玫瑰深底配白字，暗色玫瑰浅底配深字 */
+  --on-accent: #ffffff;
 }
 
 :root.dark {
@@ -85,6 +88,8 @@
   --paint-clay-deep: #c8aba1;
   --paint-rose: #a97f79;
   --paint-rose-deep: #c49b94;
+
+  --on-accent: var(--paint-accent-950);
 }
 
 /* ── 语义层：莫兰迪色相（bg-wash-* / text-wash-* 等类名不变）──
@@ -105,15 +110,22 @@
   --wash-rose-deep: var(--paint-rose-deep);
 }
 
-/* ── 模式无关的层级与度量 token ──
+/* ── 模式无关的层级、度量与遮罩 token ──
    不随主题切换，故不放 :root.dark。层级目前只有三档，且各有唯一消费点：
    sticky-head → 归档页年份吸顶 / 代码复制按钮；nav → Header 吸顶；skip → 跳转正文。
-   灯箱走 <dialog> 顶层，不参与 z-index，故不设 overlay 档。 */
+   灯箱走 <dialog> 顶层，不参与 z-index，故不设 overlay 档。
+   遮罩（S16）：纯黑玻璃压在照片上，亮暗同值 —— 与主题无关，故也放这里。
+   --on-scrim 是遮罩上的文字色，同理恒为白。 */
 :root {
   --header-h: 4rem; /* 与 Header 的 h-16 对齐；锚点偏移由它派生 */
   --z-sticky-head: 10;
   --z-nav: 40;
   --z-skip: 50;
+
+  --scrim: rgb(0 0 0 / 0.5);          /* 灯箱关闭钮的常驻底 */
+  --scrim-strong: rgb(0 0 0 / 0.7);   /* 同上，悬停加深 */
+  --scrim-backdrop: rgb(0 0 0 / 0.8); /* <dialog> 背后的整屏遮罩 */
+  --on-scrim: #ffffff;
 }
 
 /* ── 交互 chip：亮暗各一套，替代静态 accent 阶 ──
@@ -205,6 +217,8 @@
   --radius-chip: 9999px;
   --radius-card: 1.5rem;
   --radius-panel: 2rem;
+  /* 素材圆角（S16）：专辑封面 / 无封面占位 —— 比卡片小一档，小图上比例更合适 */
+  --radius-media: 0.75rem;
 
   --font-mono:
     ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, 'Courier New', monospace;
@@ -233,6 +247,12 @@
   --color-cat-fill-sand: var(--cat-fill-sand);
   --color-cat-fill-clay: var(--cat-fill-clay);
   --color-cat-fill-rose: var(--cat-fill-rose);
+  /* 媒体遮罩与强调底上的文字（S16）：bg-scrim / text-on-scrim / text-on-accent */
+  --color-scrim: var(--scrim);
+  --color-scrim-strong: var(--scrim-strong);
+  --color-scrim-backdrop: var(--scrim-backdrop);
+  --color-on-scrim: var(--on-scrim);
+  --color-on-accent: var(--on-accent);
   --color-line: var(--line);
   --color-nav: var(--nav-bg);
   --color-code-bg: var(--code-bg);
@@ -515,12 +535,13 @@
     cursor: zoom-in;
   }
 
-  /* 图片预览对话框 */
+  /* 图片预览对话框：整屏遮罩走 --scrim-backdrop；预览图压在 80% 黑上，
+     阴影本来就看不出来，收敛到素材阴影 --shadow-media（S16） */
   .lightbox-dialog {
-    @apply m-auto max-w-[92vw] max-h-[92vh] bg-transparent p-0 backdrop:bg-black/80 backdrop:backdrop-blur-sm;
+    @apply m-auto max-w-[92vw] max-h-[92vh] bg-transparent p-0 backdrop:bg-scrim-backdrop backdrop:backdrop-blur-sm;
   }
   .lightbox-dialog img {
-    @apply max-h-[92vh] max-w-[92vw] rounded-2xl object-contain shadow-2xl;
+    @apply max-h-[92vh] max-w-[92vw] rounded-2xl object-contain shadow-media;
   }
 
   /* TOC 长目录：容器内滚轮浏览，细滚动条（PostLayout .toc-scroll） */

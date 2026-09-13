@@ -29,8 +29,8 @@
     height: auto;
     aspect-ratio: 1 / 1;
     object-fit: cover;
-    border-radius: 0.75rem;
-    box-shadow: 0 2px 10px rgb(120 105 90 / 0.18);
+    border-radius: var(--radius-media);
+    box-shadow: var(--shadow-media);
     background: var(--surface-2);
     cursor: zoom-in;
     filter: blur(12px);
@@ -48,7 +48,7 @@
 
   .album-grid .album-item img.album-loaded:hover {
     transform: scale(1.06);
-    box-shadow: 0 4px 12px rgb(0 0 0 / 0.2);
+    box-shadow: var(--shadow-media-hover);
   }
 
   .album-item span {
@@ -67,7 +67,7 @@
   .no-cover {
     aspect-ratio: 1 / 1;
     width: 100%;
-    border-radius: 0.75rem;
+    border-radius: var(--radius-media);
     background: linear-gradient(135deg, var(--wash-sand), var(--wash-clay));
     display: flex;
     align-items: center;

@@ -720,4 +720,47 @@ BaseLayout.css 63585 → 61432 B，四条死规则消失；`hover:bg-chip-hover`
 
 ---
 
+## 十二、S16 实施记录（P1-8 颜色 / 阴影逃逸 token 收敛）
+
+### 新增 token
+
+| token | 值 | 消费点 |
+|---|---|---|
+| `--on-accent` | 亮 `#ffffff` / 暗 `var(--paint-accent-950)` | 404 回首页按钮的文字（计划点名的两个新 token 之一） |
+| `--radius-media` | `0.75rem` | ImasAlbum 封面与无封面占位（计划点名的另一个） |
+| `--scrim` / `--scrim-strong` / `--scrim-backdrop` | 黑 50% / 70% / 80% | 灯箱关闭钮常驻底 / 悬停 / `<dialog>` 整屏遮罩 |
+| `--on-scrim` | `#ffffff`（静态） | 遮罩上的关闭钮文字 |
+
+计划只点名了前两个；后四个是收敛 `Lightbox.astro` 的 `bg-black/50`、`hover:bg-black/70`、
+`text-white` 与 `global.css` 的 `backdrop:bg-black/80` 所必需 —— 这些遮罩压在照片上、
+亮暗同值，不适合借用任何主题色，只能自成一族（命名沿用 shadow-media 的「媒体遮罩」语义）。
+
+### 收敛明细
+
+- **ImasAlbum**：`rgb(120 105 90 / .18)` → `var(--shadow-media)`、`rgb(0 0 0 / .2)` →
+  `var(--shadow-media-hover)`（S3 冻结时就是照这两个字面值抄的，故逐像素不变）；
+  两处 `border-radius: 0.75rem` → `var(--radius-media)`。
+  §六 担心的「`--shadow-media-hover` 进不了产物」已不复现 —— 被消费后正常产出。
+- **Lightbox 关闭钮**：`bg-black/50 text-white hover:bg-black/70` →
+  `bg-scrim text-on-scrim hover:bg-scrim-strong`。
+- **灯箱 `<dialog>`**：`backdrop:bg-black/80` → `backdrop:bg-scrim-backdrop`；
+  预览图 `shadow-2xl` → `shadow-media` —— 压在 80% 黑遮罩上两种阴影都看不出来，属无感变更。
+- **404 按钮**：`text-white` + `dark:text-accent-950` → `text-on-accent`（`--on-accent` 随模式换值），
+  `dark:` 前缀少写一个。
+
+### 验收
+
+| 闸门 | 结果 |
+|---|---|
+| `grep -rnE "rgb\(|shadow-2xl|text-white|bg-black/" src/` | **只剩 token 定义处**（global.css 的阴影/遮罩定义），`shadow-2xl` / `text-white` / `bg-black/` 归零 |
+| `contrast-audit` | **66 项全过** —— 新增 `on-accent / accent-700`（亮，5.88）与 `on-accent / accent-300`（暗，8.40），配对随模式切换 |
+| `astro check` / `astro build` | 0 error；`--radius-media` / `--scrim*` / `--on-accent` 全部进产物 |
+| 截图（1440px） | 与基线逐字节一致（除暗色分类胶囊 3 张既有差异）→ **零视觉变化** |
+
+审计口径说明：`on-accent` 的配对随模式切换（亮配 accent-700、暗配 accent-300），所以写成
+`if (mode === …)` 分支而非统一配对 —— 这是审计脚本第一次出现按模式分叉的检查项。
+遮罩上的 `--on-scrim` 无法核算（底下是任意的照片），不进审计，靠「黑底白字恒定对比」这一事实兜底。
+
+---
+
 *本计划基于 2026-09-13 工作区快照与源码逐处核对；行号以该快照为准。*
