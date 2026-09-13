@@ -34,9 +34,10 @@ import { SITE } from '../../site.config';
 
 <script is:inline>
   (function () {
-    // ClientRouter 换页会重跑本脚本；防重复绑定导致监听器累积（与 Giscus 同一模式）
-    if (window.__searchBound) return;
-    window.__searchBound = true;
+    // ClientRouter 换页会重跑本脚本；防重复绑定导致监听器累积（与 Giscus 同一模式）。
+    // 幂等标记挂 <html>（documentElement 不随换页替换）
+    if (document.documentElement.dataset.searchBound === 'true') return;
+    document.documentElement.dataset.searchBound = 'true';
 
     var pagefind = null;
 
@@ -133,8 +134,8 @@ import { SITE } from '../../site.config';
       }
       restore();
       // popstate 只绑一次；回调内实时查当前页的输入框，避免引用已脱离文档的旧元素
-      if (!window.__searchPopBound) {
-        window.__searchPopBound = true;
+      if (document.documentElement.dataset.searchPopBound !== 'true') {
+        document.documentElement.dataset.searchPopBound = 'true';
         window.addEventListener('popstate', function () {
           var current = document.getElementById('search-input');
           if (!current) return;

@@ -10,20 +10,32 @@
 </dialog>
 
 <script>
-  // 点击正文/皮肤内的图片放大预览；委托绑定，换页后依然生效
-  const dialog = document.querySelector<HTMLDialogElement>('#lightbox');
-  const previewImg = dialog?.querySelector('img');
+  // 点击正文/皮肤内的图片放大预览；委托绑定在 document 上，换页后依然生效。
+  //
+  // 关键点（S23）：模块脚本不会因 ClientRouter 换页而重跑，而换页会把 <dialog> 换成新节点 ——
+  // 元素引用必须在每次 astro:page-load 重新查询，否则关闭按钮会绑在已脱离文档的旧节点上、
+  // 换页后预览关不掉。这里用 isConnected 惰性失效 + page-load 预绑定两层保证。
+  let dialog: HTMLDialogElement | null = null;
+  let previewImg: HTMLImageElement | null = null;
 
-  const closeBtn = dialog?.querySelector('button');
-
-  function openLightbox(img: HTMLImageElement) {
-    if (!dialog || !previewImg) return;
-    previewImg.src = img.getAttribute('src') ?? '';
-    previewImg.alt = img.alt;
-    if (!dialog.open) dialog.showModal();
+  function refreshDialog() {
+    if (dialog?.isConnected) return dialog;
+    dialog = document.querySelector<HTMLDialogElement>('#lightbox');
+    previewImg = dialog?.querySelector('img') ?? null;
+    if (dialog && dialog.dataset.bound !== 'true') {
+      dialog.dataset.bound = 'true';
+      dialog.querySelector('button')?.addEventListener('click', () => dialog?.close());
+    }
+    return dialog;
   }
 
-  closeBtn?.addEventListener('click', () => dialog?.close());
+  function openLightbox(img: HTMLImageElement) {
+    const el = refreshDialog();
+    if (!el || !previewImg) return;
+    previewImg.src = img.getAttribute('src') ?? '';
+    previewImg.alt = img.alt;
+    if (!el.open) el.showModal();
+  }
 
   // 给正文/说说/专辑里的内容图补键盘入口（tabindex + button 语义）
   function enhanceImages() {
@@ -38,13 +50,17 @@
       });
   }
 
-  document.addEventListener('astro:page-load', enhanceImages);
+  document.addEventListener('astro:page-load', () => {
+    refreshDialog(); // 换页后立刻重绑关闭按钮，不等用户第一次点图
+    enhanceImages();
+  });
 
   document.addEventListener('click', (event) => {
-    if (!dialog || !previewImg) return;
+    const el = refreshDialog();
+    if (!el || !previewImg) return;
     // closedby="any" 仅 Chromium 134+ 支持：点 dialog 空白处关闭作为兜底
-    if (event.target === dialog) {
-      dialog.close();
+    if (event.target === el) {
+      el.close();
       return;
     }
     const target = event.target as HTMLElement | null;
@@ -59,7 +75,7 @@
   // 键盘可达：Enter/Space 触发放大
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Enter' && event.key !== ' ') return;
-    const target = event.target as HTMLElement | null;
+    const target = event.target;
     const img = target instanceof HTMLImageElement ? target : null;
     if (!img || img.getAttribute('role') !== 'button') return;
     if (!img.closest('.prose, .album-grid, .shuoshuo-images')) return;

@@ -5,8 +5,7 @@ import Prose from '../components/Prose.astro';
 import Toc from '../components/Toc.astro';
 import Giscus from '../components/Giscus.astro';
 import ImasAlbum from '../components/skins/ImasAlbum.astro';
-import CodeFold from '../components/CodeFold.astro';
-import CodeCopy from '../components/CodeCopy.astro';
+import CodeBlock from '../components/CodeBlock.astro';
 import Card from '../components/primitives/Card.astro';
 import TagChip from '../components/primitives/TagChip.astro';
 import Container from '../components/primitives/Container.astro';
@@ -56,8 +55,7 @@ const category = data.categories[0];
   {
     data.skin === 'imas-album' && <ImasAlbum />
   }
-  <CodeFold />
-  <CodeCopy />
+  <CodeBlock />
 
   <Container width="wide" class="flex justify-center gap-10">
     <article class="min-w-0 max-w-4xl flex-1">

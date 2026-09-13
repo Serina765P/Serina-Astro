@@ -25,8 +25,9 @@ import { GISCUS } from '../site.config';
   }}
 >
   (function () {
-    if (window.__giscusBound) return;
-    window.__giscusBound = true;
+    // 幂等标记挂 <html>（documentElement 不随换页替换）：本脚本换页后会被重跑
+    if (document.documentElement.dataset.giscusBound === 'true') return;
+    document.documentElement.dataset.giscusBound = 'true';
 
     function mountGiscus() {
       var container = document.getElementById('giscus-root');

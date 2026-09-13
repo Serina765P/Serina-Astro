@@ -108,19 +108,24 @@ const isActive = (href: string) => {
 
 <script>
   // 只做增强，绝不代管 summary 的点击（否则与 <details> 原生切换打架、一次点击切换两次）。
-  // 事件委托绑在 document 上：ClientRouter 换页后依然生效。
-  document.addEventListener('click', (event) => {
-    const target = event.target as HTMLElement | null;
-    for (const menu of document.querySelectorAll<HTMLDetailsElement>('details[data-mobile-menu]')) {
-      if (menu.open && !target?.closest('details[data-mobile-menu]')) menu.open = false;
-    }
-  });
+  // 事件委托绑在 document 上：ClientRouter 换页后依然生效。幂等标记挂在 <html> 上
+  // （documentElement 不随换页被替换），脚本被重复执行时不会累积监听器。
+  if (document.documentElement.dataset.menuBound !== 'true') {
+    document.documentElement.dataset.menuBound = 'true';
 
-  document.addEventListener('keydown', (event) => {
-    if (event.key !== 'Escape') return;
-    const menu = document.querySelector<HTMLDetailsElement>('details[data-mobile-menu][open]');
-    if (!menu) return;
-    menu.open = false;
-    menu.querySelector('summary')?.focus();
-  });
+    document.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement | null;
+      for (const menu of document.querySelectorAll<HTMLDetailsElement>('details[data-mobile-menu]')) {
+        if (menu.open && !target?.closest('details[data-mobile-menu]')) menu.open = false;
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      const menu = document.querySelector<HTMLDetailsElement>('details[data-mobile-menu][open]');
+      if (!menu) return;
+      menu.open = false;
+      menu.querySelector('summary')?.focus();
+    });
+  }
 </script>

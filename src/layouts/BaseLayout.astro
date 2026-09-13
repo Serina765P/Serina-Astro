@@ -45,6 +45,10 @@ const {
           if (themeColor) themeColor.setAttribute('content', dark ? '#262320' : '#edeae4');
         }
         applyTheme();
+        // 监听器只在首次执行时绑定：本脚本换页后会被 ClientRouter 重跑，
+        // 幂等标记挂 <html>（documentElement 不随换页替换）防止监听器累积
+        if (document.documentElement.dataset.themeBound === 'true') return;
+        document.documentElement.dataset.themeBound = 'true';
         // ClientRouter 换页会换掉 <html> 的 class，换页后必须重新应用主题
         document.addEventListener('astro:after-swap', applyTheme);
         // smooth 会让换页回顶变成动画，动画期间视口停在内容之外（页面下方出现大量空白）

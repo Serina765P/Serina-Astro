@@ -1,0 +1,99 @@
+---
+// 代码块增强（渐进增强）：一键复制 + 超高自动折叠。
+// 合并前是 CodeFold / CodeCopy 两个组件，最终 DOM 的嵌套顺序取决于 PostLayout 的
+// import 顺序（谁先注册 page-load 谁先包裹）—— 现在只有一条路径、一套幂等标记：
+//   .code-fold > .code-clip > .code-copy-wrap > pre + 复制按钮，折叠按钮挂在 .code-fold
+// （先包复制层再包折叠层，渐隐只盖代码区、不盖按钮）。脚本不运行时代码块保持原样。
+---
+
+<script>
+  const FOLD_THRESHOLD = 480; // px，超过则折叠（收起高度见 global.css .code-fold.is-collapsed）
+
+  const COPY_ICON = `<svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"></path><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"></path></svg>`;
+  const CHECK_ICON = `<svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L1.72 8.78a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"></path></svg>`;
+
+  async function copyText(text: string): Promise<boolean> {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // http 环境等 Clipboard API 不可用时回退 execCommand
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      let ok = false;
+      try {
+        ok = document.execCommand('copy');
+      } catch {
+        /* 忽略 */
+      }
+      ta.remove();
+      return ok;
+    }
+  }
+
+  function makeCopyButton(pre: HTMLPreElement) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'code-copy-btn';
+    btn.setAttribute('aria-label', '复制代码');
+    btn.innerHTML = `<span class="code-copy-icon">${COPY_ICON}</span><span class="code-copy-icon hidden">${CHECK_ICON}</span>`;
+    btn.addEventListener('click', async () => {
+      const code = pre.querySelector('code') ?? pre;
+      const ok = await copyText(code.innerText.replace(/\n$/, ''));
+      btn.classList.toggle('is-copied', ok);
+      btn.setAttribute('aria-label', ok ? '已复制' : '复制失败');
+      btn.querySelectorAll('.code-copy-icon').forEach((el) => el.classList.toggle('hidden'));
+      setTimeout(() => {
+        btn.classList.remove('is-copied');
+        btn.setAttribute('aria-label', '复制代码');
+        btn.querySelectorAll('.code-copy-icon').forEach((el) => el.classList.toggle('hidden'));
+      }, 2000);
+    });
+    return btn;
+  }
+
+  function makeFoldButton(fold: HTMLDivElement) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'code-fold-btn';
+    btn.setAttribute('aria-expanded', 'false');
+    btn.textContent = '展开代码';
+    btn.addEventListener('click', () => {
+      const collapsed = fold.classList.toggle('is-collapsed');
+      btn.setAttribute('aria-expanded', String(!collapsed));
+      btn.textContent = collapsed ? '展开代码' : '收起代码';
+    });
+    return btn;
+  }
+
+  function enhanceCodeBlocks() {
+    document.querySelectorAll<HTMLPreElement>('.prose .astro-code').forEach((pre) => {
+      if (pre.dataset.enhanced) return; // 幂等：同一代码块只包裹一次
+      pre.dataset.enhanced = 'true';
+
+      const copyWrap = document.createElement('div');
+      copyWrap.className = 'code-copy-wrap';
+      pre.before(copyWrap);
+      copyWrap.appendChild(pre);
+      copyWrap.appendChild(makeCopyButton(pre));
+
+      if (pre.scrollHeight <= FOLD_THRESHOLD) return;
+
+      const fold = document.createElement('div');
+      fold.className = 'code-fold is-collapsed';
+      copyWrap.before(fold);
+
+      const clip = document.createElement('div');
+      clip.className = 'code-clip';
+      clip.appendChild(copyWrap);
+      fold.appendChild(clip);
+      fold.appendChild(makeFoldButton(fold));
+    });
+  }
+
+  document.addEventListener('astro:page-load', enhanceCodeBlocks);
+</script>

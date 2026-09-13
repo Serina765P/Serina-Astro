@@ -59,7 +59,8 @@ const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
 
   document.addEventListener('astro:page-load', () => {
     const toc = document.getElementById('toc');
-    if (!toc) return;
+    if (!toc || toc.dataset.bound === 'true') return;
+    toc.dataset.bound = 'true';
 
     const links = [...toc.querySelectorAll<HTMLAnchorElement>('a[data-toc-link]')];
     const byId = new Map(links.map((a) => [a.getAttribute('href')!.slice(1), a]));

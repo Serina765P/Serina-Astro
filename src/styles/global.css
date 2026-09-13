@@ -536,7 +536,7 @@
     background: transparent;
   }
 
-  /* 代码块超高自动折叠（CodeFold.astro 注入）：渐隐只盖代码区，不盖按钮 */
+  /* 代码块超高自动折叠（CodeBlock.astro 注入）：渐隐只盖代码区，不盖按钮 */
   .code-fold .code-clip {
     position: relative;
   }
@@ -557,7 +557,7 @@
     @apply mx-auto mt-2.5 block rounded-full bg-chip px-4 py-1.5 text-xs text-chip-fg transition-colors hover:bg-chip-hover hover:text-chip-fg-hover;
   }
 
-  /* 代码块复制按钮（CodeCopy.astro 注入）：GitHub 式右上角图标，常显但低对比不抢戏 */
+  /* 代码块复制按钮（CodeBlock.astro 注入）：GitHub 式右上角图标，常显但低对比不抢戏 */
   .code-copy-wrap {
     position: relative;
   }
