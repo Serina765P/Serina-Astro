@@ -10,7 +10,7 @@
 /* class 策略暗色模式（html.dark），由 ThemeToggle 控制 */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ── 「雾粉手帖」语义色：亮/暗两套，随 .dark 切换 ── */
+/* ── 基础语义色：亮/暗两套，随 .dark 切换 ── */
 :root {
   --bg: #edeae4;
   --surface: #faf8f4;
@@ -19,25 +19,45 @@
   --body: #5c564d;
   /* 6f675b：加深后的次级文字（scripts/contrast-audit.mjs 核算 ≥4.5:1） */
   --sub: #6f675b;
-  /* 压在 wash 淡彩底上的「墨色」（分类胶囊/ico），与 wash 底配对核算达标 */
+  /* 压在 wash 淡彩底上的「墨色」（分类胶囊/ico），与 wash 底配对核算达标。
+     暗色下与 --code-bg 碰巧同值（#1e1b18），但角色无关（墨色 vs 代码底），不做别名耦合 */
   --on-wash: #2a2724;
   --line: rgba(93, 84, 72, 0.14);
   --nav-bg: rgba(237, 234, 228, 0.82);
   --code-bg: #4a443c;
   --code-ink: #f1ebe1;
 
-  --wash-pink: #cbb3b5;
-  --wash-pink-deep: #835a58;
-  --wash-mist: #a9b4c0;
-  --wash-mist-deep: #7f8a9b;
-  --wash-sage: #afc0b1;
-  --wash-sage-deep: #55675a;
-  --wash-sand: #d6cbb8;
-  --wash-sand-deep: #93826a;
-  --wash-clay: #c2a8a0;
-  --wash-clay-deep: #7f574e;
-  --wash-rose: #ce918a;
-  --wash-rose-deep: #8f4a42;
+  /* ── 颜料阶（S13）：全站唯一允许写死色值的地方 ──
+     两个家族：
+     · --paint-accent-50..950  玫瑰阶，静态（不随 .dark 翻转）——
+       ::selection / 搜索高亮 / 404 按钮的 dark:bg-accent-700 依赖这个不变性
+     · --paint-<色相>[-deep]   莫兰迪六色，亮/暗各一套（暗色见 :root.dark，亮深互换）
+     二者唯一交点：玫瑰阶 700 = 亮色莫兰迪粉的深档（#835a58），字面值只写一次。
+     消费方一律走别名：玫瑰阶走 @theme 的 --color-accent-*，色相走 --wash-*。 */
+  --paint-accent-50: #faf5f5;
+  --paint-accent-100: #f3e7e7;
+  --paint-accent-200: #e5d0d1;
+  --paint-accent-300: #d5babc;
+  --paint-accent-400: #c4a2a4;
+  --paint-accent-500: #ae8889;
+  --paint-accent-600: #9e6e6b;
+  --paint-accent-700: #835a58;
+  --paint-accent-800: #6a4948;
+  --paint-accent-900: #583d3c;
+  --paint-accent-950: #33211f;
+
+  --paint-pink: #cbb3b5;
+  --paint-pink-deep: var(--paint-accent-700); /* 与玫瑰阶 700 同源（#835a58） */
+  --paint-mist: #a9b4c0;
+  --paint-mist-deep: #7f8a9b;
+  --paint-sage: #afc0b1;
+  --paint-sage-deep: #55675a;
+  --paint-sand: #d6cbb8;
+  --paint-sand-deep: #93826a;
+  --paint-clay: #c2a8a0;
+  --paint-clay-deep: #7f574e;
+  --paint-rose: #ce918a;
+  --paint-rose-deep: #8f4a42;
 }
 
 :root.dark {
@@ -53,18 +73,36 @@
   --code-bg: #1e1b18;
   --code-ink: #d8cfc0;
 
-  --wash-pink: #b09395;
-  --wash-pink-deep: #c7a6a4;
-  --wash-mist: #93a0b0;
-  --wash-mist-deep: #a9b6c4;
-  --wash-sage: #9aab9e;
-  --wash-sage-deep: #afc0b2;
-  --wash-sand: #b8ab94;
-  --wash-sand-deep: #cfc3ab;
-  --wash-clay: #b3968c;
-  --wash-clay-deep: #c8aba1;
-  --wash-rose: #a97f79;
-  --wash-rose-deep: #c49b94;
+  --paint-pink: #b09395;
+  --paint-pink-deep: #c7a6a4;
+  --paint-mist: #93a0b0;
+  --paint-mist-deep: #a9b6c4;
+  --paint-sage: #9aab9e;
+  --paint-sage-deep: #afc0b2;
+  --paint-sand: #b8ab94;
+  --paint-sand-deep: #cfc3ab;
+  --paint-clay: #b3968c;
+  --paint-clay-deep: #c8aba1;
+  --paint-rose: #a97f79;
+  --paint-rose-deep: #c49b94;
+}
+
+/* ── 语义层：莫兰迪色相（bg-wash-* / text-wash-* 等类名不变）──
+   只别名一次。:root.dark 只覆写 --paint-*，别名在取值时按上下文自动切到暗色颜料，
+   所以暗色块里不需要再写一遍 --wash-*。 */
+:root {
+  --wash-pink: var(--paint-pink);
+  --wash-pink-deep: var(--paint-pink-deep);
+  --wash-mist: var(--paint-mist);
+  --wash-mist-deep: var(--paint-mist-deep);
+  --wash-sage: var(--paint-sage);
+  --wash-sage-deep: var(--paint-sage-deep);
+  --wash-sand: var(--paint-sand);
+  --wash-sand-deep: var(--paint-sand-deep);
+  --wash-clay: var(--paint-clay);
+  --wash-clay-deep: var(--paint-clay-deep);
+  --wash-rose: var(--paint-rose);
+  --wash-rose-deep: var(--paint-rose-deep);
 }
 
 /* ── 模式无关的层级与度量 token ──
@@ -125,18 +163,19 @@
   /* 首页 hero 大标题：朝华标题明朝体（item 2101，单字重 Bold 700） */
   --font-hero: 'ZhaohuaMinA Bold', 'Songti SC', 'SimSun', serif;
 
-  /* 莫兰迪灰粉 —— 强调色阶（旧 accent-* 类全部沿用新值） */
-  --color-accent-50: #faf5f5;
-  --color-accent-100: #f3e7e7;
-  --color-accent-200: #e5d0d1;
-  --color-accent-300: #d5babc;
-  --color-accent-400: #c4a2a4;
-  --color-accent-500: #ae8889;
-  --color-accent-600: #9e6e6b;
-  --color-accent-700: #835a58;
-  --color-accent-800: #6a4948;
-  --color-accent-900: #583d3c;
-  --color-accent-950: #33211f;
+  /* 玫瑰阶（S13）：值指向 :root 的颜料阶，类名 accent-* 不变。
+     静态 —— 暗色下不翻转，::selection / 搜索高亮 / 404 按钮依赖这一点 */
+  --color-accent-50: var(--paint-accent-50);
+  --color-accent-100: var(--paint-accent-100);
+  --color-accent-200: var(--paint-accent-200);
+  --color-accent-300: var(--paint-accent-300);
+  --color-accent-400: var(--paint-accent-400);
+  --color-accent-500: var(--paint-accent-500);
+  --color-accent-600: var(--paint-accent-600);
+  --color-accent-700: var(--paint-accent-700);
+  --color-accent-800: var(--paint-accent-800);
+  --color-accent-900: var(--paint-accent-900);
+  --color-accent-950: var(--paint-accent-950);
 
   --shadow-card: 0 6px 24px rgb(120 105 90 / 0.1);
   --shadow-card-hover: 0 14px 34px rgb(120 105 90 / 0.16);
