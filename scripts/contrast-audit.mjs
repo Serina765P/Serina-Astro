@@ -93,7 +93,13 @@ const normalizeHex = (hex) => {
 
 const rgbToHex = ([r, g, b]) =>
   '#' +
-  [r, g, b].map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+  [r, g, b]
+    .map((v) =>
+      Math.max(0, Math.min(255, Math.round(v)))
+        .toString(16)
+        .padStart(2, '0'),
+    )
+    .join('');
 
 /** 递归解析一个颜色值；token 缺失或循环引用一律抛错，绝不静默返回错值 */
 function resolveColor(raw, table, stack = []) {
@@ -128,7 +134,8 @@ function resolveColor(raw, table, stack = []) {
 
   if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value)) return normalizeHex(value);
 
-  const rgbMatch = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)\s*(?:[/,]\s*([\d.]+))?\s*\)$/i.exec(value);
+  const rgbMatch =
+    /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)\s*(?:[/,]\s*([\d.]+))?\s*\)$/i.exec(value);
   if (rgbMatch) {
     const alpha = rgbMatch[4] === undefined ? 1 : Number(rgbMatch[4]);
     if (alpha < 1) throw new Error(`半透明色需给定背景才能核算对比度：${value}`);
@@ -263,7 +270,14 @@ for (const [mode, T] of Object.entries(tables)) {
     check(mode, 'on-accent / accent-300（404 按钮）', T.onAccent, T.accent300, 4.5);
   }
   // 分类胶囊：cat-on 压每种 wash 底（亮色 = wash 原色；暗色 = wash 揉进 surface）
-  for (const w of ['catFillPink', 'catFillMist', 'catFillSage', 'catFillSand', 'catFillClay', 'catFillRose']) {
+  for (const w of [
+    'catFillPink',
+    'catFillMist',
+    'catFillSage',
+    'catFillSand',
+    'catFillClay',
+    'catFillRose',
+  ]) {
     check(mode, `cat-on / ${w}（分类胶囊）`, T.catOn, T[w], 4.5);
   }
   // blockquote 边框为非文字 UI，3:1 即可

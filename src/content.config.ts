@@ -1,5 +1,5 @@
 import { defineCollection, z } from 'astro:content';
-import { glob, file } from 'astro/loaders';
+import { file, glob } from 'astro/loaders';
 
 const posts = defineCollection({
   loader: glob({ pattern: '*.md', base: './src/content/posts' }),
@@ -15,7 +15,6 @@ const posts = defineCollection({
     skin: z.enum(['imas-album']).optional(),
   }),
 });
-
 
 const shuoshuo = defineCollection({
   loader: file('src/data/shuoshuo.json', {

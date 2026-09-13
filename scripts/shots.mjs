@@ -17,7 +17,7 @@
 
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
 
@@ -117,7 +117,7 @@ async function captureStable(page) {
   let prev = null;
   for (let attempt = 0; attempt < 4; attempt += 1) {
     const buf = await page.screenshot({ fullPage: true });
-    if (prev !== null && prev.equals(buf)) return buf;
+    if (prev?.equals(buf)) return buf;
     prev = buf;
     // 这次全页渲染本身会触发新的字体分片请求，等它落定再截下一张
     await Promise.race([
@@ -157,7 +157,9 @@ async function shoot(write) {
         const buf = await captureStable(page);
         if (write) {
           await writeFile(path.join(outDir, file), buf);
-          console.log(`  ${theme.padEnd(5)} ${name.padEnd(16)} ${String(buf.length).padStart(9)} B  ${sha256(buf)}`);
+          console.log(
+            `  ${theme.padEnd(5)} ${name.padEnd(16)} ${String(buf.length).padStart(9)} B  ${sha256(buf)}`,
+          );
         }
         hashes[file] = sha256(buf);
       }
@@ -174,7 +176,9 @@ async function capture() {
   // 若在无样式页面上出图，会把"构建坏了"误报成一屏"视觉回归"，所以先断言产物完整。
   const emitted = await readdir(path.join(ROOT, 'dist', '_astro')).catch(() => []);
   if (!emitted.some((f) => f.endsWith('.css'))) {
-    throw new Error('dist 缺少 CSS 产物 —— 构建不可信（疑似 astro build 静默丢包），请重建后再出图');
+    throw new Error(
+      'dist 缺少 CSS 产物 —— 构建不可信（疑似 astro build 静默丢包），请重建后再出图',
+    );
   }
 
   await mkdir(outDir, { recursive: true });
@@ -186,7 +190,7 @@ async function capture() {
   const kept = await shoot(true);
   const unstable = Object.keys(kept).filter((f) => probe[f] !== kept[f]);
   console.log(`\n本机不稳定（本次两轮即不一致，已从闸门剔除）：${unstable.length} 张`);
-  if (unstable.length) console.log('  ' + unstable.join('\n  '));
+  if (unstable.length) console.log(`  ${unstable.join('\n  ')}`);
   return { hashes: kept, unstable };
 }
 
@@ -194,7 +198,9 @@ async function capture() {
 async function compare(current) {
   let baseline;
   try {
-    baseline = JSON.parse(await readFile(path.join(SHOTS_DIR, 'baseline', 'manifest.json'), 'utf8'));
+    baseline = JSON.parse(
+      await readFile(path.join(SHOTS_DIR, 'baseline', 'manifest.json'), 'utf8'),
+    );
   } catch {
     console.log('\n未找到 baseline（先跑一次 node scripts/shots.mjs baseline），跳过比对');
     return true;
@@ -211,11 +217,16 @@ async function compare(current) {
   const stable = total - unstable.size;
   console.log('\n── 与 baseline 比对 ──');
   if (changed.length === 0) {
-    console.log(`✅ 稳定子集全部一致（${stable}/${total} 张；另 ${skipped.length} 张不稳定已跳过）`);
+    console.log(
+      `✅ 稳定子集全部一致（${stable}/${total} 张；另 ${skipped.length} 张不稳定已跳过）`,
+    );
   } else {
     console.log(`❌ 稳定图有变化（${changed.length} 张）：\n  ${changed.join('\n  ')}`);
   }
-  if (skipped.length) console.log(`ℹ 不稳定图（仅人工走查，不作为失败）：${skipped.length} 张\n  ${skipped.join('\n  ')}`);
+  if (skipped.length)
+    console.log(
+      `ℹ 不稳定图（仅人工走查，不作为失败）：${skipped.length} 张\n  ${skipped.join('\n  ')}`,
+    );
   console.log(`\n对比目录：.shots/${label}/  ←→  .shots/baseline/`);
   return changed.length === 0;
 }
@@ -226,8 +237,9 @@ try {
   await waitForServer();
   const result = await capture();
   const manifest = { hashes: result.hashes, unstable: result.unstable };
-  await writeFile(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
-  if (isBaseline) console.log(`\n基线已写入 .shots/baseline/（${Object.keys(result.hashes).length} 张）`);
+  await writeFile(path.join(outDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+  if (isBaseline)
+    console.log(`\n基线已写入 .shots/baseline/（${Object.keys(result.hashes).length} 张）`);
   else ok = await compare(result);
 } catch (err) {
   console.error(`\n失败：${err.message}`);

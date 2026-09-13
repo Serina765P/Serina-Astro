@@ -1,0 +1,3 @@
+# 统一 LF。本机 core.autocrlf=true 会把 checkout 出来的文本文件转成 CRLF，
+# 而 Biome 的格式化校验与 CI（Linux）都按 LF 比较 —— 不锁住会在本地产生假失败。
+* text=auto eol=lf

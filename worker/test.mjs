@@ -2,7 +2,16 @@
 // 用法：cd worker && npm install && npm test
 import assert from 'node:assert/strict';
 import PostalMime from 'postal-mime';
-import { authFailed, buildItem, fromBase64, isAllowed, mergeItem, stripSignature, stripToken, toBase64 } from './src/lib.js';
+import {
+  authFailed,
+  buildItem,
+  fromBase64,
+  isAllowed,
+  mergeItem,
+  stripSignature,
+  stripToken,
+  toBase64,
+} from './src/lib.js';
 
 const RAW_MAIL = [
   'From: 芹菜P <me@example.com>',
@@ -53,7 +62,18 @@ const db = {
   source: 'https://api.bilibili.com/...',
   fetched_at: '2026-01-01T00:00:00.000Z',
   count: 1,
-  items: [{ id: 'legacy', type: 'OPUS', title: '', content: '旧说说', images: [], link: 'https://b23.tv/x', like: 3, published_at: '2026-01-01T00:00:00.000Z' }],
+  items: [
+    {
+      id: 'legacy',
+      type: 'OPUS',
+      title: '',
+      content: '旧说说',
+      images: [],
+      link: 'https://b23.tv/x',
+      like: 3,
+      published_at: '2026-01-01T00:00:00.000Z',
+    },
+  ],
 };
 const first = mergeItem(db, item);
 assert.equal(first.changed, true);
@@ -66,7 +86,7 @@ const again = mergeItem(first.data, item);
 assert.equal(again.changed, false, '同一 Message-ID 重复投递应跳过');
 
 // ── base64 往返（含中文）──
-const roundtrip = JSON.stringify(first.data, null, 2) + '\n';
+const roundtrip = `${JSON.stringify(first.data, null, 2)}\n`;
 assert.deepEqual(JSON.parse(fromBase64(toBase64(roundtrip))), first.data);
 
 console.log('✅ 全部断言通过：解析/白名单/口令/签名/幂等/base64 往返均符合预期');

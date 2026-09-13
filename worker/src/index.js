@@ -2,7 +2,16 @@
 // push 触发 Cloudflare Pages 自动构建，约两分钟后说说上线。
 // 部署与 secret 配置见 worker/README.md。
 import PostalMime from 'postal-mime';
-import { authFailed, buildItem, fromBase64, isAllowed, mergeItem, stripSignature, stripToken, toBase64 } from './lib.js';
+import {
+  authFailed,
+  buildItem,
+  fromBase64,
+  isAllowed,
+  mergeItem,
+  stripSignature,
+  stripToken,
+  toBase64,
+} from './lib.js';
 
 const GITHUB_API = 'https://api.github.com';
 
@@ -76,7 +85,9 @@ export default {
       return message.defer(); // 网络抖动：重新入队，稍后重投
     }
     if (!getRes.ok) {
-      return getRes.status >= 500 ? message.defer() : message.setReject(`GitHub 读取失败 ${getRes.status}`);
+      return getRes.status >= 500
+        ? message.defer()
+        : message.setReject(`GitHub 读取失败 ${getRes.status}`);
     }
     const meta = await getRes.json();
     const data = JSON.parse(fromBase64(meta.content));
@@ -87,13 +98,15 @@ export default {
       method: 'PUT',
       body: JSON.stringify({
         message: `说说(mail): ${subject || item.published_at}`,
-        content: toBase64(JSON.stringify(merged, null, 2) + '\n'),
+        content: toBase64(`${JSON.stringify(merged, null, 2)}\n`),
         sha: meta.sha,
         branch,
       }),
     });
     if (!putRes.ok) {
-      return putRes.status >= 500 ? message.defer() : message.setReject(`GitHub 提交失败 ${putRes.status}`);
+      return putRes.status >= 500
+        ? message.defer()
+        : message.setReject(`GitHub 提交失败 ${putRes.status}`);
     }
     // 成功：邮件照常投递入站（不 reject），无需回执
   },

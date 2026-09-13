@@ -2,11 +2,13 @@
   "description": "这里是芹菜P，偶像大师新人制作人，涉猎广而不精的业余爱好者。写博客记录生活和学习的点滴。",
   "social": [
     { "name": "GitHub", "icon": "simple-icons:github", "href": "https://github.com/Serina765P" },
-    { "name": "QQ", "icon": "simple-icons:tencentqq", "href": "http://wpa.qq.com/msgrd?v=3&uin=2241439211&site=qq&menu=yes" },
+    {
+      "name": "QQ",
+      "icon": "simple-icons:tencentqq",
+      "href": "http://wpa.qq.com/msgrd?v=3&uin=2241439211&site=qq&menu=yes"
+    },
     { "name": "X", "icon": "simple-icons:x", "href": "https://x.com/Serina765P" },
     { "name": "邮箱", "icon": "material-symbols:mail", "href": "mailto:serinap@qq.com" }
   ],
-  "friendLinks": [
-    { "name": "偶像大师中文维基", "href": "https://wikimas.org" }
-  ]
+  "friendLinks": [{ "name": "偶像大师中文维基", "href": "https://wikimas.org" }]
 }

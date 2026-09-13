@@ -10,7 +10,11 @@ export function stripSignature(text) {
 
 /** 发件人是否在白名单（不区分大小写；ALLOWED_SENDERS 逗号分隔） */
 export function isAllowed(from, allowList) {
-  return allowList.includes(String(from || '').trim().toLowerCase());
+  return allowList.includes(
+    String(from || '')
+      .trim()
+      .toLowerCase(),
+  );
 }
 
 /** Authentication-Results 里出现 spf/dkim 硬失败视为校验未通过（伪造拦截） */
@@ -37,7 +41,10 @@ export function buildItem({ id, subject, content, publishedAt }) {
     images: [],
     link: '',
     like: 0,
-    published_at: (publishedAt instanceof Date ? publishedAt : new Date(publishedAt || Date.now())).toISOString(),
+    published_at: (publishedAt instanceof Date
+      ? publishedAt
+      : new Date(publishedAt || Date.now())
+    ).toISOString(),
   };
 }
 

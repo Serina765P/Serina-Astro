@@ -3,10 +3,10 @@
 // 标签/分类映射与侧栏文案抽到了 src/data/*.json（本地工作台 Astro-WebUI 直接读写 JSON，
 // 不碰 TS），这里按原导出名 re-export，消费方无感。
 
-import taxonomy from './data/taxonomy.json';
-import siteInfo from './data/site-info.json';
 import avatarImage from './assets/images/fav.webp';
 import heroImage from './assets/images/hero.webp';
+import siteInfo from './data/site-info.json';
+import taxonomy from './data/taxonomy.json';
 
 export const SITE = {
   title: "SerinaP's Blog",

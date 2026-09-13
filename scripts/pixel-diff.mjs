@@ -52,7 +52,11 @@ for (let y = 0; y < H; y++) {
   let maxX = -1;
   for (let x = 0; x < W; x++) {
     const i = (y * W + x) * C;
-    if (a.data[i] !== b.data[i] || a.data[i + 1] !== b.data[i + 1] || a.data[i + 2] !== b.data[i + 2]) {
+    if (
+      a.data[i] !== b.data[i] ||
+      a.data[i + 1] !== b.data[i + 1] ||
+      a.data[i + 2] !== b.data[i + 2]
+    ) {
       count++;
       if (x < minX) minX = x;
       if (x > maxX) maxX = x;

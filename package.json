@@ -5,9 +5,10 @@
   "private": true,
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build && pagefind --site dist",
+    "build": "astro build && node scripts/check-build.mjs && pagefind --site dist",
     "preview": "astro preview",
-    "check": "astro check",
+    "check": "astro check && node scripts/contrast-audit.mjs",
+    "lint": "biome check .",
     "contrast": "node scripts/contrast-audit.mjs",
     "shots": "node scripts/shots.mjs"
   },
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@biomejs/biome": "^2.5.13",
     "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "^4.3.3",
     "pagefind": "^1.5.2",

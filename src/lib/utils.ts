@@ -29,7 +29,9 @@ export function wordcount(text: string): number {
     .replace(/<[^>]+>/g, ' ')
     .replace(/[#>*_~\-|]/g, ' ');
   const cjk = plain.match(/[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]/g)?.length ?? 0;
-  const words = plain.replace(/[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]/g, ' ').match(/[A-Za-z0-9]+/g)?.length ?? 0;
+  const words =
+    plain.replace(/[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]/g, ' ').match(/[A-Za-z0-9]+/g)
+      ?.length ?? 0;
   return cjk + words;
 }
 

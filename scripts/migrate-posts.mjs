@@ -1,7 +1,7 @@
 // 一次性迁移脚本：从旧 Hexo 站点(blogdev)搬运文章与数据到 Astro 内容目录。
 // 用法：node scripts/migrate-posts.mjs [旧站根目录]
-import { readdir, readFile, writeFile, mkdir, cp } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+
+import { cp, mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const OLD_ROOT = process.argv[2] ?? 'C:/Projects/blogdev';
@@ -14,7 +14,10 @@ const DROP_KEYS = new Set(['layout', 'type', 'comments', 'toc', 'custom_css']);
 
 function skinFromCustomCss(value) {
   if (!value) return null;
-  const name = String(value).trim().replace(/^\/?css\//, '').replace(/\.css$/, '');
+  const name = String(value)
+    .trim()
+    .replace(/^\/?css\//, '')
+    .replace(/\.css$/, '');
   return name || null;
 }
 
@@ -60,7 +63,7 @@ for (const entry of entries) {
   const src = path.join(OLD_POSTS, entry.name);
   if (entry.isFile() && entry.name.endsWith('.md')) {
     const original = await readFile(src, 'utf8');
-    let text = original.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n');
+    const text = original.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n');
     const dirName = entry.name.replace(/\.md$/, '');
     const fmMatch = /^---\n([\s\S]*?)\n---\n?([\s\S]*)$/.exec(text);
     if (!fmMatch) throw new Error(`无法解析 frontmatter: ${entry.name}`);
@@ -84,4 +87,6 @@ for (const entry of entries) {
 
 await cp(path.join(OLD_ROOT, 'source/_data/shuoshuo.json'), new URL('shuoshuo.json', NEW_DATA));
 
-console.log(`完成: ${postCount} 篇文章 (${rewritten} 篇有改动), ${assetDirs} 个资源目录, shuoshuo.json`);
+console.log(
+  `完成: ${postCount} 篇文章 (${rewritten} 篇有改动), ${assetDirs} 个资源目录, shuoshuo.json`,
+);
