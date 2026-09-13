@@ -1,3 +1,6 @@
 # 老的 Atom 订阅地址不停用：内容是 RSS 2.0（@astrojs/rss），文件名/MIME 在 S10 已纠正
 # 用 301 让已订阅 /atom.xml 的阅读器跟到新地址
 /atom.xml  /rss.xml  301
+
+# 无斜杠 URL（/about、/posts/x）不需要在这里补规则：站点产物是 <name>/index.html，
+# Cloudflare Pages 对目录型路径会自动 308 补尾斜杠（实测见 S24c 记录），写了反而多一份维护面

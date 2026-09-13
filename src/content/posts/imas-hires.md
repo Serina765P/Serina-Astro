@@ -2213,4 +2213,3 @@ description: 偶像大师系列游戏的Hi-Res高解析度音频整理聚合贴�
 <a href="#资源总览" class="back-top">⬆ 返回总览</a>
 
 ---
-<script src="/js/album-blur.js" defer></script>
