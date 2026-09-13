@@ -3,7 +3,7 @@ import { Icon } from 'astro-icon/components';
 import PageLayout from '../../layouts/PageLayout.astro';
 import Card from '../../components/primitives/Card.astro';
 import TagChip from '../../components/primitives/TagChip.astro';
-import { SIDEBAR } from '../../site.config';
+import { SITE_META } from '../../site.config';
 ---
 
 <PageLayout title="友情链接" description="欢迎交换友链" showComments>
@@ -11,7 +11,7 @@ import { SIDEBAR } from '../../site.config';
 
   <ul class="not-prose mt-6 grid gap-3 sm:grid-cols-2">
     {
-      SIDEBAR.friendLinks.map((link) => (
+      SITE_META.friendLinks.map((link) => (
         <li>
           <Card as="a" href={link.href} target="_blank" rel="noopener" class="flex items-center gap-2.5 px-5 py-4">
             <Icon name="material-symbols:link" class="size-4 shrink-0 text-sub" />
@@ -25,7 +25,7 @@ import { SIDEBAR } from '../../site.config';
   <h2>找到我</h2>
   <ul class="not-prose mt-4 flex flex-wrap gap-2">
     {
-      SIDEBAR.social.map((s) => (
+      SITE_META.social.map((s) => (
         <li>
           <TagChip href={s.href} label={s.name} icon={s.icon} size="social" target="_blank" rel="noopener" />
         </li>

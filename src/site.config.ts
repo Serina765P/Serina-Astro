@@ -1,7 +1,7 @@
-// 站点配置：菜单、侧栏、页脚、评论、分类/标签 slug 映射等集中于此。
+// 站点配置：站点元信息（简介/社交/友链）、菜单、页脚、评论、分类/标签 slug 映射等集中于此。
 // 结构沿用旧主题配置文件（MD3 风格 Hexo 主题 _config.yml），图标名为 Material Symbols。
-// 标签/分类映射与侧栏文案抽到了 src/data/*.json（本地工作台 Astro-WebUI 直接读写 JSON，
-// 不碰 TS），这里按原导出名 re-export，消费方无感。
+// 标签/分类映射与站点元信息文案抽到了 src/data/*.json（本地工作台 Astro-WebUI 直接读写
+// JSON，不碰 TS），这里按原导出名 re-export，消费方无感。
 
 import avatarImage from './assets/images/fav.webp';
 import heroImage from './assets/images/hero.webp';
@@ -49,7 +49,7 @@ export const GISCUS = {
   lang: 'zh-CN',
 };
 
-export const SIDEBAR = {
+export const SITE_META = {
   description: siteInfo.description,
   social: siteInfo.social,
   friendLinks: siteInfo.friendLinks,
