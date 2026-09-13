@@ -1,6 +1,12 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
 
+/* 来源收敛：Tailwind 的自动来源探测会把 docs/ 里的实施记录也当成用例 ——
+   文档正文里引用过的类名（`hover:bg-accent-100`、`prose-headings:scroll-mt-24` …）
+   会因此产出**已经没有消费点**的死规则，删代码后 CSS 也不缩水。
+   排除文档目录，只让 src/ 决定产物。 */
+@source not '../../docs';
+
 /* class 策略暗色模式（html.dark），由 ThemeToggle 控制 */
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -273,9 +279,11 @@
     @apply bg-accent-200 text-accent-950 dark:bg-accent-700 dark:text-accent-50;
   }
 
-  /* 锚点定位不被吸顶导航遮挡 */
+  /* 锚点定位不被吸顶导航遮挡（S15）：唯一来源 = --header-h（吸顶头高度）+ 1.5rem 呼吸缝。
+     注意本选择器只有 (0,1,0)，别在别处再写 scroll-margin-top（如 prose-headings:scroll-mt-*)，
+     那会变成第二套取值、且以更高层叠序压掉这里 */
   [id] {
-    scroll-margin-top: 5.5rem;
+    scroll-margin-top: calc(var(--header-h) + 1.5rem);
   }
 
   /* Shiki 代码块：单暗色主题（github-dark-dimmed），底色按亮/暗切换为暖炭 */

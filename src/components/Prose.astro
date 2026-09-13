@@ -9,7 +9,8 @@ const { class: className = '' } = Astro.props;
 <div
   class:list={[
     'prose prose-neutral dark:prose-invert max-w-none',
-    'prose-headings:scroll-mt-24',
+    // 标题的锚点偏移统一由 global.css 的 [id] 派生（calc(--header-h + 1.5rem)），
+    // 这里不要再写 prose-headings:scroll-mt-*，否则会以更高层叠序覆盖成第二套取值（S15）
     'prose-a:text-wash-pink-deep prose-a:decoration-wash-pink prose-a:underline-offset-4 prose-a:hover:text-wash-rose-deep',
     'prose-img:rounded-2xl prose-img:shadow-card',
     className,

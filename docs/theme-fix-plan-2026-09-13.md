@@ -602,4 +602,76 @@ S3 之前没有任何 `color-mix()` 进过 `TOKENS`，所以一直没触发。�
 
 ---
 
+## 十、S14 + S15 实施记录（断点收口 / 锚点偏移单一来源）—— 提交 6 收尾
+
+### S14（P1-6）断点收口
+
+`index.astro` 的 `@media (max-width: 880px) { … }` 改用 Tailwind 的 `@variant max-bento`，
+断点值来自 S3 冻结的 `--breakpoint-bento: 55rem`。`880px` 从源码里消失，
+产物里也 grep 不到（只剩 `width>=55rem`）。
+
+两个实现细节：
+
+1. **折叠规则必须留在样式块最后**。`.bento > .cell` 与 `.cell:nth-of-type(n)` 同特异性 (0,2,0)，
+   靠源序压过后者；Tailwind 把 `@variant` 展开成独立 media 块且位置跟源码走 ——
+   已核对产物：折叠块 `.bento>.cell{grid-area:auto}` 在 @7186，`.cell:nth-of-type(4)` 在 @1157。
+2. **`@variant` 展开成 `grid-template: none/1fr`**，等价于旧的三条声明
+   （rows none / columns 1fr / areas none）—— 简写会把 areas 一并置回初值。
+
+**语义差异（1px，已留档）**：Tailwind 的 `max-*` 变体是开区间 `width < 55rem`，旧写法是闭区间
+`max-width: 880px`。实测：
+
+| 视口 | 旧 | 新 |
+|---|---|---|
+| 879px | 折叠 | 折叠 |
+| **880px** | **折叠** | **四列** |
+| 881px | 四列 | 四列 |
+
+折叠点从「≤880」变成「<880」—— 这是 `max-*` 变体的固有语义（`max-lg` 等同样是开区间）。
+要闭区间就得把 `55rem` 再写死一遍（`@media (width <= 55rem)`），回到双源。选了单源 + 1px 差异。
+
+### S15（P1-7）锚点偏移单一来源
+
+- `global.css` 的 `[id] { scroll-margin-top: 5.5rem }` → `calc(var(--header-h) + 1.5rem)`（= 88px，数值不变）；
+- 删掉 `Prose.astro` 的 `prose-headings:scroll-mt-24`（96px，第二套取值）—— 标题都有 id，`[id]` 已覆盖；
+- 归档页吸顶年份 `sticky top-16` → `top-[var(--header-h)]`。
+
+实测（真实浏览器跳锚点：`location.hash` 赋值 → 等平滑滚动落定 → 读 `getBoundingClientRect`）：
+
+| 组合 | 标题 scroll-margin-top | h2 top | h3 top | 吸顶头底 | 判定 |
+|---|---|---|---|---|---|
+| light @1440（TOC 可见） | 88px | 88px | 88px | 65px | 未遮挡 |
+| light @900（无 TOC） | 88px | 88px | 88px | 65px | 未遮挡 |
+| dark @1440（TOC 可见） | 88px | 88px | 88px | 65px | 未遮挡 |
+| dark @900（无 TOC） | 88px | 88px | 88px | 65px | 未遮挡 |
+
+四组合下标题落点都精确等于 88px，比头底高 23px。该文没有 h4，h2/h3 覆盖了两种深度。
+
+### 顺带修掉：Tailwind 把 docs/ 当成用例来源
+
+S15 删掉 `prose-headings:scroll-mt-24` 之后，产物里居然**还在** —— 追查发现 Tailwind 的自动
+来源探测把 `docs/` 的实施记录也扫了：文档正文里出现过的类名会产出规则。本项目文档引用过大量
+旧类名（`hover:bg-accent-100`、`hover:shadow-card`、`text-white`…），它们在 S4/S7 已无消费点，
+却一直以死规则的形式留在产物里。
+
+修法：`global.css` 头部加 `@source not '../../docs';`，只让 `src/` 决定产物。
+BaseLayout.css 63585 → 61432 B，四条死规则消失；`hover:bg-chip-hover`、`text-cat-on`、
+`bg-cat-fill-*`、`card-surface` 等真实用例逐条核对仍在。
+
+### 验收
+
+| 闸门 | 结果 |
+|---|---|
+| `astro check` | 0 error / 0 warning |
+| `contrast-audit` | 64 项全过 |
+| `astro build` | 38 页，`dist/_astro` 有 CSS |
+| 截图（1440px） | 与基线逐字节一致（除暗色分类胶囊 3 张既有差异）→ 零视觉变化 |
+
+### 遗留
+
+- 归档页年份 `h2` 的 `z-10` 不在 S15 范围 —— 属 S17（z-index 表）。
+- `PostLayout` TOC 的 `sticky top-24` 是吸顶定位不是锚点偏移，未动；若想统一到 token，S17 顺手。
+
+---
+
 *本计划基于 2026-09-13 工作区快照与源码逐处核对；行号以该快照为准。*

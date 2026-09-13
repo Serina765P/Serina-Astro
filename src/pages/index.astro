@@ -180,6 +180,13 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
       's1 s2 s3 s4'
       'say say say say'
       'cloud cloud quick quick';
+
+    /* 窄屏折叠（S14）：断点走 --breakpoint-bento（55rem），不再裸写 880px */
+    @variant max-bento {
+      grid-template-columns: 1fr;
+      grid-template-rows: none;
+      grid-template-areas: none;
+    }
   }
   /* 抬升只给可交互的格子（标签云/快捷入口），非交互格子保持安静 —— 可供性要诚实 */
   .bento > .cell {
@@ -229,13 +236,10 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
     @apply flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-chip px-2 py-3.5 text-xs font-medium text-chip-fg transition-colors hover:bg-chip-hover hover:text-chip-fg-hover;
   }
 
-  @media (max-width: 880px) {
-    .bento {
-      grid-template-columns: 1fr;
-      grid-template-rows: none;
-      grid-template-areas: none;
-    }
-    .bento > .cell {
+  /* 窄屏折叠（S14）：让每格回到自动排布。
+     必须留在样式块最后 —— 与上面的 .cell:nth-of-type(n) 同特异性（0,2,0），靠源序压过它们 */
+  .bento > .cell {
+    @variant max-bento {
       grid-area: auto;
     }
   }
