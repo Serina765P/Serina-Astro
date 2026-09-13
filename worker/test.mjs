@@ -5,12 +5,15 @@ import PostalMime from 'postal-mime';
 import {
   authFailed,
   buildItem,
+  createShard,
   fromBase64,
   isAllowed,
   mergeItem,
+  shardPath,
   stripSignature,
   stripToken,
   toBase64,
+  yearInShanghai,
 } from './src/lib.js';
 
 const RAW_MAIL = [
@@ -89,4 +92,29 @@ assert.equal(again.changed, false, '同一 Message-ID 重复投递应跳过');
 const roundtrip = `${JSON.stringify(first.data, null, 2)}\n`;
 assert.deepEqual(JSON.parse(fromBase64(toBase64(roundtrip))), first.data);
 
-console.log('✅ 全部断言通过：解析/白名单/口令/签名/幂等/base64 往返均符合预期');
+// ── 按年分片（东八区口径，与站内日期展示一致）──
+assert.equal(yearInShanghai(new Date('2025-06-01T00:00:00.000Z')), 2025);
+assert.equal(
+  yearInShanghai(new Date('2025-12-31T16:30:00.000Z')),
+  2026,
+  'UTC 跨年夜 = 沪元旦凌晨，应归入 2026',
+);
+assert.equal(
+  shardPath('src/data/shuoshuo', '2026-09-05T06:30:00.000Z'),
+  'src/data/shuoshuo/2026.json',
+);
+assert.equal(
+  shardPath('src/data/shuoshuo/', new Date('2025-12-31T16:30:00.000Z')),
+  'src/data/shuoshuo/2026.json',
+  '目录结尾斜杠不应产生双斜杠',
+);
+
+// ── 新分片信封 + 在新分片里同样幂等 ──
+const shard = createShard(item, new Date('2026-09-07T06:30:00.000Z'));
+assert.equal(shard.source, 'mail-to-github');
+assert.equal(shard.fetched_at, '2026-09-07T06:30:00.000Z');
+assert.equal(shard.count, 1);
+assert.deepEqual(shard.items, [item]);
+assert.equal(mergeItem(shard, item).changed, false, '同一 Message-ID 在新分片里也应跳过');
+
+console.log('✅ 全部断言通过：解析/白名单/口令/签名/幂等/分片路径/base64 往返均符合预期');

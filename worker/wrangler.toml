@@ -3,10 +3,11 @@ main = "src/index.js"
 compatibility_date = "2026-08-01"
 
 [vars]
-# 目标仓库与数据文件路径（公开信息，可明文）
+# 目标仓库与数据目录（公开信息，可明文）
 GITHUB_REPO = "Serina765P/Serina-Astro"
 GITHUB_BRANCH = "main"
-FILE_PATH = "src/data/shuoshuo.json"
+# 说说按年分片：<SHUOSHUO_DIR>/<沪年>.json，目标年份的分片不存在时由 worker 自动创建
+SHUOSHUO_DIR = "src/data/shuoshuo"
 
 # 以下三项为 secret，用 `wrangler secret put <NAME>` 配置，切勿写进本文件：
 #   GITHUB_TOKEN     —— fine-grained PAT，仅授予本仓库 Contents: Read and write

@@ -1,13 +1,15 @@
-// 说说邮件管道：收到邮件 → 校验 → 解析 → commit 进 src/data/shuoshuo.json。
+// 说说邮件管道：收到邮件 → 校验 → 解析 → commit 进 src/data/shuoshuo/<沪年>.json（按年分片）。
 // push 触发 Cloudflare Pages 自动构建，约两分钟后说说上线。
 // 部署与 secret 配置见 worker/README.md。
 import PostalMime from 'postal-mime';
 import {
   authFailed,
   buildItem,
+  createShard,
   fromBase64,
   isAllowed,
   mergeItem,
+  shardPath,
   stripSignature,
   stripToken,
   toBase64,
@@ -74,9 +76,9 @@ export default {
       publishedAt: raw.date ? new Date(raw.date) : new Date(),
     });
 
-    // ── 4. 拉取 shuoshuo.json → 合并 → commit（push 自动触发 Pages 构建）──
+    // ── 4. 读取该条目所属年份的分片（不存在则新建）→ 合并 → commit（push 自动触发 Pages 构建）──
     const branch = env.GITHUB_BRANCH || 'main';
-    const path = encodeURI(env.FILE_PATH || 'src/data/shuoshuo.json');
+    const path = encodeURI(shardPath(env.SHUOSHUO_DIR || 'src/data/shuoshuo', item.published_at));
 
     let getRes;
     try {
@@ -84,22 +86,31 @@ export default {
     } catch {
       return message.defer(); // 网络抖动：重新入队，稍后重投
     }
-    if (!getRes.ok) {
+
+    let meta = null;
+    let data;
+    if (getRes.status === 404) {
+      data = createShard(item); // 该年份还没有分片：新建（PUT 不带 sha）
+    } else if (getRes.ok) {
+      meta = await getRes.json();
+      data = JSON.parse(fromBase64(meta.content));
+    } else {
       return getRes.status >= 500
         ? message.defer()
         : message.setReject(`GitHub 读取失败 ${getRes.status}`);
     }
-    const meta = await getRes.json();
-    const data = JSON.parse(fromBase64(meta.content));
-    const { data: merged, changed } = mergeItem(data, item);
-    if (!changed) return; // 同一封邮件重复投递：静默跳过
+
+    if (meta) {
+      const { changed } = mergeItem(data, item);
+      if (!changed) return; // 同一封邮件重复投递：静默跳过
+    }
 
     const putRes = await gh(env, path, {
       method: 'PUT',
       body: JSON.stringify({
         message: `说说(mail): ${subject || item.published_at}`,
-        content: toBase64(`${JSON.stringify(merged, null, 2)}\n`),
-        sha: meta.sha,
+        content: toBase64(`${JSON.stringify(data, null, 2)}\n`),
+        ...(meta ? { sha: meta.sha } : {}),
         branch,
       }),
     });

@@ -1,6 +1,7 @@
 // 纯逻辑：邮件 → 说说条目（无副作用，worker/test.mjs 可直接本地跑）
 // schema 对应 src/content.config.ts 的 shuoshuo collection：
 // type 'OPUS' = B 站动态（历史数据），'MAIL' = 邮件发布
+// 说说数据按年分片存放（src/data/shuoshuo/<沪年>.json），写入路径由 shardPath() 决定。
 
 /** 去掉邮件签名：RFC 惯例分隔线 "-- "（或 "--"）及以下全部丢弃 */
 export function stripSignature(text) {
@@ -31,7 +32,7 @@ export function stripToken(subject, token) {
   return { subject: s.replaceAll(token, '').trim(), ok: true };
 }
 
-/** 邮件解析产物 → shuoshuo.json 里的一条 item */
+/** 邮件解析产物 → 说说分片里的一条 item */
 export function buildItem({ id, subject, content, publishedAt }) {
   return {
     id: String(id),
@@ -48,7 +49,30 @@ export function buildItem({ id, subject, content, publishedAt }) {
   };
 }
 
-/** 合并进 shuoshuo.json：新条目置顶；同 id（Message-ID）重复投递直接跳过，天然幂等 */
+/** 东八区年份：站内日期展示都按 Asia/Shanghai，分片路径必须同口径，否则跨年条目会写错文件 */
+export function yearInShanghai(date) {
+  const d = date instanceof Date ? date : new Date(date);
+  return Number(
+    new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Shanghai', year: 'numeric' }).format(d),
+  );
+}
+
+/** 说说分片路径：<dir>/<沪年>.json（与主仓库 src/content.config.ts 的 loader 契约一致） */
+export function shardPath(dir, publishedAt) {
+  return `${String(dir).replace(/\/+$/, '')}/${yearInShanghai(publishedAt)}.json`;
+}
+
+/** 新年份分片的初始信封（结构同既有分片：source / fetched_at / count / items） */
+export function createShard(item, now = new Date()) {
+  return {
+    source: 'mail-to-github',
+    fetched_at: now.toISOString(),
+    count: 1,
+    items: [item],
+  };
+}
+
+/** 合并进某年的说说分片：新条目置顶；同 id（Message-ID）重复投递直接跳过，天然幂等 */
 export function mergeItem(data, item, now = new Date()) {
   if (data.items.some((it) => it.id === item.id)) {
     return { data, changed: false };

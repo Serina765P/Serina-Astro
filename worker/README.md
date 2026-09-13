@@ -1,6 +1,6 @@
 # 说说邮件管道（shuoshuo-mailer）
 
-给 `shuo@serinap.top` 发邮件 → Cloudflare Email Worker 收信 → 校验 → 解析 → commit 进主仓库的 `src/data/shuoshuo.json` → push 触发 Cloudflare Pages 自动构建 → 说说上线。全程免费额度，延迟约 2–3 分钟。
+给 `shuo@serinap.top` 发邮件 → Cloudflare Email Worker 收信 → 校验 → 解析 → commit 进主仓库的 `src/data/shuoshuo/<沪年>.json`（按年分片）→ push 触发 Cloudflare Pages 自动构建 → 说说上线。全程免费额度，延迟约 2–3 分钟。
 
 ```
 你写邮件（主题=标题可选，正文=说说内容）
@@ -13,8 +13,8 @@ Cloudflare Email Routing（serinap.top 的 MX 已托管）
   │  1. 白名单 + SPF/DKIM 校验（不在白名单 → setReject 退信）
   │  2. 主题口令校验（可选，防地址泄露后被冒发）
   │  3. postal-mime 解析：正文 text/plain（仅 HTML 时剥标签兜底）、去签名（-- 线以下丢弃）
-  │  4. GitHub Contents API：读 src/data/shuoshuo.json → 顶部插入新条目 → PUT commit
-  │     （同一 Message-ID 重复投递自动跳过；GitHub 5xx/网络抖动 defer 重试）
+  │  4. GitHub Contents API：读 src/data/shuoshuo/<沪年>.json（按年分片）→ 顶部插入新条目 → PUT commit
+  │     （分片不存在则新建；同一 Message-ID 重复投递自动跳过；GitHub 5xx/网络抖动 defer 重试）
   ▼
 push → Cloud Pages 构建（~2 分钟）→ https://blog.serinap.top/shuoshuo/
 ```
