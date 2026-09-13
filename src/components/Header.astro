@@ -1,6 +1,7 @@
 ---
+import { Image } from 'astro:assets';
 import { Icon } from 'astro-icon/components';
-import { NAV, SITE } from '../site.config';
+import { HERO, NAV, SITE } from '../site.config';
 import ThemeToggle from './ThemeToggle.astro';
 
 const current = Astro.url.pathname.replace(/\/$/, '') || '/';
@@ -14,7 +15,17 @@ const isActive = (href: string) => {
 <header class="sticky top-0 z-nav border-b border-line bg-nav backdrop-blur-md backdrop-saturate-150">
   <div class="flex h-16 w-full items-center justify-between gap-4 px-4 sm:px-6 lg:px-10">
     <a href="/" class="flex min-w-0 items-center gap-2.5 rounded-full py-1 pr-2">
-      <img src="/images/fav.webp" alt="" class="size-8 shrink-0 rounded-full shadow-card" />
+      <!-- S20：头像走 astro:assets，按显示尺寸缩放输出（32px 显示，2x 取 64）；
+           fixed 布局只出 densities srcset；每页首屏元素，显式 eager -->
+      <Image
+        src={HERO.avatar}
+        alt=""
+        width={64}
+        height={64}
+        layout="fixed"
+        loading="eager"
+        class="size-8 shrink-0 rounded-full shadow-card"
+      />
       <span class="truncate tracking-[0.12em] text-ink">{SITE.title}</span>
     </a>
 

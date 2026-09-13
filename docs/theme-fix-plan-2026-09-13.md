@@ -899,4 +899,77 @@ Tailwind 的源扫描**连注释也扫**：第一版注释里写了 `prose-neutr
 
 ---
 
+## 十六、S20 实施记录（P2-10 / P2-11 图像管线补齐）
+
+### 先做实测（计划第四节第 5 条的决策点）：`image.layout` 是否让 Markdown 图自动出 srcset
+
+**结论：支持，用配置。** Astro 7.3.1 顶层 `image.layout`（类型定义标注 5.10.0 起）会让 Markdown 相对路径
+图片自动生成 `srcset/sizes/data-astro-image` —— 改动面只有 `astro.config.mjs` 一处，**未动 16 处 markdown**。
+
+- `constrained` 语义实测：小于容器的图不放大（514px 图输出单候选 514w）；大于容器的图按断点出候选
+  （2559px 图 8 个候选；1440 视口下浏览器选 **1440w 而非 2559w 原图**）。
+- 16 张正文图：11 张多候选、5 张单候选（源宽 ≤ 显示宽度 ~742px）。小图不放大、大图不溢出均符合预期。
+
+### 关键决策：不开 `responsiveStyles`
+
+- 实测 `responsiveStyles: true` 的注入物是 `@layer astro.images`（`:where([data-astro-image]){height:auto}` 等），
+  且**只在有组件 import `astro:assets` 时才被拉进产物**（Markdown 渲染路径不触发）。
+- 本项目已有承担该职责的规则：Tailwind preflight `img,video{max-width:100%;height:auto}`（base 层），
+  组件图尺寸全部由 class 控制。开启等于引入一个排在 Tailwind 各层之后的 cascade layer——
+  与 S18 刚确立的层序纪律（先比层、后比特异性）相冲，故不开。将来若真需要
+  object-fit/position 数据属性驱动形状，再评估。
+
+### P2-11：fav / hero 迁入资产管线
+
+- `git mv public/images/fav.webp src/assets/images/fav.webp`（hero.webp 同）。
+- 消费点改造：
+
+| 位置 | 改动 |
+|---|---|
+| `site.config.ts` HERO | 值改为 import 的 ImageMetadata（原为 public 路径字符串） |
+| `Header.astro:17` | `<Image width={64} height={64} layout="fixed" loading="eager">`（显示 32px，2x 取 64） |
+| `index.astro:46` | 同上 `width={320}`（显示 144/160，2x）；`fetchpriority="high"` 保留、显式 eager |
+| `404.astro:11` | 同上 `width={192}`（显示 96，2x） |
+| `BaseHead.astro:27` favicon | 改 `getImage({ width: 64 }).src`，不再引用 public 原图 |
+
+- **hero.webp 全站无消费**（全仓 grep 只有 site.config 一处定义，无任何消费点）——按计划迁入资产目录
+  保留素材，未被引用故不进 dist；旧 public 副本（125.7KB）随迁移从产物中消失。
+- og.png 保持 public 不动（og:image 需要稳定绝对 URL，不在 S20 范围）。
+- 三处组件图显式 `loading="eager"`：原 `<img>` 无 loading 属性（= eager），`<Image>` 默认 lazy，须显式修正。
+
+### 验证
+
+| 闸门 | 结果 |
+|---|---|
+| `astro check` | 0 error / 0 warning / 29 hints（与基线逐条一致，无新增） |
+| `scripts/contrast-audit.mjs` | 66 项全过 |
+| 产物断言 | `dist/_astro` 两个 CSS；`dist/images` 仅剩 imas/og.png；HTML/XML 中 `/images/fav.webp`、`hero.webp` 引用 = 0 |
+| 产物图片 | Header 64w+128w；首页 320w+640w；404 192w+384w（fixed 布局的 densities srcset）；正文 16 张全部带 srcset |
+| 浏览器探针（msedge，1440px） | 首页/文章/404 **CLS = 0**；大图选 1440w 候选；所有正文图显示宽 ≤ 742px 无溢出；小图不放大 |
+| 截图（1440px 亮暗） | 差异全部归入三类：**S20 头像重编码**（每页 header 32×32、首页 160×160、404 96×96）、S5 胶囊、S18 文字——无意外回归 |
+
+### 体积数据（留档）
+
+- 正文图产物：55 个候选 / 2124KB（原图 16 个 / 636.8KB）—— srcset 的固有代价（部署体积）；
+  单次访问传输量反而下降（1440 视口取 1440w 而非原图）。
+- fav 产物 8 个 / 39.5KB（原单文件 34.4KB）：header 每页只下载 0.8KB（64w）；
+  64w/128w 各两份是组件路径与 `getImage` 路径编码参数不同所致，可接受。
+
+### 基线处置
+
+旧基线是阶段 0 拍摄的，一直携带 S5（暗色胶囊）/ S18（prose 文字）的已知差异噪音；借 S20 重拍：
+
+- 备份 `.shots/baseline-pre-s20/`；新基线两轮**零不稳定**（26 张）。
+- 自此对比只对 S20 之后的改动负责；S5/S18 差异噪音归零。
+
+### 遗留 / 注意
+
+- `layout="fixed"` 输出 densities srcset（1x/2x），不生成响应式候选——组件图语义正确。
+- Markdown 图格式仍为源格式（webp）；Astro 无全局 `defaultFormat`，要 avif 需换 `<Picture>`——
+  按计划口径「至少 webp」达标，avif 不做。
+- `data-astro-image-fit="cover"` / `-pos="center"` 属性已输出但无对应 CSS（未开 responsiveStyles）；
+  组件图靠自身 class 的 object-cover 生效，无实际影响。
+
+---
+
 *本计划基于 2026-09-13 工作区快照与源码逐处核对；行号以该快照为准。*

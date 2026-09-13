@@ -30,3 +30,10 @@ pnpm-debug.log*
 
 # 工作台本地数据（项目记忆 / 会话任务），只在本机有效
 .workbuddy/
+
+# Command Code：本地会话 / 品味数据，不进版本库
+.commandcode/
+
+# 项目记忆（本地维护，不进版本库）
+AGENTS.md
+AGENT.md

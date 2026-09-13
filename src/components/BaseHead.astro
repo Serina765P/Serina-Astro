@@ -1,5 +1,6 @@
 ---
-import { SITE } from '../site.config';
+import { getImage } from 'astro:assets';
+import { HERO, SITE } from '../site.config';
 
 interface Props {
   title: string;
@@ -14,6 +15,8 @@ const { title, description = SITE.description, pathname = '', keywords = SITE.ke
 const canonical = new URL(pathname, Astro.site);
 const ogImage = new URL('/images/og.png', Astro.site);
 const rssUrl = new URL('/rss.xml', Astro.site);
+// S20：fav.webp 已迁入资产管线，favicon 改用 getImage 输出的 64px 小图（不再引用 public 原图）
+const favicon = await getImage({ src: HERO.avatar, width: 64 });
 ---
 
 <meta charset="utf-8" />
@@ -24,7 +27,7 @@ const rssUrl = new URL('/rss.xml', Astro.site);
 <meta name="keywords" content={keywords.join(', ')} />
 <meta name="author" content={SITE.author} />
 <link rel="canonical" href={canonical} />
-<link rel="icon" href="/images/fav.webp" />
+<link rel="icon" href={favicon.src} />
 <!-- 导航底色延伸到浏览器 chrome；content 由主题脚本随手动切换同步（media 写法只跟系统偏好） -->
 <meta name="theme-color" content="#edeae4" />
 <link rel="alternate" type="application/rss+xml" title={SITE.title} href={rssUrl} />

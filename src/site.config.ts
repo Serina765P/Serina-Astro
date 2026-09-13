@@ -5,6 +5,8 @@
 
 import taxonomy from './data/taxonomy.json';
 import siteInfo from './data/site-info.json';
+import avatarImage from './assets/images/fav.webp';
+import heroImage from './assets/images/hero.webp';
 
 export const SITE = {
   title: "SerinaP's Blog",
@@ -17,9 +19,11 @@ export const SITE = {
   since: 2025,
 };
 
+// S20：值为 astro:assets 的 ImageMetadata（原为 public 路径字符串），消费方用 <Image> 渲染；
+// image（hero.webp）目前全站无消费，随 avatar 一并迁入资产管线，产物不再包含未压缩原图。
 export const HERO = {
-  avatar: '/images/fav.webp',
-  image: '/images/hero.webp',
+  avatar: avatarImage,
+  image: heroImage,
 };
 
 export const NAV = [

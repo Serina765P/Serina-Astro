@@ -11,6 +11,13 @@ export default defineConfig({
   build: {
     format: 'directory',
   },
+  // S20：正文图/组件图统一走 astro:assets。constrained 让 Markdown 相对路径图片
+  // 自动获得 srcset/sizes；不开 responsiveStyles —— 尺寸约束由 Tailwind preflight
+  // （img{max-width:100%;height:auto}）与组件 class 承担，避免 @layer astro.images
+  // 与 Tailwind 层序产生新的不确定优先级。
+  image: {
+    layout: 'constrained',
+  },
   integrations: [
     mdx(),
     sitemap(),

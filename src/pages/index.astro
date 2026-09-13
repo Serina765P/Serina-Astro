@@ -1,4 +1,5 @@
 ---
+import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import { Icon } from 'astro-icon/components';
 import BaseLayout from '../layouts/BaseLayout.astro';
@@ -43,9 +44,14 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
     <div class="wash absolute h-52 w-60 right-[22%] -bottom-16 bg-wash-sage" aria-hidden="true"></div>
 
     <div class="blob-wrap blob relative mx-auto mb-7 size-36 sm:size-40">
-      <img
+      <!-- S20：首屏头像走 astro:assets；320 覆盖最大显示宽（160px）的 2x，fetchpriority 保留 -->
+      <Image
         src={HERO.avatar}
         alt={`${SITE.author} 的头像`}
+        width={320}
+        height={320}
+        layout="fixed"
+        loading="eager"
         fetchpriority="high"
         class="blob relative size-full object-cover shadow-card-hover"
       />

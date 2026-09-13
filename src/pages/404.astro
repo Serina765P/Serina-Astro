@@ -1,14 +1,24 @@
 ---
+import { Image } from 'astro:assets';
 import { Icon } from 'astro-icon/components';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Container from '../components/primitives/Container.astro';
-import { SITE } from '../site.config';
+import { HERO, SITE } from '../site.config';
 ---
 
 <BaseLayout title={`404 · ${SITE.title}`} description="页面不存在" pathname="/404.html">
   <Container width="standard">
     <div class="flex min-h-[55vh] flex-col items-center justify-center py-10 text-center">
-      <img src="/images/fav.webp" alt="" class="blob size-24 shadow-card" />
+      <!-- S20：走 astro:assets（96px 显示，2x 取 192）；首屏主视觉保持 eager -->
+      <Image
+        src={HERO.avatar}
+        alt=""
+        width={192}
+        height={192}
+        layout="fixed"
+        loading="eager"
+        class="blob size-24 shadow-card"
+      />
       <p class="mt-6 text-6xl tracking-[0.15em] text-wash-pink-deep [text-indent:0.15em]">404</p>
       <p class="mt-3 text-sub">（´・ω・｀） 页面好像走丢了…</p>
       <a
