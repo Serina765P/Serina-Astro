@@ -66,7 +66,7 @@ export default {
         .replace(/&gt;/g, '>')
         .replace(/&quot;/g, '"');
     }
-    text = stripSignature(text);
+    text = stripSignature(text, raw.from);
     if (!text) return message.setReject('正文为空');
 
     const item = buildItem({

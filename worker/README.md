@@ -12,7 +12,8 @@ Cloudflare Email Routing（serinap.top 的 MX 已托管）
 本 Worker（email handler）
   │  1. 白名单 + SPF/DKIM 校验（不在白名单 → setReject 退信）
   │  2. 主题口令校验（可选，防地址泄露后被冒发）
-  │  3. postal-mime 解析：正文 text/plain（仅 HTML 时剥标签兜底）、去签名（-- 线以下丢弃）
+  │  3. postal-mime 解析：正文 text/plain（仅 HTML 时剥标签兜底）、去签名（`-- ` 线以下丢弃；
+  │     手机 QQ 等不加分隔线的客户端，按发件人「显示名 + 邮箱」尾部块剥离）
   │  4. GitHub Contents API：读 src/data/shuoshuo/<沪年>.json（按年分片）→ 顶部插入新条目 → PUT commit
   │     （分片不存在则新建；同一 Message-ID 重复投递自动跳过；GitHub 5xx/网络抖动 defer 重试）
   ▼
@@ -65,7 +66,7 @@ push → Cloud Pages 构建（~2 分钟）→ https://blog.serinap.top/shuoshuo/
    - 启用 Email Routing（按提示添加 MX/TXT 记录）
    - Routing rules → 新建：Catch-all 或指定地址 `shuo@serinap.top` → Action: **Send to a Worker** → 选 `shuoshuo-mailer`
 
-4. **验证**：从白名单地址发一封带口令的邮件，然后 `npx wrangler tail` 看日志；主仓库 `src/data/shuoshuo.json` 应多出一条 `type: MAIL` 的记录，Pages 构建完成后说说页可见。
+4. **验证**：从白名单地址发一封带口令的邮件，然后 `npx wrangler tail` 看日志；主仓库 `src/data/shuoshuo/<沪年>.json` 应多出一条 `type: MAIL` 的记录，Pages 构建完成后说说页可见。
 
 ## 本地测试
 

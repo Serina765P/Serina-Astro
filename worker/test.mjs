@@ -52,6 +52,52 @@ assert.equal(stripToken('没有口令的主题', '[s3cret]').ok, false);
 const text = stripSignature(mail.text);
 assert.equal(text, '今天冲了杯新豆子，柑橘调很惊喜。');
 
+// ── 签名剥离：手机端 QQ 无 `-- ` 分隔线，尾部「显示名 + 邮箱地址」按发件人身份剥离 ──
+const PHONE_MAIL = [
+  'From: 芹菜P <serinap@qq.com>',
+  'To: shuo@serinap.top',
+  'Subject: 寝室楼的洗衣机真的不够用',
+  'Date: Sat, 13 Sep 2026 21:27:00 +0800',
+  'Message-ID: <phone1@qq.com>',
+  'Content-Type: text/plain; charset=utf-8',
+  '',
+  '我就拿个洗衣粉的15秒功夫就被抢了😅',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '芹菜P',
+  'serinap@qq.com',
+].join('\r\n');
+const phone = await PostalMime.parse(PHONE_MAIL);
+assert.equal(phone.from.name, '芹菜P');
+assert.equal(
+  stripSignature(phone.text, phone.from),
+  '我就拿个洗衣粉的15秒功夫就被抢了😅',
+  '手机端尾部「显示名 + 邮箱」签名应剥离',
+);
+
+const qq = { name: '芹菜P', address: 'serinap@qq.com' };
+assert.equal(stripSignature('今天好累\nserinap@qq.com\n芹菜P', qq), '今天好累');
+assert.equal(stripSignature('今天好累\n芹菜P', qq), '今天好累\n芹菜P', '只有显示名的落款不动');
+assert.equal(
+  stripSignature('今天好累\nserinap@qq.com', qq),
+  '今天好累\nserinap@qq.com',
+  '只有邮箱一行不动',
+);
+assert.equal(
+  stripSignature('今天好累\n\n阿猫\nserinap@qq.com', qq),
+  '今天好累',
+  '昵称不匹配但块与正文隔空行：按 QQ 形态兜底',
+);
+assert.equal(stripSignature('芹菜P\nserinap@qq.com', qq), '', '全是签名 → 空正文');
+
 // ── 条目构造 + 合并 + 幂等 ──
 const item = buildItem({ id: mail.messageId, subject, content: text, publishedAt: mail.date });
 assert.equal(item.type, 'MAIL');
@@ -117,4 +163,6 @@ assert.equal(shard.count, 1);
 assert.deepEqual(shard.items, [item]);
 assert.equal(mergeItem(shard, item).changed, false, '同一 Message-ID 在新分片里也应跳过');
 
-console.log('✅ 全部断言通过：解析/白名单/口令/签名/幂等/分片路径/base64 往返均符合预期');
+console.log(
+  '✅ 全部断言通过：解析/白名单/口令/签名（-- 线 + 手机端尾部块）/幂等/分片路径/base64 往返均符合预期',
+);
