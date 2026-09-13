@@ -2,11 +2,12 @@
 import { Icon } from 'astro-icon/components';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PageHeader from '../../components/primitives/PageHeader.astro';
+import Container from '../../components/primitives/Container.astro';
 import { SITE } from '../../site.config';
 ---
 
 <BaseLayout title={`搜索 · ${SITE.title}`} description="全站搜索" pathname="/search/">
-  <div id="search-app" class="mx-auto max-w-2xl">
+  <Container width="narrow" id="search-app">
     <PageHeader title="搜索" class="mb-6" />
 
     <div class="relative">
@@ -28,7 +29,7 @@ import { SITE } from '../../site.config';
 
     <p id="search-status" class="mt-3 hidden text-xs text-sub tabular-nums" aria-live="polite"></p>
     <ul id="search-results" class="mt-4 space-y-3 pb-16"></ul>
-  </div>
+  </Container>
 </BaseLayout>
 
 <script is:inline>

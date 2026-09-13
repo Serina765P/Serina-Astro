@@ -1,0 +1,31 @@
+---
+/**
+ * 页面容器（P1-4）：全站页面级宽度的唯一出口。
+ *
+ * 为什么不直接在页面里写 max-w-*：之前全站并列 5 套宽度（3xl/2xl/5xl/4xl/6xl）且横向留白
+ * 有时在 <main> 上、有时在页面自带的 wrapper 上，改一处宽度要翻全站。这里把
+ * 「居中 + 横向留白 + 宽度档位」三件事收成一处，档位值见 global.css 的 --container-*。
+ *
+ * 纵向留白不归它管：由 <main> 的 mainClass（如 py-8 sm:py-10）或页面自己决定。
+ */
+interface Props {
+  /** narrow = 说说/搜索窄列 42rem；content = 长文 48rem；standard = 列表 64rem；wide = 文章+TOC 72rem */
+  width: 'narrow' | 'content' | 'standard' | 'wide';
+  /** 透传到外层 div（搜索页要挂 #search-app 给脚本用） */
+  id?: string;
+  class?: string;
+}
+
+const { width, class: className = '', ...rest } = Astro.props;
+
+const WIDTHS = {
+  narrow: 'max-w-narrow',
+  content: 'max-w-content',
+  standard: 'max-w-standard',
+  wide: 'max-w-wide',
+} as const;
+---
+
+<div class:list={['mx-auto w-full px-4 sm:px-6', WIDTHS[width], className]} {...rest}>
+  <slot />
+</div>

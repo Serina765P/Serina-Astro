@@ -523,4 +523,83 @@ S3 之前没有任何 `color-mix()` 进过 `TOKENS`，所以一直没触发。�
 
 ---
 
+## 九、S12 实施记录（P1-4 容器 token + `<Container>` + 消除 lg 空白死区）
+
+### 做法
+
+- 新增 `src/components/primitives/Container.astro`：props `width: 'narrow' | 'content' | 'standard' | 'wide'`、
+  `id?`、`class?`，输出 `mx-auto w-full px-4 sm:px-6 max-w-<档位>`。档位值见 `global.css` 的 `--container-*`。
+- **`<main>` 不再承担宽度与横向留白**：`BaseLayout` 的默认 `mainClass` 从
+  `mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10` 收成 **`py-8 sm:py-10`**（只留纵向留白）。
+- 页面级容器统一改用 `<Container>`（12 处）：
+
+| 页面 | 档位 | 旧写法 |
+|---|---|---|
+| 归档 / 分类 / 标签 / 分类-slug / 标签-slug / 404 | standard | 靠 `<main>` 默认的 `max-w-5xl` |
+| 首页下半 | standard | `mx-auto w-full max-w-5xl px-4 pb-16 sm:px-6` |
+| Footer | standard | `mx-auto max-w-5xl px-4 … sm:px-6` |
+| PageLayout（关于 / 友链） | content | `mx-auto max-w-3xl` |
+| 说说 / 搜索 | narrow | `mx-auto max-w-2xl` |
+| 文章页 | wide | `mainClass` 里的 `max-w-6xl` |
+
+### 关键坑：`max-width` 是 border-box，内边距会吃掉宽度
+
+第一版按字面把 `--container-content` 定成 48rem（= 旧 `max-w-3xl` 的值），
+结果**说说 / 搜索 / 关于 / 友链四页的内容栏各被压窄 48px** —— 截图当场报出来（4 页 × 亮暗 = 8 张变化）。
+
+原因：旧结构里这四页的宽度是「外层 `<main>` 带内边距 + 内层元素只管 `max-w-*`、不带内边距」，
+内层的 `max-width` 是**不含** gutter 的内容宽；而 `<Container>` 把 gutter 和 `max-width` 放在同一元素上，
+`box-sizing: border-box` 下 48px 内边距必须从 max-width 里扣。
+
+修法：把档位口径统一为**容器总宽（含 sm+ 的 1.5rem×2 内边距）**：
+`narrow = 45rem`、`content = 51rem`（各 +3rem，复刻原内容宽 42rem / 48rem）；
+`standard = 64rem`、`wide = 72rem` 不动 —— 这两档的旧值（`max-w-5xl` / `max-w-6xl`）
+本来就是含 gutter 的总宽。改完截图回到「只有暗色分类胶囊在变」。
+
+### TOC 断点：`xl` → `lg`
+
+`PostLayout` 的侧栏 `hidden xl:block` 与 `Toc.astro` 的二次守卫一并提到 `lg:block`。
+1024–1279px 这一档不再出现「宽容器 + 无侧栏」的横向浪费。实测（Edge headless，1440 高）：
+
+| 视口 | 容器 | 正文栏 | 侧栏 |
+|---|---|---|---|
+| 1023px | 1023（满宽） | 896px（被 `max-w-4xl` 封顶） | 隐藏 |
+| 1024px | 1024（满宽） | 712px | 224px |
+| 1279px | 1152px | 840px | 224px |
+| 1280px | 1152px | 840px | 224px |
+| 1440px | 1152px | 840px | 224px |
+
+- 1279 与 1280 **完全一致** → 断点切换不再卡在 `xl` 上跳变；新的跳变点是 1024（正文 896 → 712）。
+- 1024px 下正文面板内边距是 `lg:p-12`，文字栏剩 616px，仍属舒适阅读宽度。
+- 五个宽度横向溢出均为 0。截图：`.shots/breakpoints/`。
+
+### 验收
+
+| 闸门 | 结果 |
+|---|---|
+| `astro check` | 0 error / 0 warning |
+| `astro build` | 38 页、`dist/_astro` 有 CSS；四个 `max-w-<档位>` 工具类都进了产物 |
+| `contrast-audit` | 64 项全过 |
+| 截图（1440px） | 亮色 13/13 与基线逐字节一致；暗色稳定图只有分类胶囊那 3 张（S5 的既有差异） |
+
+产物逐页核对：归档/404 → `max-w-standard`；说说/搜索 → `max-w-narrow`；关于/友链 → `max-w-content`；
+文章页 → `max-w-wide`；页脚 → `max-w-standard`。
+
+### 残留的 `max-w-*`（都不该动，逐条说明）
+
+`grep max-w- src/` 除 Container 自身的档位映射表外还剩 5 处：
+
+1. `Prose.astro` 的 `max-w-none` —— 压掉 typography 自带的行宽限制（宽度已由容器管住）。
+2. `PostLayout` 的 `<article class="min-w-0 max-w-4xl flex-1">` —— wide 容器**内部**的阅读栏上限，
+   与侧栏抢空间时先收它，不是页面级容器。
+3. `shuoshuo` 的 `max-w-sm` —— 单张配图的缩略上限。
+4. `global.css` 的 `max-w-[92vw]` ×2 —— 灯箱对话框，按视口而非容器定宽。
+
+### 遗留
+
+- `index.astro` 的 `@media (max-width: 880px)`（bento 折叠）仍是裸像素 —— 属 S14。
+- 首页 hero 的 `<section>` 自带 `px-6`、不吃容器（有意全幅），没有对应档位。
+
+---
+
 *本计划基于 2026-09-13 工作区快照与源码逐处核对；行号以该快照为准。*

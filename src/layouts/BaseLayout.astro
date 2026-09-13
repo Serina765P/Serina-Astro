@@ -12,7 +12,7 @@ interface Props {
   keywords?: string[];
   ogType?: 'website' | 'article';
   pathname?: string;
-  /** 覆盖 main 容器的布局类（如首页/文章页需要全幅或自定义宽度时） */
+  /** 覆盖 <main> 的布局类。默认只留纵向留白 —— 页面级宽度一律交给 <Container>（P1-4） */
   mainClass?: string;
 }
 
@@ -22,7 +22,7 @@ const {
   keywords,
   ogType,
   pathname,
-  mainClass = 'mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10',
+  mainClass = 'py-8 sm:py-10',
 } = Astro.props;
 ---
 

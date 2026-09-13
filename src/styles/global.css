@@ -144,9 +144,16 @@
      消费点：断点 → index.astro 的 bento 媒体查询；容器 → <Container>；圆角/阴影 → 逃逸值收敛。 */
   /* 非标断点：替代 index.astro 里裸写的 880px（既非 md 768 也非 lg 1024） */
   --breakpoint-bento: 55rem;
-  /* 容器宽度：收敛全站 5 套 max-w-*
-     content = 长文 / PageLayout；standard = 列表页；wide = 文章 + TOC */
-  --container-content: 48rem;
+  /* 容器宽度：全站「页面级宽度」的唯一来源，消费方是 <Container>（页面里不要再手写 max-w-*）。
+     口径 = **容器总宽（含 sm+ 的 1.5rem×2 横向内边距）**，因为 max-width 是 border-box，
+     内边距会吃掉宽度。所以：
+       narrow   45rem = 内容 42rem（复刻旧 max-w-2xl：说说 / 搜索的窄读列）
+       content  51rem = 内容 48rem（复刻旧 max-w-3xl：长文 / PageLayout）
+       standard 64rem（旧 max-w-5xl 本来就是含内边距的总宽：列表页 / 页脚 / 首页）
+       wide     72rem（旧 max-w-6xl，同上：文章 + TOC）
+     narrow/content 的旧值是不含内边距的内容宽，故 +3rem —— 目的是这一批零视觉变化。 */
+  --container-narrow: 45rem;
+  --container-content: 51rem;
   --container-standard: 64rem;
   --container-wide: 72rem;
   /* 语义圆角 */

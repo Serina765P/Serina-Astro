@@ -4,6 +4,7 @@ import { Icon } from 'astro-icon/components';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PostCard from '../components/PostCard.astro';
 import TagChip from '../components/primitives/TagChip.astro';
+import Container from '../components/primitives/Container.astro';
 import { formatDate } from '../lib/utils';
 import { HERO, SITE, tagSlug } from '../site.config';
 
@@ -53,7 +54,7 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
     <p class="mt-4 text-sm tracking-[0.3em] text-sub [text-indent:0.3em]">{SITE.description}</p>
   </section>
 
-  <div class="mx-auto w-full max-w-5xl px-4 pb-16 sm:px-6">
+  <Container width="standard" class="pb-16">
     <!-- 便当盒信息区 -->
     <div class="sec-head">
       <h2>小站速览</h2>
@@ -118,7 +119,7 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
           </a>
       )
     }
-  </div>
+  </Container>
 </BaseLayout>
 
 <style>

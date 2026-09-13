@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Container from '../../components/primitives/Container.astro';
 import PostCard from '../../components/PostCard.astro';
 import PageHeader from '../../components/primitives/PageHeader.astro';
 import { categorySlug } from '../../site.config';
@@ -28,9 +29,11 @@ const sorted = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf(
 ---
 
 <BaseLayout title={`分类：${name} · ${SITE.title}`} description={`分类「${name}」下的文章`} pathname={`/categories/${categorySlug(name)}/`}>
-  <PageHeader title={name} eyebrow="分类" subtitle={`共 ${sorted.length} 篇文章`} />
+  <Container width="standard">
+    <PageHeader title={name} eyebrow="分类" subtitle={`共 ${sorted.length} 篇文章`} />
 
-  <div class="space-y-4">
-    {sorted.map((post) => <PostCard post={post} />)}
-  </div>
+    <div class="space-y-4">
+      {sorted.map((post) => <PostCard post={post} />)}
+    </div>
+  </Container>
 </BaseLayout>

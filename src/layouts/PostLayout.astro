@@ -9,6 +9,7 @@ import CodeFold from '../components/CodeFold.astro';
 import CodeCopy from '../components/CodeCopy.astro';
 import Card from '../components/primitives/Card.astro';
 import TagChip from '../components/primitives/TagChip.astro';
+import Container from '../components/primitives/Container.astro';
 import { categoryFillClass, categorySlug, tagSlug, SITE } from '../site.config';
 import { formatDate, formatCount, readingTime, wordcount } from '../lib/utils';
 
@@ -50,7 +51,7 @@ const category = data.categories[0];
   description={data.description}
   ogType="article"
   pathname={`/posts/${post.id}/`}
-  mainClass="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10"
+  mainClass="py-8 sm:py-10"
 >
   {
     data.skin === 'imas-album' && <ImasAlbum />
@@ -58,7 +59,7 @@ const category = data.categories[0];
   <CodeFold />
   <CodeCopy />
 
-  <div class="flex w-full justify-center gap-10">
+  <Container width="wide" class="flex justify-center gap-10">
     <article class="min-w-0 max-w-4xl flex-1">
       <!-- 文章面板：Apple 式大标题 + 舒适栏宽 -->
       <div class="rounded-3xl border border-line bg-surface p-6 shadow-card sm:p-10 lg:p-12">
@@ -151,11 +152,12 @@ const category = data.categories[0];
       <Giscus />
     </article>
 
-    <!-- TOC：≥xl 双栏；吸顶但容器自身可滚轮浏览长目录，随文章容器结束而结束 -->
-    <aside class="hidden w-56 shrink-0 xl:block">
+    <!-- TOC：≥lg 双栏（原先只从 xl 起，1024–1279px 就出现「宽容器 + 无侧栏」的横向浪费）；
+         吸顶但容器自身可滚轮浏览长目录，随文章容器结束而结束 -->
+    <aside class="hidden w-56 shrink-0 lg:block">
       <div class="toc-scroll sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto overscroll-contain">
         <Toc headings={headings} />
       </div>
     </aside>
-  </div>
+  </Container>
 </BaseLayout>

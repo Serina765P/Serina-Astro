@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Container from '../../components/primitives/Container.astro';
 import PageHeader from '../../components/primitives/PageHeader.astro';
 import { tagSlug } from '../../site.config';
 import { SITE } from '../../site.config';
@@ -28,22 +29,24 @@ const fontSize = (count: number) => {
 ---
 
 <BaseLayout title={`标签 · ${SITE.title}`} description="文章标签" pathname="/tags/">
-  <PageHeader title="标签" />
+  <Container width="standard">
+    <PageHeader title="标签" />
 
-  <ul class="flex flex-wrap gap-x-5 gap-y-3" aria-label="全部标签">
-    {
-      sorted.map(({ name, count }) => (
-        <li>
-          <a
-            href={`/tags/${tagSlug(name)}/`}
-            class="inline-flex items-baseline gap-1.5 text-wash-pink-deep transition-colors hover:text-wash-rose-deep"
-            style={`font-size: ${fontSize(count)};`}
-          >
-            <span class="font-medium"># {name}</span>
-            <span class="text-xs text-sub tabular-nums">{count}</span>
-          </a>
-        </li>
-      ))
-    }
-  </ul>
+    <ul class="flex flex-wrap gap-x-5 gap-y-3" aria-label="全部标签">
+      {
+        sorted.map(({ name, count }) => (
+          <li>
+            <a
+              href={`/tags/${tagSlug(name)}/`}
+              class="inline-flex items-baseline gap-1.5 text-wash-pink-deep transition-colors hover:text-wash-rose-deep"
+              style={`font-size: ${fontSize(count)};`}
+            >
+              <span class="font-medium"># {name}</span>
+              <span class="text-xs text-sub tabular-nums">{count}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </Container>
 </BaseLayout>

@@ -3,7 +3,8 @@
  * 页面标题块基元（P1-1）：把 8 处「h1 + 可选 eyebrow / subtitle」的字面重复收敛到一处。
  * - eyebrow：标题上方的小字（如「分类」「标签」），小字号 + 宽字距；存在时 h1 自动上移 1 档间距
  * - subtitle：标题下方的说明（如「共 N 篇文章」），统一 mt-2 text-sm text-sub
- * - class：覆盖 <header> 自身的布局类（默认 mb-8；搜索页是 mb-6、说说页是 mx-auto max-w-2xl）
+ * - class：覆盖 <header> 自身的布局类（默认 mb-8；搜索页用 mb-6）。
+ *   宽度不归它管 —— 页面级宽度由 <Container> 提供（S12 起）
  */
 interface Props {
   title: string;

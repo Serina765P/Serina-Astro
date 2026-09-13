@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Container from '../../components/primitives/Container.astro';
 import Card from '../../components/primitives/Card.astro';
 import PageHeader from '../../components/primitives/PageHeader.astro';
 import { categoryColor, categorySlug } from '../../site.config';
@@ -20,25 +21,27 @@ const sorted = [...categories.values()].sort((a, b) => b.count - a.count);
 ---
 
 <BaseLayout title={`分类 · ${SITE.title}`} description="文章分类" pathname="/categories/">
-  <PageHeader title="分类" />
+  <Container width="standard">
+    <PageHeader title="分类" />
 
-  <ul class="grid gap-3 sm:grid-cols-2">
-    {
-      sorted.map(({ name, count }) => (
-        <li>
-          <Card
-            as="a"
-            href={`/categories/${categorySlug(name)}/`}
-            class="flex items-center justify-between px-5 py-4"
-          >
-            <span class="flex items-center gap-2.5 text-body">
-              <span aria-hidden="true" class="size-2.5 rounded-full" style={`background:${categoryColor(name)}`}></span>
-              {name}
-            </span>
-            <span class="text-sm text-sub tabular-nums">{count} 篇</span>
-          </Card>
-        </li>
-      ))
-    }
-  </ul>
+    <ul class="grid gap-3 sm:grid-cols-2">
+      {
+        sorted.map(({ name, count }) => (
+          <li>
+            <Card
+              as="a"
+              href={`/categories/${categorySlug(name)}/`}
+              class="flex items-center justify-between px-5 py-4"
+            >
+              <span class="flex items-center gap-2.5 text-body">
+                <span aria-hidden="true" class="size-2.5 rounded-full" style={`background:${categoryColor(name)}`}></span>
+                {name}
+              </span>
+              <span class="text-sm text-sub tabular-nums">{count} 篇</span>
+            </Card>
+          </li>
+        ))
+      }
+    </ul>
+  </Container>
 </BaseLayout>

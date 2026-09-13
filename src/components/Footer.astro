@@ -1,5 +1,6 @@
 ---
 import { SIDEBAR, SITE } from '../site.config';
+import Container from './primitives/Container.astro';
 import { yearInShanghai } from '../lib/utils';
 
 const year = yearInShanghai(new Date());
@@ -8,7 +9,7 @@ const washes = ['var(--wash-pink)', 'var(--wash-mist)', 'var(--wash-sage)', 'var
 ---
 
 <footer class="pb-10 pt-4">
-  <div class="mx-auto max-w-5xl px-4 text-center text-sm text-sub sm:px-6">
+  <Container width="standard" class="text-center text-sm text-sub">
     <div class="mb-5 flex justify-center gap-2.5" aria-hidden="true">
       {washes.map((color) => <i class="h-2 w-8 rounded-full opacity-65" style={`background:${color}`} />)}
     </div>
@@ -22,5 +23,5 @@ const washes = ['var(--wash-pink)', 'var(--wash-mist)', 'var(--wash-sage)', 'var
     <p class="mt-1 text-xs text-sub">
       {SIDEBAR.description.split('\n')[0]}
     </p>
-  </div>
+  </Container>
 </footer>
