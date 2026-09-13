@@ -1,8 +1,18 @@
 {
   "source": "mail-to-github",
-  "fetched_at": "2026-09-07T06:27:35.478Z",
-  "count": 1,
+  "fetched_at": "2026-09-13T12:27:29.067Z",
+  "count": 2,
   "items": [
+    {
+      "id": "tencent_323133FC11DF68C4EFF9A22C015574616107@qq.com",
+      "title": "用DeepSeek调整了下架构",
+      "type": "MAIL",
+      "content": "所以试试这个说说还能不能用，另外我打算清理一下QQ邮箱自带的签名功能",
+      "images": [],
+      "link": "",
+      "like": 0,
+      "published_at": "2026-09-13T12:27:26.000Z"
+    },
     {
       "id": "tencent_D4E13FF812216ACEA3654DA9360AFF88C10A@qq.com",
       "title": "这是一个测试说说",
