@@ -47,84 +47,69 @@ const isActive = (href: string) => {
         <Icon name="material-symbols:search" class="size-5" />
       </a>
       <ThemeToggle />
-      <button
-        id="mobile-menu-button"
-        type="button"
-        aria-label="打开菜单"
-        aria-expanded="false"
-        aria-controls="mobile-menu"
-        class="grid size-9 place-items-center rounded-full text-sub transition-colors hover:bg-surface-2 hover:text-wash-pink-deep lg:hidden"
-      >
-        <Icon name="material-symbols:menu" class="menu-open-icon size-5" />
-        <Icon name="material-symbols:close" class="menu-close-icon hidden size-5" />
-      </button>
+
+      <!-- 移动端菜单 CSS-only：展开态由 <details open> 承载（无 JS 可展开/跳转/收起），
+           脚本只做增强。面板用实心 --surface（P2-14），并绝对定位到 header 下沿。 -->
+      <details class="mobile-menu group lg:hidden" data-mobile-menu>
+        <summary
+          aria-label="菜单"
+          class="grid size-9 cursor-pointer list-none place-items-center rounded-full text-sub transition-colors hover:bg-surface-2 hover:text-wash-pink-deep [&::-webkit-details-marker]:hidden"
+        >
+          <Icon name="material-symbols:menu" class="menu-open-icon size-5 group-open:hidden" />
+          <Icon
+            name="material-symbols:close"
+            class="menu-close-icon hidden size-5 group-open:block"
+          />
+        </summary>
+
+        <!-- 面板：原先继承 header 的半透明 --nav-bg + 模糊底，展开时正文会透上来（P2-14） -->
+        <nav
+          id="mobile-menu"
+          aria-label="移动端导航"
+          class="absolute inset-x-0 top-full border-t border-b border-line bg-surface px-4 pt-2 pb-4"
+        >
+          <ul class="grid grid-cols-2 gap-1">
+            {
+              NAV.map((item) => (
+                <li>
+                  <a
+                    href={item.href}
+                    aria-current={isActive(item.href) ? 'page' : undefined}
+                    class:list={[
+                      'flex items-center gap-2 rounded-2xl px-3 py-2 text-sm transition-colors',
+                      isActive(item.href)
+                        ? 'bg-surface-2 font-medium text-ink'
+                        : 'text-sub hover:bg-surface-2',
+                    ]}
+                  >
+                    <Icon name={`material-symbols:${item.icon}`} class="size-4" />
+                    {item.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+      </details>
     </div>
   </div>
-
-  <nav
-    id="mobile-menu"
-    hidden
-    class="border-t border-line px-4 pb-4 pt-2 lg:hidden"
-    aria-label="移动端导航"
-  >
-    <ul class="grid grid-cols-2 gap-1">
-      {
-        NAV.map((item) => (
-          <li>
-            <a
-              href={item.href}
-              aria-current={isActive(item.href) ? 'page' : undefined}
-              class:list={[
-                'flex items-center gap-2 rounded-2xl px-3 py-2 text-sm transition-colors',
-                isActive(item.href)
-                  ? 'bg-surface font-medium text-ink shadow-card'
-                  : 'text-sub hover:bg-surface-2',
-              ]}
-            >
-              <Icon name={`material-symbols:${item.icon}`} class="size-4" />
-              {item.label}
-            </a>
-          </li>
-        ))
-      }
-    </ul>
-  </nav>
 </header>
 
 <script>
-  // 事件委托绑定在 document 上：ClientRouter 换页后依然生效
-  function setMenuOpen(open: boolean) {
-    const button = document.querySelector<HTMLButtonElement>('#mobile-menu-button');
-    const menu = document.querySelector<HTMLElement>('#mobile-menu');
-    if (!button || !menu) return;
-    button.setAttribute('aria-expanded', String(open));
-    button.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
-    menu.hidden = !open;
-    button.querySelector('.menu-open-icon')?.classList.toggle('hidden', open);
-    button.querySelector('.menu-close-icon')?.classList.toggle('hidden', !open);
-    if (open) button.dataset.menuOpen = 'true';
-    else delete button.dataset.menuOpen;
-  }
-
+  // 只做增强，绝不代管 summary 的点击（否则与 <details> 原生切换打架、一次点击切换两次）。
+  // 事件委托绑在 document 上：ClientRouter 换页后依然生效。
   document.addEventListener('click', (event) => {
     const target = event.target as HTMLElement | null;
-    const button = target?.closest<HTMLButtonElement>('#mobile-menu-button');
-    if (button) {
-      setMenuOpen(button.getAttribute('aria-expanded') !== 'true');
-      return;
+    for (const menu of document.querySelectorAll<HTMLDetailsElement>('details[data-mobile-menu]')) {
+      if (menu.open && !target?.closest('details[data-mobile-menu]')) menu.open = false;
     }
-    // 菜单展开时：点击菜单外任意处关闭
-    const menu = document.querySelector<HTMLElement>('#mobile-menu');
-    if (menu && !menu.hidden && !target?.closest('#mobile-menu')) setMenuOpen(false);
   });
 
-  // Esc 关闭并把焦点还给按钮
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return;
-    const button = document.querySelector<HTMLButtonElement>('#mobile-menu-button');
-    if (button?.dataset.menuOpen === 'true') {
-      setMenuOpen(false);
-      button.focus();
-    }
+    const menu = document.querySelector<HTMLDetailsElement>('details[data-mobile-menu][open]');
+    if (!menu) return;
+    menu.open = false;
+    menu.querySelector('summary')?.focus();
   });
 </script>

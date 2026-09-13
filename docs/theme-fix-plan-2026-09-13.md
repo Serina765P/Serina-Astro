@@ -463,4 +463,64 @@ S3 之前没有任何 `color-mix()` 进过 `TOKENS`，所以一直没触发。�
 
 ---
 
+## 八、S11 实施记录（P0-2 移动导航改 CSS-only，吸收 P2-14）
+
+### 做法
+
+`Header.astro` 的移动菜单从「`<button>` + JS 移除 `hidden`」改成 `<details><summary>`：
+
+- 展开态由 `<details open>` 承载 —— 浏览器原生管理，**没有 JS 也能展开 / 跳转 / 收起**；
+  桌面导航（`lg:flex`）与其余结构未动。
+- 图标切换不再靠 JS toggle `hidden`，改为 `group-open:hidden` / `group-open:block`
+  （`<details class="mobile-menu group">`）。产物选择器已核：
+  `.group-open\:block:is(:where(.group):is([open],:popover-open,:open) *)`。
+- `summary` 需要 `list-none` + `[&::-webkit-details-marker]:hidden` 压掉原生三角
+  （与 `.prose details summary` 同一套处理）。
+- 脚本只留增强：**点面板外关闭** + **Esc 关闭并归还焦点**。刻意**不代管 summary 的点击** ——
+  否则会与 `<details>` 的原生切换打架、一次点击切两次。
+
+### P2-14（一并解决）
+
+面板底色从「继承 header 的半透明 `--nav-bg` + 模糊底」改为**实心 `--surface`**；
+同时绝对定位到 header 下沿（`absolute inset-x-0 top-full`；header 的 `backdrop-blur`
+使它成为绝对定位后代的包含块），**展开不再把正文顶下去**。
+
+连带一处必需改动：面板里当前项的 active 底由 `bg-surface` 改成 `bg-surface-2` ——
+面板本身就是 `--surface`，不换 token 的话 active 项与面板同色、看不出来。
+
+### 语义
+
+按计划移除冗余的 `aria-expanded` / `aria-controls`（`<summary>` 自带展开态播报）。
+`aria-label` 保留，但取中性文案「菜单」：静态 label 无法随展开态变化，中性文案才不会在展开时撒谎。
+产物已核：`dist/index.html` 里 `aria-expanded` / `aria-controls` 各出现 **0 次**。
+
+### 验证（亮/暗 × 有/无 JS）
+
+`shots.mjs` 的视口是 1440px，移动菜单在基线里根本不出现，所以 S11 另做了一次移动端走查
+（375×812，Edge headless）：
+
+| 组合 | 展开 | 再点收起 | 点面板链接到达 | 面板底色 | Esc | 点外面关 |
+|---|---|---|---|---|---|---|
+| light + JS | ✅ | ✅ | `/archives/` | `rgb(250,248,244)` = `--surface`，不透明 | ✅ 且焦点归还 summary | ✅ |
+| light 无 JS | ✅ | ✅ | `/archives/` | 同上 | — | — |
+| dark + JS | ✅ | ✅ | `/archives/` | `rgb(48,44,39)` = `--surface`，不透明 | ✅ | ✅ |
+| dark 无 JS | ✅ | ✅ | `/archives/` | 同上（继承亮色） | — | — |
+
+两点必须说清楚：
+
+1. **「暗色 × 无 JS」这一格实际不存在** —— 主题由内联脚本按 `localStorage` 给 `<html>` 加 `dark`，
+   JS 关掉就是亮色。所以四种组合实际只覆盖三种状态。
+2. 1024px（`lg` 临界）下整块 `display:none`，已断言。
+
+桌面视口回归：`final → s11` 稳定图**逐字节零差异**（仅 2 张已知抖动图不同）——
+这次重写对 ≥lg 完全没有影响。截图落在 `.shots/mobile/`（每组合 `-closed` / `-open` 各一张）。
+
+### 遗留
+
+- `#mobile-menu` 这个 id 现在没有任何 ARIA 引用（`aria-controls` 已删），留着只作稳定选择器；
+  脚本真正依赖的是 `data-mobile-menu`。S17 统一层级时可一并决定去留。
+- 面板改为覆盖式（绝对定位）后不再推开正文 —— 有意的行为变更，基线拍不到，不构成回归。
+
+---
+
 *本计划基于 2026-09-13 工作区快照与源码逐处核对；行号以该快照为准。*
