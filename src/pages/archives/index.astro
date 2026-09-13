@@ -28,7 +28,7 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
       {
         years.map((year) => (
           <section aria-label={`${year} 年文章`}>
-            <h2 class="sticky top-[var(--header-h)] z-10 -mx-4 bg-bg/90 px-4 py-1.5 text-xl tracking-[0.15em] text-accent-600 backdrop-blur-sm">
+            <h2 class="sticky top-[var(--header-h)] z-sticky-head -mx-4 bg-bg/90 px-4 py-1.5 text-xl tracking-[0.15em] text-accent-600 backdrop-blur-sm">
               {year}
             </h2>
             <ul class="mt-3 divide-y divide-line">

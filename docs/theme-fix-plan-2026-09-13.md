@@ -763,4 +763,50 @@ BaseLayout.css 63585 → 61432 B，四条死规则消失；`hover:bg-chip-hover`
 
 ---
 
+## 十三、S17 实施记录（P1-9 z-index 统一表）
+
+### 做法
+
+`:root` 的三档 `--z-sticky-head: 10` / `--z-nav: 40` / `--z-skip: 50`（S3 已冻结）经
+`@utility` 注册为 `z-sticky-head` / `z-nav` / `z-skip` 三个工具类，四个消费点全部迁移：
+
+| 消费点 | 旧 | 新 |
+|---|---|---|
+| Header 吸顶 | `z-40` | `z-nav` |
+| BaseLayout skip-link | `focus:z-50` | `focus:z-skip` |
+| 归档页年份 h2（sticky） | `z-10` | `z-sticky-head` |
+| `.code-copy-btn` | `z-10` | `z-sticky-head` |
+
+归档年份与复制按钮共用 sticky-head 档 —— 两者语义同为「压过正文但不压过导航」，且取值本来就是 10，
+不因共用而改变任何层叠结果。移动菜单面板**不设 z**：它是 header 的后代，整个 header 以 `z-nav`
+成层，面板天然跟随（S11 已验证不压正文）。`grep -rn "z-[0-9]" src/` 已归零（仅剩注释里的规劝语）。
+
+### 验收
+
+| 闸门 | 结果 |
+|---|---|
+| `astro check` / `contrast-audit` | 0 error；66 项全过 |
+| 产物 CSS | `.z-nav` / `.z-sticky-head` / `.focus\:z-skip` 三个规则全在，`:root` 带 `--z-*` 值 |
+| 截图（1440px） | 亮色 13/13 与基线逐字节一致；暗色 3 张为 S5 既有差异（pixel-diff 带位置与 S12/S13/S16 时的记录逐项吻合：72×20 @ x 261–332，0.2202% / 0.3109%）→ 零视觉变化 |
+| 探针（真实浏览器，msedge） | header=40；Tab 聚焦 skip-link z=50 且可见；年份 h2=10；TOC sticky=auto（本就不该有）；复制按钮（67 个，datastructure-03）z=10、滚动入视口后中心点命中自身（无遮挡）；移动面板 z=auto 继承 header、Esc 可关 |
+
+### 遗留
+
+- `PostLayout` TOC 的 `sticky top-24` 维持 S15 的留档决定：吸顶定位 ≠ 锚点偏移，不并入 token。
+- 探针脚本落 `.shots/s17-verify.mjs` / `s17-verify2.mjs`（本地不进库）。
+
+### 环境备忘：构建丢 CSS 从「间歇」观察到的两个新事实
+
+S17 验收当天连续 6 次构建全部丢 CSS（此前记录的失败率约 1/3），清 `.vite` / `.astro` 缓存无效；
+随后又连续 4 次成功。两个此前没记录的事实：
+
+1. **失败时 HTML 不引用 CSS**（旧记录是「引用了但文件缺失」）—— 即客户端 vite 构建压根没产出
+   CSS 资产，Astro 据此省略了 `<link>`。两种症状同源：资产缺失时 `<link>` 跟着消失。
+2. **最小复现排除了 Tailwind**：同一份 vite 8.2.2 + `@tailwindcss/vite` 在独立工程里构建 CSS
+   正常产出。间歇性只在 Astro 7.3.1 的完整构建管线里触发，怀疑方向是客户端构建（Rolldown）的
+   CSS 资产产出竞态。`.shots/css-watch.mjs` 可在构建期间实时追踪 `.css` 的出现/搬移，留作后续排查工具。
+   S22 的产物断言防线（`astro build && check-build`）依然是必要的兜底。
+
+---
+
 *本计划基于 2026-09-13 工作区快照与源码逐处核对；行号以该快照为准。*

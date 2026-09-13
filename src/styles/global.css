@@ -282,6 +282,21 @@
   @apply transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card-hover;
 }
 
+/* ── 层级（S17）：Tailwind 的 --z-* 不是命名空间，须用 @utility 转成工具类 ──
+   值与消费点一一对应（见 :root 的注释）。新增层级先在 --z-* 立项，再在这里注册工具类；
+   页面里不要再写 z-10 / z-40 这类裸数字。 */
+@utility z-sticky-head {
+  z-index: var(--z-sticky-head);
+}
+
+@utility z-nav {
+  z-index: var(--z-nav);
+}
+
+@utility z-skip {
+  z-index: var(--z-skip);
+}
+
 @layer base {
   :root {
     color-scheme: light;
@@ -586,7 +601,7 @@
     position: relative;
   }
   .code-copy-btn {
-    @apply absolute top-2.5 right-2.5 z-10 grid size-8 place-items-center rounded-lg border-0 bg-transparent p-0 transition-colors;
+    @apply absolute top-2.5 right-2.5 z-sticky-head grid size-8 place-items-center rounded-lg border-0 bg-transparent p-0 transition-colors;
     color: color-mix(in srgb, var(--code-ink) 55%, transparent);
   }
   .code-copy-btn svg {
