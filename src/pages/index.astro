@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import { Icon } from 'astro-icon/components';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PostCard from '../components/PostCard.astro';
+import TagChip from '../components/primitives/TagChip.astro';
 import { formatDate } from '../lib/utils';
 import { HERO, SITE, tagSlug } from '../site.config';
 
@@ -82,9 +83,7 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
         <div class="mt-3 flex flex-wrap content-start gap-2">
           {
             topTags.map(([name]) => (
-              <a href={`/tags/${tagSlug(name)}/`} class="rounded-full bg-surface-2 px-3.5 py-1 text-xs text-body transition-colors hover:bg-accent-100 hover:text-accent-700">
-                {name}
-              </a>
+              <TagChip href={`/tags/${tagSlug(name)}/`} label={name} size="cloud" />
             ))
           }
         </div>
@@ -95,7 +94,7 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
         <div class="mt-3 grid flex-1 grid-cols-4 gap-2.5">
           <a href="/search/" class="quick"><Icon name="material-symbols:search" class="size-5" />搜索</a>
           <a href="/shuoshuo/" class="quick"><Icon name="material-symbols:chat" class="size-5" />说说</a>
-          <a href="/atom.xml" class="quick"><Icon name="material-symbols:send" class="size-5" />RSS</a>
+          <a href="/rss.xml" class="quick"><Icon name="material-symbols:send" class="size-5" />RSS</a>
           <a href="https://github.com/Serina765P" target="_blank" rel="noopener" class="quick"><Icon name="simple-icons:github" class="size-5" />GitHub</a>
         </div>
       </div>
@@ -226,7 +225,7 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
     @apply mt-2.5 text-xs text-sub;
   }
   .quick {
-    @apply flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-surface-2 px-2 py-3.5 text-xs font-medium text-body transition-colors hover:bg-accent-100 hover:text-accent-700;
+    @apply flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-chip px-2 py-3.5 text-xs font-medium text-chip-fg transition-colors hover:bg-chip-hover hover:text-chip-fg-hover;
   }
 
   @media (max-width: 880px) {

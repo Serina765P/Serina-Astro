@@ -2,6 +2,7 @@
 import BaseLayout from './BaseLayout.astro';
 import Prose from '../components/Prose.astro';
 import Giscus from '../components/Giscus.astro';
+import PageHeader from '../components/primitives/PageHeader.astro';
 import { SITE } from '../site.config';
 
 interface Props {
@@ -15,9 +16,7 @@ const { title, description, showComments = false } = Astro.props;
 
 <BaseLayout title={`${title} · ${SITE.title}`} description={description} pathname={Astro.url.pathname}>
   <div class="mx-auto max-w-3xl">
-    <header class="mb-8">
-      <h1 class="text-3xl tracking-[0.15em] text-ink">{title}</h1>
-    </header>
+    <PageHeader title={title} />
 
     <Prose>
       <slot />

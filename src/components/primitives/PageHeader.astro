@@ -1,0 +1,22 @@
+---
+/**
+ * 页面标题块基元（P1-1）：把 8 处「h1 + 可选 eyebrow / subtitle」的字面重复收敛到一处。
+ * - eyebrow：标题上方的小字（如「分类」「标签」），小字号 + 宽字距；存在时 h1 自动上移 1 档间距
+ * - subtitle：标题下方的说明（如「共 N 篇文章」），统一 mt-2 text-sm text-sub
+ * - class：覆盖 <header> 自身的布局类（默认 mb-8；搜索页是 mb-6、说说页是 mx-auto max-w-2xl）
+ */
+interface Props {
+  title: string;
+  eyebrow?: string;
+  subtitle?: string;
+  class?: string;
+}
+
+const { title, eyebrow, subtitle, class: className = 'mb-8' } = Astro.props;
+---
+
+<header class={className}>
+  {eyebrow && <p class="text-sm tracking-[0.2em] text-sub">{eyebrow}</p>}
+  <h1 class:list={['text-3xl tracking-[0.15em] text-ink', eyebrow && 'mt-1']}>{title}</h1>
+  {subtitle && <p class="mt-2 text-sm text-sub">{subtitle}</p>}
+</header>

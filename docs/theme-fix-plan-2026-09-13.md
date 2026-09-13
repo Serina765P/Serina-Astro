@@ -1,0 +1,466 @@
+# Astro 主题修复实施计划
+
+**来源**：`docs/theme-design-audit-2026-09-13.md`（审查日期 2026-09-13）
+**覆盖范围**：27 个缺陷 —— P0×3、P1×10、P2×14
+**计划日期**：2026-09-13
+**总原则**：**先立验证网 → 先加 token 不改视觉 → 小步替换 → 最后收口工程化**。每一步都要求"改完即验"，避免多点同步的返工。
+
+---
+
+## 零、批次与依赖总览
+
+| 阶段 | 步骤 | 主题 | 能否并行 |
+|---|---|---|---|
+| **阶段 0** | S1–S3 | 验证网 + token 骨架冻结（不产生视觉变更） | 严格串行，是全流程前置 |
+| **阶段一** | S4–S10 | P0 正确性修复 + 三个基元抽取 + 低风险清理 | S6/S7/S8 可并行；S10 独立可提前 |
+| **阶段二** | S11–S18 | 结构与 token 体系收口 | 基本串行，S14/S16 可并行 |
+| **阶段三** | S19–S25 | 工程化、性能、配置收口 | S22/S23/S25 可并行 |
+
+**关键依赖链（不能倒序）**
+
+```
+S1 截图基线 ─┬─► 每步验收
+S2 audit 解析CSS ─┬─► S3 token冻结 ─► S4/S5/S6/S7/S8/S9/S10
+                  └─► S13 调色板收口 ─► S18 typography ─► S21 CI接线
+S4/S5 ─► S13（必须先消灭 accent 直接用法，别名层才不必兼容两套）
+S11 ─► S17（Header 重写后再定 z-index）
+S13 ─► S19（字体/颜色稳定后再动 head）
+S10 与 S24 共用 `_redirects`，应合并为同一次变更
+```
+
+**批次出入口（每批结束必过）**：`npm run check` → `npm run build` → `npm run contrast` → 截图对比基线全分辨率走查（亮/暗各一遍）。
+
+---
+
+## 阶段 0 · 基线与验证网
+
+### S1　建立截图回归基线
+
+- **修改目标**：动手前固化"当前视觉状态"，让后续每一步都能对比；顺带消费掉仓库里已声明但全仓未使用的 `playwright-core` 依赖。
+- **涉及模块**：新增 `scripts/shots.mjs`；`package.json`（新增 `shots` script）；`.gitignore`（新增 `.shots/`）。
+- **依赖关系**：无。**必须是第一个动作**。
+- **完成标准**：`node scripts/shots.mjs` 对 `/`、`/archives/`、`/categories/`、`/tags/`、`/tags/<slug>/`、`/posts/pcshurufa/`、`/shuoshuo/`、`/links/`、`/search/`、`/404.html` 在 light/dark 两态各输出一张全分辨率 PNG 到 `.shots/baseline/`；后续运行输出到 `.shots/current/` 并可逐页目视对比。
+- **备注**：`playwright-core` 在 `package.json:27` 声明，全仓（除 lock 文件）无任何引用 —— 属遗留依赖。本步决定"复用"；若最终不复用，改由 S22 删除。
+
+### S2　改造 `contrast-audit.mjs` 为解析 `global.css`
+
+- **修改目标**：消除 P2-1 的"色值双源"，让审计脚本从 `global.css` 的 `:root` / `:root.dark` 读色，并让全流程的配色改动有自动回归网。
+- **涉及模块**：`scripts/contrast-audit.mjs`（重写取色部分，保留 lum/ratio/mix 算法与阈值语义）。
+- **依赖关系**：无，但**必须在 S3 之前**完成。
+- **完成标准**：
+  1. 解析器能读取 `:root` / `:root.dark` 内的自定义属性；
+  2. 能解析 `var()` **别名链**（多层间接）与 `color-mix(in srgb, A p%, B)`；
+  3. 配对表改为**引用 token 名**，token 缺失时**报错退出**而非静默跳过；
+  4. 现有全部配对结果与改动前逐行一致（`node scripts/contrast-audit.mjs` 输出 diff 为空）；
+  5. 手工把 `global.css` 某个 hex 改成错值，脚本必须 fail —— 证明"忘记同步"已成构建失败。
+- **备注**：`var()` 别名解析是本步的核心能力。S13（调色板收口）会把 `accent-*`/`wash-*` 降级为别名，若审计不能追别名，S13 之后会全盘误报。
+
+### S3　冻结 token 骨架（只加不改）
+
+- **修改目标**：把报告第六节草案落成真实的 `@theme` / `:root` 声明，为后续所有替换提供稳定接口；**本步不改变任何现有视觉**。
+- **涉及模块**：`src/styles/global.css`。
+- **依赖关系**：S1（基线）、S2（审计能识别新 token）。
+- **完成标准**：
+  - 新增并注册：断点 `--breakpoint-bento`；容器 `--container-content/standard/wide`；圆角 `--radius-chip/card/panel`；阴影 `--shadow-card/card-hover/media`；层级 `--z-sticky-head/nav/skip/overlay`；`--header-h`；
+  - 交互 chip：`--chip-bg` / `--chip-fg` / `--chip-bg-hover` / `--chip-fg-hover`（亮暗各一套），并在 `@theme inline` 里注册为 `--color-chip`、`--color-chip-hover`、`--color-chip-fg`、`--color-chip-fg-hover`，以便直接用 `bg-chip-hover text-chip-fg-hover`；
+  - 分类胶囊：`--cat-fill` / `--cat-on`（暗色 fill 取 deep、on 取浅色），同样注册为工具类；
+  - `npm run build` 通过，**截图与 S1 基线逐页一致（零视觉变更）**。
+- **命名约定**：token 用 `--语义-作用-状态`，Tailwind 消费层统一走 `@theme inline` 注册，避免在组件里写 `var(...)` 字面量。
+
+---
+
+## 阶段一 · P0 正确性 + 基元抽取 + 低风险清理
+
+### S4　P0-1 暗色 hover chip 闪白
+
+- **修改目标**：暗色下悬停 chip 不再闪出近白块（现状 `#f3e7e7` 压在 `#302c27` 上）。
+- **涉及模块**：`global.css:414`（`.code-fold-btn`）、`PostCard.astro:79`、`PostLayout.astro:105`、`index.astro:85`、`links/index.astro:37`。
+- **依赖关系**：S3。
+- **完成标准**：5 处 `hover:bg-accent-100 hover:text-accent-700` 全部替换为 S3 的 chip 语义 token；暗色下悬停底色为 `color-mix(wash-pink 22%, surface)` 系而非近白；S2 审计新增 `chip-fg-hover / chip-bg-hover` 配对（亮暗各一）且通过；暗色悬停态截图与基线对比无闪白。
+- **附带**：`search/index.astro:105` 的高亮 `mark` 也用 accent 阶（`accent-200/900`、`dark:accent-700/50`）—— 此处暗色已显式翻转，**不属于本缺陷**，仅在 S13 别名化时一并纳入，不要在本步改动。
+
+### S5　P0-3 分类胶囊 fill/on 分离
+
+- **修改目标**：暗色页面不再出现"近白底 + 近黑字"的高饱和亮块。
+- **涉及模块**：`PostCard.astro:47`、`PostLayout.astro:69`、`site.config.ts:65-69`（`categoryColor()` 的消费语义）。
+- **依赖关系**：S3。
+- **完成标准**：两处胶囊改用 `--cat-fill` / `--cat-on`；暗色下为 deep 底 + 浅字；亮色视觉与基线一致；S2 审计新增 6 组 `cat-on / cat-fill` 配对（每种 wash 色一组 × 亮暗）全部通过。
+- **核对备注**：报告把 `categories/index.astro:34` 列为同类问题，**实际该行是一个 `size-2.5` 的纯色圆点（无文字承载）**，不构成对比度缺陷。本步不动它 —— 但实现时请再确认一次，避免误改。
+
+### S6　P1-1 抽取 `PageHeader.astro`，替换 8 处标题块
+
+- **修改目标**：消除页面标题块的 8 处字面重复。
+- **涉及模块**：新增 `src/components/primitives/PageHeader.astro`（props：`title` / `eyebrow?` / `subtitle?`）；替换 `archives/index.astro:22-25`、`categories/index.astro:21-23`、`tags/index.astro:30-32`、`search/index.astro:9-11`、`shuoshuo/[...page].astro:38-41`、`categories/[slug].astro:30-34`、`tags/[slug].astro:30-34`、`layouts/PageLayout.astro:18-20`。
+- **依赖关系**：S3。
+- **完成标准**：8 处字面标题块全部消除；页面 DOM 结构等价；四种入参组合（仅 title / +eyebrow / +subtitle / 两者全给）逐一目视验证；受影响的 6 个页面截图与基线一致。
+
+### S7　P1-2 抽取 `Card.astro` + `@utility card-surface / card-lift`
+
+- **修改目标**：卡片 recipe 单点定义，**同时覆盖 Astro 侧与 JS 侧两条消费路径**。
+- **涉及模块**：新增 `src/components/primitives/Card.astro`（props：`lift?`、`as?`、`class?`）；`global.css` 增加 `@utility card-surface` / `@utility card-lift`；替换 `PostCard.astro:27-28`、`categories/index.astro:31`、`links/index.astro:18`、`PostLayout.astro:126`、`PostLayout.astro:144`、`search/index.astro:96-97`。
+- **依赖关系**：S3。
+- **完成标准**：
+  1. 上述 6 处统一到组件 / utility；
+  2. **顺带修正一处报告未列出的不一致**：`PostLayout.astro:126/144`（上一篇/下一篇）写的是 `hover:shadow-card`（悬停无阴影变化），而其余卡片是 `hover:shadow-card-hover` —— 统一后四处抬升行为一致；
+  3. `search/index.astro` 的 `li` 由 JS `className` 拼字符串生成，无法用组件，必须走 `@utility`，且与组件视觉等价；
+  4. 截图对比无差异（除上述 hover 修正外）。
+
+### S8　P1-3 抽取 `TagChip.astro`
+
+- **修改目标**：标签 chip 单点定义。
+- **涉及模块**：新增 `src/components/primitives/TagChip.astro`（props：`href` / `label` / `count?` / `size?: 'compact' | 'cloud'`）；替换 `PostCard.astro:77-82`、`PostLayout.astro:103-108`、`index.astro:85`、`links/index.astro:37`。
+- **依赖关系**：S3、S4（chip token 已就位，组件一出生就是对的）。
+- **完成标准**：4 处统一；**两档尺寸必须保留** —— 卡片/文章页 chip 是 `px-2.5 py-0.5 text-xs text-sub`，首页标签云是 `px-3.5 py-1 text-xs text-body`，友链社交 chip 是 `px-3.5 py-1.5`，不要为了"统一"抹掉尺寸层级；hover 全部走 chip token；亮暗自适应验证。
+
+### S9　P2-3 修正陈旧注释（不动脚本）
+
+- **修改目标**：消除注释与实现自相矛盾。
+- **涉及模块**：`global.css:160`（"霞鹜文楷全局应用" → 实际是 IBM Plex Sans SC）、`global.css:161`（"标题保持不加粗" 与 `:162-167` 的加粗规则矛盾）。
+- **依赖关系**：S3（同文件，避免冲突）。
+- **完成标准**：`global.css` 内所有注释与相邻实现一致；`grep -rn "霞鹜文楷" src/` 无残留。
+- **批次冲突说明（重要）**：报告 P2-3 要求"删除死脚本 `vendor-fonts.mjs`"，而 P2-8 又要求"复用 `vendor-fonts.mjs` 的思路"。**两者不能都照字面执行**。本计划决议：**不删除，改为在 S19 重写复用**。`vendor-fonts.mjs` 里真正有价值的是"下载 woff2 + 补 `font-weight` + 把 `url()` 本地化"这段逻辑，删掉等于把这个能力再写一遍。江城圆体专有常量（`FONT_ID = 59`、`JiangChengYuanTi`）在 S19 替换为 389 / 2101。
+
+### S10　P2-9 修正 RSS 文件名与 MIME
+
+- **修改目标**：feed 阅读器不再拿 Atom 声明去解析 RSS 2.0 内容。
+- **涉及模块**：`src/pages/atom.xml.js` → `src/pages/rss.xml.js`；`BaseHead.astro:16`（`rssUrl`）、`:30`（`type` → `application/rss+xml`）；`index.astro:98`（快捷入口链接）；新增 `public/_redirects`（`/atom.xml /rss.xml 301`）。
+- **依赖关系**：无，**可提前到阶段一开头独立执行**。
+- **完成标准**：`/rss.xml` 返回 RSS 2.0 且 `<link rel="alternate">` 声明为 `application/rss+xml`；`/atom.xml` 301 到 `/rss.xml`（老订阅地址不断）；`index.astro` 入口链接更新；feed 校验器通过。
+- **衔接**：`_redirects` 文件同时会被 S24（trailingSlash）改动，建议预留合并。
+
+---
+
+## 阶段二 · 结构与 token 体系收口
+
+### S11　P0-2 移动导航改 CSS-only（吸收 P2-14）
+
+- **修改目标**：无 JS 时移动端导航可达；同时修掉菜单面板继承半透明底的问题。
+- **涉及模块**：`Header.astro`（`:21` 桌面导航、`:50-60` 按钮、`:64-69` 菜单面板、`:94-130` 脚本）、`global.css`（如需新增工具类）。
+- **依赖关系**：S3。
+- **完成标准**：
+  1. 方案用 `<details><summary>` 承载移动菜单（`open` 由浏览器管理，天然无 JS 可用），或 checkbox + `peer`；**与报告 P0-2 建议一致**；
+  2. **禁用 JS 后 < lg 视口**：菜单可展开、可跳转、可关闭；
+  3. JS 开启时保留增强：Esc 关闭 + 焦点归还按钮 + 点击菜单外关闭；
+  4. 语义：`<details>/<summary>` 自带展开态播报，**移除冗余的 `aria-expanded`/`aria-controls`**，但保留 `aria-label`；
+  5. **P2-14 一并解决**：菜单面板背景改实心 `--surface`，展开时页面内容不再透过模糊底可见；
+  6. 亮暗两态 × 有无 JS 四种组合截图验证。
+
+### S12　P1-4 容器 token + `<Container>` + 消除 lg 空白死区
+
+- **修改目标**：全站容器宽度来源单一，并修掉"宽容器 + 无侧栏"的浪费区间。
+- **涉及模块**：`global.css`（容器 token）、新增 `src/components/primitives/Container.astro`（props：`width: 'content' | 'standard' | 'wide'`）；替换 `BaseLayout.astro:25`（默认值）、`PostLayout.astro:51`、`PageLayout.astro:17`、`shuoshuo/[...page].astro:38`、`search/index.astro:8`、`index.astro:55`、`Footer.astro:11`。
+- **依赖关系**：S3、S7。
+- **完成标准**：
+  1. 全站宽度由 3 个容器档位表达，`grep -rn "max-w-" src/` 只剩容器内部允许项；
+  2. **1024–1279px 区间**（`PostLayout` 用 `max-w-6xl` 而 TOC 仅 `xl:block`，且 `Toc.astro:21` 也二次 `hidden xl:block`）—— 二选一：把 TOC 提到 `lg:block`，或收窄 lg 下的正文宽度；**推荐前者**，与 Fuwari/Firefly 的"TOC 全程可用"方向一致；
+  3. 断点 1024 / 1279 / 1280 三个临界宽度截图走查。
+
+### S13　P1-5 调色板收口（颜料阶 + 语义别名）
+
+- **修改目标**：消除 `#835a58` 等字面同值、把 34 个颜色 token 收敛到"一套颜料阶 + 语义别名"。
+- **涉及模块**：`global.css` 的 `:root` / `:root.dark` / `@theme` / `@theme inline`；`scripts/contrast-audit.mjs` 配对表。
+- **依赖关系**：**S4、S5 必须先完成**（先消灭 `accent-*` 的直接 hover 用法），S2（审计能追别名链）。
+- **完成标准**：
+  1. `--color-accent-700: #835a58` 与 `--wash-pink-deep: #835a58` 只保留一处字面定义，另一处为 `var()` 别名；
+  2. `accent-*`（11 档）与 `wash-*`（12 项）全部降级为指向颜料阶的语义别名，**类名不变**（避免全站改 class）；
+  3. `::selection`（`accent-200/950`、`dark:accent-700/50`）、search `mark`（`accent-200/900`、`dark:accent-700/50`）、`text-accent-600`（`archives/index.astro:31`）所依赖的档位必须全部保留；
+  4. 全站视觉零变化（截图逐页比对）；审计通过。
+- **风险**：这是本计划影响面最广的一步，务必独立提交、单独验收。
+
+### S14　P1-6 断点收口
+
+- **修改目标**：消除脱离 Tailwind 标度的裸 `880px`。
+- **涉及模块**：`index.astro:232`；`global.css` 的 `--breakpoint-bento`。
+- **依赖关系**：S12（断点与容器同期定稿）。
+- **完成标准**：`grep -rn "max-width: [0-9]" src/` 无结果；bento 在 880px 处的折叠行为与基线一致；可选：把该断点并入 Tailwind 标度（如改 `lg`），但需先确认视觉可接受。
+
+### S15　P1-7 锚点偏移单一来源
+
+- **修改目标**：锚点跳转偏移不再有两套取值（88px vs 96px）。
+- **涉及模块**：`global.css:178-180`（`[id] { scroll-margin-top: 5.5rem }`）、`Prose.astro:12`（`prose-headings:scroll-mt-24`）、`archives/index.astro:31`（`sticky top-16`）、S3 引入的 `--header-h`。
+- **依赖关系**：S3。
+- **完成标准**：偏移统一由 `calc(var(--header-h) + 1.5rem)` 派生；跳转任意标题（h2/h3/h4）均不被吸顶导航遮挡；亮暗、有无 TOC 四种组合验证。
+
+### S16　P1-8 颜色/阴影逃逸 token 收敛
+
+- **修改目标**：硬编码色值与阴影全部回归 token 体系。
+- **涉及模块**：`404.astro:14`（`text-white` + `bg-accent-700 dark:bg-accent-300`）、`skins/ImasAlbum.astro:33`（`rgb(120 105 90 / .18)`）、`:51`（`rgb(0 0 0 / .2)`）、`:32/:69`（硬编码 `border-radius: 0.75rem`）、`Lightbox.astro:6`（`bg-black/50 text-white`）、`global.css:374/377`（`bg-black/80`、`shadow-2xl`）。
+- **依赖关系**：S3（`--shadow-*`、`--radius-*`、`--on-accent`）。
+- **完成标准**：新增 `--on-accent` 与 `--radius-media`；全量收敛；`grep -rnE "rgb\(|shadow-2xl|text-white|bg-black/" src/` 只剩 token 定义处；亮暗两态验证 404 按钮、专辑网格、图片预览。
+
+### S17　P1-9 z-index 统一表
+
+- **修改目标**：层级不再靠散落的数字。
+- **涉及模块**：`global.css`（`--z-*` 注册为工具类）；`Header.astro:14`（`z-40`）、`BaseLayout.astro:74`（`z-50`）、`archives/index.astro:31`（`z-10`）、`global.css:422`（`.code-copy-btn` 的 `z-10`）。
+- **依赖关系**：S3、S11（Header 已重写）。
+- **完成标准**：全部 z 值来自 token；键盘 Tab 首次聚焦时 skip-link 可见且在最上层；吸顶头 / TOC sticky / 代码复制按钮 / 移动菜单四者无错误遮挡。
+
+### S18　P1-10 typography 改走 `--tw-prose-*`
+
+- **修改目标**：清掉 `.prose` 相关的 `!important` 与手写颜色规则，改为覆盖 typography 变量。
+- **涉及模块**：`global.css:185`、`:259`、`:277`、`:281`、`:285`（5 处 `!`）、`:266-273`（手写 `.prose { color }` 与 `.prose h* { color }`）、`Prose.astro`。
+- **依赖关系**：S13（token 别名稳定后）、S2（审计兜底）。
+- **完成标准**：
+  1. `.prose` 相关 `!important` 归零（**`global.css:205` 的 reduced-motion `!important` 保留** —— 那是 `*` 选择器压制，属有意设计，报告中亦作为达标项）；
+  2. 正文 / 标题 / 链接 / 引用 / 行内 code 的颜色全部由 `--tw-prose-*` 驱动；
+  3. 亮暗两态正文页截图逐段比对（允许因变量覆盖产生的预期差异，但必须逐处说明理由）。
+- **风险**：`@tailwindcss/typography` v0.5 的变量名与作用域需实测；`prose-neutral` / `dark:prose-invert` 与自定义变量同时存在时的优先级要逐一验证 —— **不要把"清掉 `!`"当成纯重构**，其中两处 `!` 正是为了压过 typography 自带字重阶（h2 700 / h1 800），改成变量后需确认字重仍为 700/600。
+
+---
+
+## 阶段三 · 工程化、性能与配置收口
+
+### S19　P2-8 字体自托管子集化（重写 `vendor-fonts.mjs`）
+
+- **修改目标**：消除 5 个 render-blocking 的第三方字体 CSS，字重与 `font-display` 受控。
+- **涉及模块**：`scripts/vendor-fonts.mjs`（重写：`FONT_ID` 59 → 389 与 2101，`JiangChengYuanTi` → `IBM Plex Sans SC` / `ZhaohuaMinA Bold`，按真实字重 300/400/500/600/700 补 `font-weight`）；`BaseLayout.astro:63-68`（移除 5 个 CDN `<link rel="stylesheet">`，改本地样式 + 首屏字重 `<link rel="preload" as="font" crossorigin>`）；产出目录建议走 `src/assets` 而非 `public`（见 S20）。
+- **依赖关系**：S9（注释先对齐）、S18（字体相关规则已稳定）。
+- **完成标准**：
+  1. `<head>` 内无第三方字体样式表阻塞渲染；
+  2. 首屏只 preload 1–2 个必要 woff2 子集，其余按需加载；
+  3. 所有 `@font-face` 显式 `font-display: swap`；
+  4. 在屏蔽 `fontsapi.zeoseven.com` 的环境下字体仍正确显示（这正是该脚本当初存在的理由）；
+  5. 字体文件名带内容哈希，可长期缓存。
+- **备注**：README「字体」一节（`:23-25`）需同步改写。
+
+### S20　P2-10 / P2-11 图像管线补齐
+
+- **修改目标**：所有图像经过 `astro:assets`，正文图带上 `srcset/sizes`。
+- **涉及模块**：
+  - P2-11：新增 `src/assets/images/`（迁入 `public/images/fav.webp`、`hero.webp`），改造 `Header.astro:17`、`index.astro:45`、`404.astro:9`、`site.config.ts:21-22`（`HERO`）；
+  - P2-10：`src/content/posts/pcshurufa/*.webp`（16 张，散落在 markdown 图片语法中）改走 `<Picture widths={[...]} formats={['avif','webp']}>`。
+- **依赖关系**：S3（`--radius-media` / `--shadow-media` 由 S16 提供）。
+- **完成标准**：Header / Hero / 404 图像输出带 `width`/`height` 与哈希；正文图输出 `srcset/sizes`（至少 webp，avif 视构建耗时决定）；CLS = 0；`dist` 中不再出现 `/images/fav.webp` 原图引用。
+- **风险与决策点**：16 处正文图手工替换易漏，建议脚本化（复用 `scripts/migrate-posts.mjs` 的批量改写思路）。另需**实测** Astro 7.3.1 是否已支持通过 `markdown.image.layout` 自动生成响应式 `srcset` —— 若支持，则优先用配置而非改 markdown（改动面小一个数量级）。
+
+### S21　P2-1 收尾：把对比度审计接入 `check` 链路
+
+- **修改目标**：色值忘记同步时构建失败。
+- **涉及模块**：`package.json`（`check` → `astro check && node scripts/contrast-audit.mjs`）；`scripts/contrast-audit.mjs` 配对表补齐 chip / cat / on-accent 等新增 token。
+- **依赖关系**：S2、S13、S14–S18 全部完成。
+- **完成标准**：任意 token 未达标时 `npm run check` 非零退出；本地与 CI 行为一致。
+
+### S22　P2-2 接入 Biome + GitHub Actions
+
+- **修改目标**：补上 lint / format / CI 缺口。
+- **涉及模块**：新增 `biome.json`、`.github/workflows/ci.yml`（`biome ci` + `npm run check` + `npm run build` 冒烟）、`.editorconfig`；清理依赖（`playwright-core` 若 S1 未采用则删除）。
+- **依赖关系**：S1（决定 playwright 去留）、S21。
+- **完成标准**：CI 三连绿；PR 上能拦截格式 / lint / 类型 / 构建错误；仓库根不再只有 `.gitignore`。
+
+### S23　P2-4 / P2-5 脚本守卫统一 + 代码块组件合并
+
+- **修改目标**：换页时脚本行为一致；消除代码块处理的隐式 import 顺序契约。
+- **涉及模块**：
+  - **P2-4**：统一为 `astro:page-load` + `dataset` 幂等标记，覆盖 `Header.astro:94`、`Lightbox.astro:12`、`Toc.astro:52`、`CodeFold.astro:6`、`CodeCopy.astro:7`、`BaseLayout.astro:32`（内联主题脚本）；
+  - **P2-5**：合并 `CodeFold.astro` / `CodeCopy.astro` 为单一 `CodeBlock.astro`（一次 `wrap`、一套守卫、无顺序依赖），或引入 `astro-expressive-code`；同时删除 `CodeCopy.astro:3-4` 的顺序注释与 `PostLayout.astro:56-57` 的隐式契约。
+- **依赖关系**：S17（层级）、S18（code 样式已稳定）。
+- **完成标准**：
+  1. 无 import 顺序依赖；
+  2. 连续换页 5 次不产生重复按钮、不重复绑定监听器；
+  3. `grep -rn "__.*Bound" src/` 收敛为统一命名（推荐 `dataset` 标记而非 `window.__x`）；
+  4. **额外修正一处报告未展开的隐患**：`Lightbox.astro:14-17` 在**模块顶层**捕获 `<dialog>` 与 `<img>` 引用并绑定 `closeBtn` 监听。ClientRouter 换页会替换 DOM，模块脚本不再重跑 → 换页后这些引用会指向已脱离文档的旧节点，预览关闭按钮失效。**修复不是"加个守卫"，而是把元素查询挪进 `astro:page-load` 内重新执行**。请重点验证：文章页 → 换页到另一文章页 → 点图放大 → 关闭按钮是否可用。
+
+### S24　P2-6 / P2-12 / P2-13 配置与路由收口
+
+- **修改目标**：配置单一来源、URL 形态唯一、内容源可扩展。
+- **涉及模块**：
+  - **P2-6**：`site.config.ts:6-7` 合并 `data/taxonomy.json` / `data/site-info.json`（或反向由 TS 生成 JSON，需保留"本地工作台直接读写 JSON"的能力）；`SIDEBAR` → `SITE_META`（消费方 `Footer.astro:23`、`links/index.astro:4`）；
+  - **P2-13**：`astro.config.mjs:10` `trailingSlash` 固定为 `'always'`（与 `:12` `format: 'directory'` 一致），移除 `Header.astro:6-11` 的手工去尾斜杠比较，补 `_redirects` 处理旧的无斜杠 URL；
+  - **P2-12**：`src/data/shuoshuo.json` 按年分片 + `content.config.ts:21-28` 改多 file loader 合并；**必须同步改 `worker/` 的追加写入逻辑**，否则新说说会写进错误的文件。
+- **依赖关系**：S10（共用 `_redirects`，建议合并为一次变更）、S21。
+- **完成标准**：配置单一来源；无非规范 URL 并存（`/posts/x` 与 `/posts/x/` 只保留一个）；说说 loader 读取全部分片且排序正确；worker 端写入路径同步更新并端到端验证一次。
+- **风险**：S24 三项虽同属 P2，但**耦合度低、风险差异大**。建议拆成三次独立提交，其中 trailingSlash 影响 canonical / sitemap / 内链，需单独走一次全站链接扫描。
+
+### S25　P2-7 图标白名单放开
+
+- **修改目标**：不再逐一手列图标名，漏加不再静默缺失。
+- **涉及模块**：`astro.config.mjs:18-52`（`include: { 'material-symbols': ['*'] }`）。
+- **依赖关系**：无，**可提前到阶段一独立执行**。
+- **完成标准**：构建通过；`dist` 产物中只含实际使用的图标（tree-shake 生效）；构建体积无显著增长（记录前后对比值）。
+
+---
+
+## 四、实施核对备注（与报告的偏差，实现时请留意）
+
+1. **P0-3 证据偏差**：报告把 `categories/index.astro:34` 列为"胶囊仍用亮色实心块"，实测该行是 `size-2.5` 的纯色圆点，只有色相提示、无文字，不构成对比度缺陷。S5 不改此处。
+2. **P1-2 未列出的不一致**：`PostLayout.astro:126/144` 用 `hover:shadow-card`（静态，悬停无变化），与其余卡片的 `hover:shadow-card-hover` 不一致；且 `search/index.astro:96-97` 在 JS 里另拼一份卡片 class，是第 6 个重复点。两项均并入 S7。
+3. **P2-3 ↔ P2-8 冲突**：报告一边要求删 `vendor-fonts.mjs`，一边要求复用其思路。已决议"重写复用"（见 S9 / S19）。
+4. **P2-4 的真实问题不是"缺守卫"**：`Lightbox.astro` 的问题在于模块级元素引用在 ClientRouter 换页后失效（见 S23）。
+5. **P2-10 需实测**：报告建议改 `<Picture>`，但若 Astro 7.3.1 已支持 `markdown.image.layout` 自动生成 `srcset`，用配置改动的面会小一个数量级 —— 实现前先验证。
+6. **P1-4 的"空白死区"实际表现**：1024–1279px 下正文仍居中显示，不是视觉破损，而是"容器宽度与 TOC 断点不匹配导致的横向空间浪费"。修复方向是让 TOC 从 `lg` 起可用（S12），而非收窄容器。
+7. **P2-4 覆盖范围修正**：报告列 `Header.astro:94` 为"无守卫"，但其监听器绑在 `document` 上做事件委托，本身天然幂等，风险等级低于其余几处。S23 仍统一处理，但它是低优先级项。
+
+---
+
+## 五、建议提交粒度
+
+| 提交 | 内容 | 单独验收重点 |
+|---|---|---|
+| 1 | S1 + S2 + S3 | 基线可复现；审计改色即 fail；token 冻结后零视觉变更 |
+| 2 | S4 + S5 | 暗色 chip / 胶囊不再闪亮块 |
+| 3 | S6 + S7 + S8 | 三个基元落地，16 处字面 class 消除 |
+| 4 | S9 + S10 + S25 | 低风险清理，独立可回滚 |
+| 5 | S11 | 禁用 JS 走查 |
+| 6 | S12 + S14 + S15 | 1024/1279/1280 三个临界宽度 |
+| 7 | S13 | **单独提交**，全站逐页截图比对 |
+| 8 | S16 + S17 | 逃逸 token 与层级表 |
+| 9 | S18 | 字重与颜色逐段比对 |
+| 10 | S19 + S20 | 字体/图像产物检查 |
+| 11 | S21 + S22 | CI 三连绿 |
+| 12 | S23 | 连续换页 5 次 + Lightbox 关闭按钮 |
+| 13 | S24 | 拆三次：配置 / 分片 / trailingSlash |
+
+---
+
+## 六、阶段 0 实施记录（S1–S3 已落地）
+
+**S1 · `scripts/shots.mjs`**（13 路由 × 亮暗 = 26 张全页图，SHA-256 逐图比对；`baseline` 拍基线，默认模式拍当前并自动 diff）
+
+出图确定性踩了三个坑，均已修，后续步骤勿回退：
+
+1. `astro preview` 默认只监听 IPv6 `::1`，用 `127.0.0.1` 会 ECONNREFUSED → 必须显式 `--host 127.0.0.1`。
+2. 懒加载图与**按 unicode-range 分片的字体**（IBM Plex Sans SC 单份 143KB）只有全页渲染才触发加载；而 CodeFold 的折叠阈值依赖字体度量，字体没落定会让折叠状态翻转。
+3. 正文图带 `decoding="async"`，`img.complete` 只代表数据到手、**不代表已解码**。不等 `img.decode()` 就出图，`post-pcshurufa` / `post-imas-hires` 两张重图会在**同一份代码**上给出不同字节（实测把 S3 前的代码连拍两次，4 张图各不相同）。加 decode 等待后：同一代码两次出图 **0 张不一致**。
+
+浏览器用系统 Edge（`channel: 'msedge'`）：本机 ms-playwright 缓存是 chromium-1228，而 playwright-core 1.63 要求 1243，直接 launch 找不到可执行文件。这也顺带消费掉了仓库里原本声明却全仓未使用的 `playwright-core` 依赖。
+
+**S2 · `contrast-audit.mjs`** 已改为解析 `global.css`（括号配对切 `:root` / `:root.dark` / `@theme` / `@theme inline`），支持 `var()` 别名链与 `color-mix()`；缺 token 或无法解析颜色即报错退出。验收证据：改造前后 stdout **逐字节一致**（52 项检查，exit 0）；负向测试——改错色值 → 3 项 FAIL/exit 1，删 token → 干净报错/exit 1。
+
+**S3 · token 骨架**已写入 `global.css`。产物级证据：**新增 18 个 token、删除 0 个**，且 18 个正是声明集合；剥离自定义属性后的规则骨架无变化；审计输出仍与前基准逐字节一致。相对计划的一处收窄：**未声明 `--z-overlay`**（灯箱走 `<dialog>` 顶层，不参与 z-index，无真实消费点）。
+
+### 给后续步骤的两条硬约束（实施中确认）
+
+- **`--shadow-media-hover` 不会进入构建产物**（`@theme` 里未被消费的变量会被 Tailwind 剪掉；改名 `--shadow-media-lift` 同样如此）。S16 消费前必须先验证；若仍旧不产出，改用 `@utility` 或 `--shadow-card-hover`。
+  （注：`--container-*` / `--radius-*` / `--shadow-media` / `--breakpoint-*` 均已确认能进产物。）
+- **`--z-index-*` 不是 Tailwind 命名空间**，`--z-*` 放在普通 `:root` 里，消费时需 `@utility z-nav { z-index: var(--z-nav) }` 或 `z-[var(--z-nav)]`。
+
+### 阻断级环境缺陷：`astro build` 会间歇性静默丢弃 CSS
+
+- 现象：退出码 0、38 页全部生成、HTML 正常引用 `/_astro/BaseLayout.*.css`，但该文件不存在于 `dist` —— 整站无样式。
+- 量化：同命令连续构建失败率约 **1/3**；与是否删 `dist`、是否清 `.vite` / `.vite-temp` / `.astro` 均无稳定相关。
+- 已排除：磁盘（154GB 可用）、`.css` 写入权限、Tailwind 全链路（含 `oxide` / `lightningcss` 原生二进制）、`global.css` 内容（回退 HEAD 同样复现）、`astro.config.mjs`（`git status` 干净）、`astro dev`（dev 下能正常编译出 78KB 样式）。
+- 现场线索：成功时曾观察到 `dist/.prerender/_astro/*.css` 暂存目录，疑与 Astro 7 的预渲染暂存搬移竞态有关。
+- 已加防线：`shots.mjs` 出图前断言 `dist/_astro` 存在 `.css`，避免把"构建坏了"误报成"视觉回归"。
+- **S22 必须补上**：把该断言并入 `npm run build`（`astro build && node scripts/check-build.mjs && pagefind --site dist`），否则 CI 会在构建成功后发布无样式站点。
+
+---
+
+## 七、阶段一实施记录（S4–S10 已落地）
+
+### 验收结果
+
+| 闸门 | 结果 |
+|---|---|
+| `astro check` | **0 error / 0 warning**（29 hints）—— 见「越界修复」 |
+| `astro build` | 38 页，`dist/_astro` 存在 CSS（防线断言通过） |
+| `contrast-audit` | **64 项全过，exit 0** |
+| 截图比对 | 亮色 **13/13 与基线逐字节一致**；暗色稳定图仅 3 张变化，且全部落在分类胶囊 |
+
+出图目录：`.shots/baseline`（阶段 0 基线）→ `.shots/final`（本次结果），中间还留了
+`.shots/pre-s4`、`.shots/phase1` 两层。基线可复现性已先验证：改动前跑一轮，稳定子集 20/20 全等。
+
+**暗色 3 张变化的像素级证据**（新增 `scripts/pixel-diff.mjs`，把差异行聚成带）：
+
+| 图 | 差异带 | 每处范围 | 整页占比 |
+|---|---|---|---|
+| `home.dark` | 6 处 | 72×20px，x 261–332 | 0.2202% |
+| `tag-idolmaster.dark` | 4 处 | 同上 | 0.3109% |
+| `category-tech.dark` | 2 处 | 同上 | 0.2117% |
+
+带数 = 该页卡片数，位置与尺寸完全一致（72×20 去掉圆角后正好 1372 像素）——即"每张卡片那一个
+分类胶囊"，页面其余部分零漂移。
+
+### 各步落地与偏离
+
+**S4（P0-1）**：S3 只往 `:root` 写了 chip 变量、**漏了 `@theme inline` 注册**，本步补齐
+`--color-chip / -hover / -fg / -fg-hover`（utils：`bg-chip` / `bg-chip-hover` / `text-chip-fg` /
+`text-chip-fg-hover`）。
+
+**实际改了 6 处而非 5 处**：报告 P0-1 证据列了 `index.astro:229`，但计划 S4 的模块清单漏了它
+（`.quick` 快捷入口，同一个 `hover:bg-accent-100 hover:text-accent-700`）。已一并修。
+
+hover 态截图拍不到，改用真实浏览器读计算样式验证（见下方"hover 探针"）：
+
+| 位置 | 亮色 hover | 暗色 hover |
+|---|---|---|
+| 标签云 chip / 快捷入口 / 文章标签 / 友链 chip | bg `#f3e7e7` + fg `#835a58`（与改动前一致，审计 4.87） | bg **`#4c433f`** + fg `#eae4d9`（不再闪白，审计 7.61） |
+| `.code-fold-btn` | 产物 CSS 已是 `var(--chip-bg-hover / --chip-fg-hover)`，token 路径同上 | 同左 |
+
+**S5（P0-3）**：**偏离了 S3 定下的 token 语义**，理由如下 ——
+
+S3 写的是暗色 `--cat-fill: var(--wash-pink-deep)`。但 `--wash-*-deep` 在暗色下本来就是**浅色**
+（它们是暗色下的正文/链接色），照此实现得到的是"浅底 + 深字"，既没修掉亮块，也与 S3 自己在同一
+段写的注释（"不再用亮色实底…靠色相而非明度提示分类"）自相矛盾。改为：
+
+```css
+:root      { --cat-on: var(--on-wash); --cat-fill-pink: var(--wash-pink); … }
+:root.dark { --cat-on: var(--ink);      --cat-fill-pink: color-mix(in srgb, var(--wash-pink) 26%, var(--surface)); … }
+```
+
+两点连带决定：
+1. 单一 `--cat-fill` 拆成**按分类分档**的 6 个 token（`-pink/-mist/-sage/-sand/-clay/-rose`）。
+   单一 fill 会把四种分类压成一色，并与卡片左侧色条（spine，取 `--wash-*`）色相脱节。
+2. 类名由 `site.config.ts` 的 `categoryFillClass()` 产出，**按 wash 变量名映射**，
+   不新增第二份分类清单（`src/data/taxonomy.json` 仍是唯一来源）。
+
+亮色下 `--cat-fill-*` 就等于 `--wash-*`，故亮色逐像素不变（基线已证）。
+
+**S6**：`PageHeader.astro` 除计划里的三个 props 外，多一个 `class?` —— 8 处消费点的 header
+包装类并不一致（默认 `mb-8`，搜索页 `mb-6`，说说页 `mx-auto max-w-2xl`），不给它会改变布局。
+
+**S7**：`@utility card-surface` / `card-lift` 用 `@apply` 实现而非手写 `var()`，
+这样才能让 Tailwind 的变量消费追踪生效（`--radius-card` / `--shadow-card` 才会进产物）。
+`Card.astro` 支持 `as` / `lift` / `class` + rest 透传。顺带修掉计划点名的
+`PostLayout:126/144` 的 `hover:shadow-card` → 统一为 `card-lift`（四处抬升行为一致）。
+搜索结果 `li` 走 `card-surface`（**不加 lift**：`li` 本身不是链接，抬升要诚实）。
+
+**S8**：尺寸档取 `'compact' | 'cloud' | 'social'` 三档（计划只写了前两档，但友链社交 chip
+是 `px-3.5 py-1.5` 且带图标，属独立的第三档）；另加 `icon?` / `target?` / `rel?`。
+计划里的 `count?` 四个消费点都不用，**未加**（不放死参数）。hover 全部走 chip token。
+
+**S9**：`global.css` 两处互相矛盾的注释合并重写为一句准确描述；`grep 霞鹜文楷 src/` 已无结果。
+
+**S10**：`src/pages/atom.xml.js` → `src/pages/rss.xml.js`；`BaseHead` 的 `type` 改
+`application/rss+xml`、`rssUrl` 改 `/rss.xml`；`index.astro` 快捷入口同步；新增
+`public/_redirects`（`/atom.xml → /rss.xml 301`，Cloudflare Pages 消费，预留 S24 的 trailingSlash 合并）。
+产物已核：`dist/atom.xml` 不存在、`dist/rss.xml` 为 RSS 2.0、`dist/_redirects` 已复制。
+
+### S2 脚本 bug（本次才暴露）
+
+`contrast-audit.mjs` 的 `color-mix()` 解析是坏的：正则分支已经吃掉色彩空间 `in srgb,`，
+代码却又 `splitTopLevel(...).slice(1)` 再砍掉一项 → 任何 `color-mix` token 都解析失败并退出。
+S3 之前没有任何 `color-mix()` 进过 `TOKENS`，所以一直没触发。已删掉多余的 `.slice(1)`。
+
+另外把旧的 `accent-700 / accent-100（hover chip）` 配对换成 chip 与 6 组 cat 配对；
+`on-wash / wash-*` 六项保留但改标为「bento 图标底」（`index.astro:215` 的 `.ico` 仍在用）。
+
+### 越界修复（计划外，但本批闸门要靠它才真能过）
+
+`shuoshuo/[...page].astro` 的 `getStaticPaths({ paginate })` 没有类型标注，Astro 推不出
+`Astro.props.page`，整页报 **14 个 never/any 错误**。已在 HEAD 上单独跑一次 check 确认
+**同样报 14 个** —— 即阶段一的 `check` 闸门在动手之前就是红的，不是本次引入。
+
+修法照 Astro 官方写法：`export const getStaticPaths = (async (...) => {...}) satisfies GetStaticPaths`。
+纯类型标注，产物 CSS 哈希不变（`BaseLayout.Cb56Ppnb.css` 前后一致），`phase1 → final` 26 张图
+除 3 张已知抖动图外**逐字节零漂移**。
+
+### 两个可复用的验证手段（本批新增/固化）
+
+- `scripts/pixel-diff.mjs <dirA> <dirB> <图名>`：像素级定位差异落在哪，把差异行聚成带。
+  shots.mjs 只答"变没变"，它答"变在哪"，正好覆盖"允许局部变化"这一类改动。
+- **hover 探针**（截图抓不到 hover 态）：用 playwright 打开页面 → `el.hover()` → 读
+  `getComputedStyle` 的 backgroundColor/color。本次用它拿到了 P0-1 的亮/暗实测值。
+  需要先 `astro build`，脚本模式照 `scripts/shots.mjs`（msedge channel + 127.0.0.1:4399）。
+
+### 遗留
+
+- `astro check` 仍有 29 条 hints，非本批引入（27 条 `astro:content` 的 `z` deprecation、
+  `execCommand` deprecation、`migrate-posts.mjs` 未用导入）。**新增 1 条**来自 `Card.astro` 的
+  `'Props' is declared but never used`：动态标签 `<Tag>` 让 Astro 的 props 推断没"读"到该接口。
+  试过显式 `: Props` 标注 —— 会关掉 rest 透传并新增 4 个 error，不值得，保留 hint。
+- `index.astro:215` 的 bento `.ico`（`bg-wash-*` + `text-on-wash`，暗色下是 22px 亮色小方块）
+  是 P0-3 的同源形态，但报告未列、计划未要求，**本批未动**，留给 S13/S16 一并处理。
+
+---
+
+*本计划基于 2026-09-13 工作区快照与源码逐处核对；行号以该快照为准。*

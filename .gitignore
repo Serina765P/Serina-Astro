@@ -24,3 +24,6 @@ pnpm-debug.log*
 
 # ZCode 会话产物
 .zcode/
+
+# 视觉回归截图（本地比对用，不进版本库）
+.shots/

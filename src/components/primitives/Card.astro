@@ -1,0 +1,23 @@
+---
+/**
+ * 卡片基元（P1-2）：卡片外观 recipe 的单点定义，配 global.css 的 @utility card-surface / card-lift。
+ * Astro 侧用本组件，JS 侧（搜索结果的 li 由脚本 className 拼字符串）直接用那两条 utility，
+ * 两条消费路径共用同一份 recipe。
+ *
+ * @example
+ * <Card as="a" href="/x/" lift class="group p-4">…</Card>
+ */
+interface Props {
+  /** 是否带悬停抬升（默认 true）。非交互容器（如搜索结果 li）应传 false —— 可供性要诚实 */
+  lift?: boolean;
+  /** 渲染成什么标签，默认 article */
+  as?: string;
+  class?: string;
+}
+
+const { lift = true, as: Tag = 'article', class: className = '', ...rest } = Astro.props;
+---
+
+<Tag class:list={['card-surface', lift && 'card-lift', className]} {...rest}>
+  <slot />
+</Tag>

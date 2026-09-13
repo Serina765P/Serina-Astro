@@ -1,6 +1,8 @@
 ---
 import { Icon } from 'astro-icon/components';
-import { categoryColor, tagSlug } from '../site.config';
+import Card from './primitives/Card.astro';
+import TagChip from './primitives/TagChip.astro';
+import { categoryColor, categoryFillClass, tagSlug } from '../site.config';
 import { formatDate, readingTime } from '../lib/utils';
 
 interface Props {
@@ -24,9 +26,7 @@ const category = post.data.categories[0];
 const spine = categoryColor(category ?? '');
 ---
 
-<article
-  class="group relative overflow-hidden rounded-3xl border border-line bg-surface py-5 pr-5 pl-6 shadow-card transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card-hover sm:py-6 sm:pr-6 sm:pl-7"
->
+<Card as="article" class="group relative overflow-hidden py-5 pr-5 pl-6 sm:py-6 sm:pr-6 sm:pl-7">
   <span
     aria-hidden="true"
     class="absolute top-5 bottom-5 left-0 w-[5px] rounded-r-full"
@@ -44,7 +44,7 @@ const spine = categoryColor(category ?? '');
   <div class="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-sub">
     {
       category && (
-        <span class="rounded-full px-3 py-0.5 text-on-wash" style={`background:${spine}`}>
+        <span class:list={['rounded-full px-3 py-0.5 text-cat-on', categoryFillClass(category)]}>
           {category}
         </span>
       )
@@ -74,15 +74,10 @@ const spine = categoryColor(category ?? '');
       <ul class="relative mt-3.5 flex flex-wrap gap-1.5" aria-label="标签">
         {post.data.tags.slice(0, 4).map((tag) => (
           <li>
-            <a
-              href={`/tags/${tagSlug(tag)}/`}
-              class="inline-flex items-center rounded-full bg-surface-2 px-2.5 py-0.5 text-xs text-sub transition-colors hover:bg-accent-100 hover:text-accent-700"
-            >
-              # {tag}
-            </a>
+            <TagChip href={`/tags/${tagSlug(tag)}/`} label={`# ${tag}`} />
           </li>
         ))}
       </ul>
     )
   }
-</article>
+</Card>

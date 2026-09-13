@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/primitives/PageHeader.astro';
 import { tagSlug } from '../../site.config';
 import { SITE } from '../../site.config';
 
@@ -27,9 +28,7 @@ const fontSize = (count: number) => {
 ---
 
 <BaseLayout title={`标签 · ${SITE.title}`} description="文章标签" pathname="/tags/">
-  <header class="mb-8">
-    <h1 class="text-3xl tracking-[0.15em] text-ink">标签</h1>
-  </header>
+  <PageHeader title="标签" />
 
   <ul class="flex flex-wrap gap-x-5 gap-y-3" aria-label="全部标签">
     {

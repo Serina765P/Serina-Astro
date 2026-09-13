@@ -7,7 +7,9 @@ import Giscus from '../components/Giscus.astro';
 import ImasAlbum from '../components/skins/ImasAlbum.astro';
 import CodeFold from '../components/CodeFold.astro';
 import CodeCopy from '../components/CodeCopy.astro';
-import { categoryColor, categorySlug, tagSlug, SITE } from '../site.config';
+import Card from '../components/primitives/Card.astro';
+import TagChip from '../components/primitives/TagChip.astro';
+import { categoryFillClass, categorySlug, tagSlug, SITE } from '../site.config';
 import { formatDate, formatCount, readingTime, wordcount } from '../lib/utils';
 
 interface PostRef {
@@ -65,8 +67,10 @@ const category = data.categories[0];
             category && (
               <a
                 href={`/categories/${categorySlug(category)}/`}
-                class="inline-flex items-center rounded-full px-3.5 py-1 text-xs text-on-wash transition-opacity hover:opacity-85"
-                style={`background:${categoryColor(category)}`}
+                class:list={[
+                  'inline-flex items-center rounded-full px-3.5 py-1 text-xs text-cat-on transition-opacity hover:opacity-85',
+                  categoryFillClass(category),
+                ]}
               >
                 {category}
               </a>
@@ -100,12 +104,7 @@ const category = data.categories[0];
               <ul class="mt-5 flex flex-wrap gap-1.5" aria-label="标签">
                 {data.tags.map((tag) => (
                   <li>
-                    <a
-                      href={`/tags/${tagSlug(tag)}/`}
-                      class="inline-flex items-center rounded-full bg-surface-2 px-2.5 py-0.5 text-xs text-sub transition-colors hover:bg-accent-100 hover:text-accent-700"
-                    >
-                      # {tag}
-                    </a>
+                    <TagChip href={`/tags/${tagSlug(tag)}/`} label={`# ${tag}`} />
                   </li>
                 ))}
               </ul>
@@ -121,10 +120,7 @@ const category = data.categories[0];
       <nav class="mt-6 grid gap-3 sm:grid-cols-2" aria-label="上一篇下一篇">
         {
           older ? (
-            <a
-              href={`/posts/${older.id}/`}
-              class="group rounded-3xl border border-line bg-surface p-4 transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card"
-            >
+            <Card as="a" href={`/posts/${older.id}/`} class="group p-4">
               <span class="flex items-center gap-1 text-xs text-sub">
                 <Icon name="material-symbols:keyboard-arrow-left" class="size-4" />
                 上一篇
@@ -132,17 +128,14 @@ const category = data.categories[0];
               <span class="mt-1 line-clamp-1 block text-sm text-ink group-hover:text-wash-pink-deep">
                 {older.data.title}
               </span>
-            </a>
+            </Card>
           ) : (
             <span />
           )
         }
         {
           newer && (
-            <a
-              href={`/posts/${newer.id}/`}
-              class="group rounded-3xl border border-line bg-surface p-4 text-right transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card"
-            >
+            <Card as="a" href={`/posts/${newer.id}/`} class="group p-4 text-right">
               <span class="flex items-center justify-end gap-1 text-xs text-sub">
                 下一篇
                 <Icon name="material-symbols:keyboard-arrow-right" class="size-4" />
@@ -150,7 +143,7 @@ const category = data.categories[0];
               <span class="mt-1 line-clamp-1 block text-sm text-ink group-hover:text-wash-pink-deep">
                 {newer.data.title}
               </span>
-            </a>
+            </Card>
           )
         }
       </nav>

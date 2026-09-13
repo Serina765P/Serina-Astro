@@ -1,6 +1,8 @@
 ---
 import { Icon } from 'astro-icon/components';
 import PageLayout from '../../layouts/PageLayout.astro';
+import Card from '../../components/primitives/Card.astro';
+import TagChip from '../../components/primitives/TagChip.astro';
 import { SIDEBAR } from '../../site.config';
 ---
 
@@ -11,15 +13,10 @@ import { SIDEBAR } from '../../site.config';
     {
       SIDEBAR.friendLinks.map((link) => (
         <li>
-          <a
-            href={link.href}
-            target="_blank"
-            rel="noopener"
-            class="flex items-center gap-2.5 rounded-3xl border border-line bg-surface px-5 py-4 shadow-card transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card-hover"
-          >
+          <Card as="a" href={link.href} target="_blank" rel="noopener" class="flex items-center gap-2.5 px-5 py-4">
             <Icon name="material-symbols:link" class="size-4 shrink-0 text-sub" />
             <span class="text-body">{link.name}</span>
-          </a>
+          </Card>
         </li>
       ))
     }
@@ -30,15 +27,7 @@ import { SIDEBAR } from '../../site.config';
     {
       SIDEBAR.social.map((s) => (
         <li>
-          <a
-            href={s.href}
-            target="_blank"
-            rel="noopener"
-            class="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-3.5 py-1.5 text-xs text-body transition-colors hover:bg-accent-100 hover:text-accent-700"
-          >
-            <Icon name={s.icon} class="size-4" />
-            {s.name}
-          </a>
+          <TagChip href={s.href} label={s.name} icon={s.icon} size="social" target="_blank" rel="noopener" />
         </li>
       ))
     }

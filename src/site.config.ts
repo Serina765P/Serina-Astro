@@ -68,6 +68,22 @@ export function categoryColor(name: string): string {
   return CATEGORY_COLORS[name] ?? 'var(--wash-pink)';
 }
 
+// 分类 → 分类胶囊的 fill 工具类（P0-3：暗色下不能再用 wash 原色当实底）。
+// 与 CATEGORY_COLORS 同源，按 wash 变量名映射，避免再维护第二份分类清单；
+// 类名字面量写在这里，Tailwind 才能扫到并产出对应工具类。
+const CATEGORY_FILL_CLASSES: Record<string, string> = {
+  'var(--wash-pink)': 'bg-cat-fill-pink',
+  'var(--wash-mist)': 'bg-cat-fill-mist',
+  'var(--wash-sage)': 'bg-cat-fill-sage',
+  'var(--wash-sand)': 'bg-cat-fill-sand',
+  'var(--wash-clay)': 'bg-cat-fill-clay',
+  'var(--wash-rose)': 'bg-cat-fill-rose',
+};
+
+export function categoryFillClass(name: string): string {
+  return CATEGORY_FILL_CLASSES[categoryColor(name)] ?? 'bg-cat-fill-pink';
+}
+
 export function tagSlug(name: string): string {
   return TAG_SLUGS[name] ?? name;
 }

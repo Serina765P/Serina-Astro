@@ -8,7 +8,8 @@
     "build": "astro build && pagefind --site dist",
     "preview": "astro preview",
     "check": "astro check",
-    "contrast": "node scripts/contrast-audit.mjs"
+    "contrast": "node scripts/contrast-audit.mjs",
+    "shots": "node scripts/shots.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.0.0",

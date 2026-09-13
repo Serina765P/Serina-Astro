@@ -1,14 +1,13 @@
 ---
 import { Icon } from 'astro-icon/components';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/primitives/PageHeader.astro';
 import { SITE } from '../../site.config';
 ---
 
 <BaseLayout title={`搜索 · ${SITE.title}`} description="全站搜索" pathname="/search/">
   <div id="search-app" class="mx-auto max-w-2xl">
-    <header class="mb-6">
-      <h1 class="text-3xl tracking-[0.15em] text-ink">搜索</h1>
-    </header>
+    <PageHeader title="搜索" class="mb-6" />
 
     <div class="relative">
       <Icon
@@ -93,8 +92,8 @@ import { SITE } from '../../site.config';
             if (!results || current !== seq) return;
             results.forEach(function (result) {
               var li = document.createElement('li');
-              li.className =
-                'rounded-3xl border border-line bg-surface p-4 shadow-card';
+              // 与 <Card lift={false}> 同一份 recipe（结果项本身不是链接，故不抬升）
+              li.className = 'card-surface p-4';
               var a = document.createElement('a');
               a.href = result.url;
               a.className =

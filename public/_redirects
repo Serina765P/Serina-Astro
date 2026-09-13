@@ -1,0 +1,3 @@
+# 老的 Atom 订阅地址不停用：内容是 RSS 2.0（@astrojs/rss），文件名/MIME 在 S10 已纠正
+# 用 301 让已订阅 /atom.xml 的阅读器跟到新地址
+/atom.xml  /rss.xml  301

@@ -1,0 +1,43 @@
+---
+import { Icon } from 'astro-icon/components';
+
+/**
+ * 标签 chip 基元（P1-3）：4 处标签 / 社交 chip 单点定义。
+ *
+ * 三档尺寸不是笔误，别为了「统一」抹平 —— 卡片与文章页的 chip 最紧凑（px-2.5 py-0.5）、
+ * 首页标签云略大（px-3.5 py-1）、友链社交 chip 因带图标再高一档（px-3.5 py-1.5）。
+ * hover 一律走 chip 语义 token（亮暗各一套，暗色不再闪白，见 P0-1）。
+ */
+interface Props {
+  href: string;
+  label: string;
+  size?: 'compact' | 'cloud' | 'social';
+  /** 图标名（material-symbols:xxx），社交 chip 用 */
+  icon?: string;
+  /** 外链透传到 <a> */
+  target?: string;
+  rel?: string;
+  class?: string;
+}
+
+const { href, label, size = 'compact', icon, class: className = '', ...rest } = Astro.props;
+
+const SIZES = {
+  compact: 'inline-flex items-center px-2.5 py-0.5 text-xs text-sub',
+  cloud: 'inline-flex items-center px-3.5 py-1 text-xs text-chip-fg',
+  social: 'inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs text-chip-fg',
+} as const;
+---
+
+<a
+  href={href}
+  class:list={[
+    'rounded-full bg-chip transition-colors hover:bg-chip-hover hover:text-chip-fg-hover',
+    SIZES[size],
+    className,
+  ]}
+  {...rest}
+>
+  {icon && <Icon name={icon} class="size-4" />}
+  {label}
+</a>

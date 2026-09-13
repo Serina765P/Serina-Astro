@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PostCard from '../../components/PostCard.astro';
+import PageHeader from '../../components/primitives/PageHeader.astro';
 import { tagSlug } from '../../site.config';
 import { SITE } from '../../site.config';
 
@@ -27,11 +28,7 @@ const sorted = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf(
 ---
 
 <BaseLayout title={`标签：${name} · ${SITE.title}`} description={`标签「${name}」下的文章`} pathname={`/tags/${tagSlug(name)}/`}>
-  <header class="mb-8">
-    <p class="text-sm tracking-[0.2em] text-sub">标签</p>
-    <h1 class="mt-1 text-3xl tracking-[0.15em] text-ink"># {name}</h1>
-    <p class="mt-2 text-sm text-sub">共 {sorted.length} 篇文章</p>
-  </header>
+  <PageHeader title={`# ${name}`} eyebrow="标签" subtitle={`共 ${sorted.length} 篇文章`} />
 
   <div class="space-y-4">
     {sorted.map((post) => <PostCard post={post} />)}

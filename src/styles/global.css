@@ -61,6 +61,55 @@
   --wash-rose-deep: #c49b94;
 }
 
+/* ── 模式无关的层级与度量 token ──
+   不随主题切换，故不放 :root.dark。层级目前只有三档，且各有唯一消费点：
+   sticky-head → 归档页年份吸顶 / 代码复制按钮；nav → Header 吸顶；skip → 跳转正文。
+   灯箱走 <dialog> 顶层，不参与 z-index，故不设 overlay 档。 */
+:root {
+  --header-h: 4rem; /* 与 Header 的 h-16 对齐；锚点偏移由它派生 */
+  --z-sticky-head: 10;
+  --z-nav: 40;
+  --z-skip: 50;
+}
+
+/* ── 交互 chip：亮暗各一套，替代静态 accent 阶 ──
+   静态 accent 阶不随 .dark 翻转，暗色下 hover 会闪出近白色块（#f3e7e7 压 #302c27）。 */
+:root {
+  --chip-bg: var(--surface-2);
+  --chip-fg: var(--body);
+  --chip-bg-hover: var(--color-accent-100);
+  --chip-fg-hover: var(--color-accent-700);
+}
+
+:root.dark {
+  --chip-bg-hover: color-mix(in srgb, var(--wash-pink) 22%, var(--surface));
+  --chip-fg-hover: var(--ink);
+}
+
+/* ── 分类胶囊：fill / on 分离（P0-3）──
+   亮色 fill 取 wash 原色（与旧行为逐像素一致）；暗色不再用亮色实底，把 wash 揉进 surface 当 fill，
+   靠色相而非明度提示分类，文字改用 --ink。fill 必须按分类分档：单一 fill 会把四种分类压成一色，
+   且与卡片色条（spine，取 --wash-*）色相脱节。 */
+:root {
+  --cat-on: var(--on-wash);
+  --cat-fill-pink: var(--wash-pink);
+  --cat-fill-mist: var(--wash-mist);
+  --cat-fill-sage: var(--wash-sage);
+  --cat-fill-sand: var(--wash-sand);
+  --cat-fill-clay: var(--wash-clay);
+  --cat-fill-rose: var(--wash-rose);
+}
+
+:root.dark {
+  --cat-on: var(--ink);
+  --cat-fill-pink: color-mix(in srgb, var(--wash-pink) 26%, var(--surface));
+  --cat-fill-mist: color-mix(in srgb, var(--wash-mist) 26%, var(--surface));
+  --cat-fill-sage: color-mix(in srgb, var(--wash-sage) 26%, var(--surface));
+  --cat-fill-sand: color-mix(in srgb, var(--wash-sand) 26%, var(--surface));
+  --cat-fill-clay: color-mix(in srgb, var(--wash-clay) 26%, var(--surface));
+  --cat-fill-rose: color-mix(in srgb, var(--wash-rose) 26%, var(--surface));
+}
+
 @theme {
   /* 正文字体：IBM Plex Sans SC（OFL-1.1，ZeoSeven item 389，CDN 分字重 CSS 见 BaseLayout）。
      同一 font-family 五档真实字重（300/400/500/600/700），字重层级见 @layer base 与 .prose 规则 */
@@ -85,6 +134,25 @@
 
   --shadow-card: 0 6px 24px rgb(120 105 90 / 0.1);
   --shadow-card-hover: 0 14px 34px rgb(120 105 90 / 0.16);
+  /* 素材阴影（专辑封面 / 灯箱）：收敛 ImasAlbum 与 Lightbox 的硬编码 rgb()
+     hover 值先如实照搬现状（纯黑 20%），是否回暖调由消费点一并决定 */
+  --shadow-media: 0 2px 10px rgb(120 105 90 / 0.18);
+  --shadow-media-hover: 0 4px 12px rgb(0 0 0 / 0.2);
+
+  /* ── 布局 token 骨架：先声明、后替换 ──
+     一次把接口定死，避免"边改边定接口"导致多点返工。本层暂无消费点，故零视觉变更；
+     消费点：断点 → index.astro 的 bento 媒体查询；容器 → <Container>；圆角/阴影 → 逃逸值收敛。 */
+  /* 非标断点：替代 index.astro 里裸写的 880px（既非 md 768 也非 lg 1024） */
+  --breakpoint-bento: 55rem;
+  /* 容器宽度：收敛全站 5 套 max-w-*
+     content = 长文 / PageLayout；standard = 列表页；wide = 文章 + TOC */
+  --container-content: 48rem;
+  --container-standard: 64rem;
+  --container-wide: 72rem;
+  /* 语义圆角 */
+  --radius-chip: 9999px;
+  --radius-card: 1.5rem;
+  --radius-panel: 2rem;
 
   --font-mono:
     ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, 'Courier New', monospace;
@@ -99,6 +167,20 @@
   --color-body: var(--body);
   --color-sub: var(--sub);
   --color-on-wash: var(--on-wash);
+  /* 交互 chip / 分类胶囊：inline 引用使工具类直接跟随 :root.dark 切换
+     消费类：bg-chip / text-chip-fg / bg-chip-hover / text-chip-fg-hover /
+             bg-cat-fill-* / text-cat-on */
+  --color-chip: var(--chip-bg);
+  --color-chip-hover: var(--chip-bg-hover);
+  --color-chip-fg: var(--chip-fg);
+  --color-chip-fg-hover: var(--chip-fg-hover);
+  --color-cat-on: var(--cat-on);
+  --color-cat-fill-pink: var(--cat-fill-pink);
+  --color-cat-fill-mist: var(--cat-fill-mist);
+  --color-cat-fill-sage: var(--cat-fill-sage);
+  --color-cat-fill-sand: var(--cat-fill-sand);
+  --color-cat-fill-clay: var(--cat-fill-clay);
+  --color-cat-fill-rose: var(--cat-fill-rose);
   --color-line: var(--line);
   --color-nav: var(--nav-bg);
   --color-code-bg: var(--code-bg);
@@ -116,6 +198,16 @@
   --color-wash-clay-deep: var(--wash-clay-deep);
   --color-wash-rose: var(--wash-rose);
   --color-wash-rose-deep: var(--wash-rose-deep);
+}
+
+/* ── 卡片 recipe（P1-2）：Astro 侧走 <Card> 组件，JS 侧（搜索结果 li 由脚本拼 className）走这两条
+   utility，两条消费路径共用同一份定义。card-surface = 静止态外观；card-lift = 悬停抬升。 ── */
+@utility card-surface {
+  @apply rounded-3xl border border-line bg-surface shadow-card;
+}
+
+@utility card-lift {
+  @apply transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card-hover;
 }
 
 @layer base {
@@ -157,8 +249,8 @@
     }
   }
 
-  /* 霞鹜文楷全局应用：正文 400，强调交给真字重，标题保持不加粗 */
-  /* 标题字重层级：大标题 Bold(700) / 小标题 SemiBold(600)，正文默认 Regular(400) */
+  /* 正文字体：--font-sans（IBM Plex Sans SC）全局应用，字重全是真实 face。
+     字重层级：大标题 Bold(700) / 小标题 SemiBold(600) / 正文 Regular(400)，强调交给真实字重。 */
   h1 {
     font-weight: 700;
   }
@@ -411,7 +503,7 @@
     pointer-events: none;
   }
   .code-fold-btn {
-    @apply mx-auto mt-2.5 block rounded-full bg-surface-2 px-4 py-1.5 text-xs text-body transition-colors hover:bg-accent-100 hover:text-accent-700;
+    @apply mx-auto mt-2.5 block rounded-full bg-chip px-4 py-1.5 text-xs text-chip-fg transition-colors hover:bg-chip-hover hover:text-chip-fg-hover;
   }
 
   /* 代码块复制按钮（CodeCopy.astro 注入）：GitHub 式右上角图标，常显但低对比不抢戏 */

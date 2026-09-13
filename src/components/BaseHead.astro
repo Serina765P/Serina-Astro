@@ -13,7 +13,7 @@ interface Props {
 const { title, description = SITE.description, pathname = '', keywords = SITE.keywords, ogType = 'website' } = Astro.props;
 const canonical = new URL(pathname, Astro.site);
 const ogImage = new URL('/images/og.png', Astro.site);
-const rssUrl = new URL('/atom.xml', Astro.site);
+const rssUrl = new URL('/rss.xml', Astro.site);
 ---
 
 <meta charset="utf-8" />
@@ -27,7 +27,7 @@ const rssUrl = new URL('/atom.xml', Astro.site);
 <link rel="icon" href="/images/fav.webp" />
 <!-- 导航底色延伸到浏览器 chrome；content 由主题脚本随手动切换同步（media 写法只跟系统偏好） -->
 <meta name="theme-color" content="#edeae4" />
-<link rel="alternate" type="application/atom+xml" title={SITE.title} href={rssUrl} />
+<link rel="alternate" type="application/rss+xml" title={SITE.title} href={rssUrl} />
 <link rel="sitemap" href="/sitemap-index.xml" />
 
 <meta property="og:type" content={ogType} />

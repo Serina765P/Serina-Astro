@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/primitives/PageHeader.astro';
 import { formatDate, yearInShanghai } from '../../lib/utils';
 import { SITE } from '../../site.config';
 
@@ -19,10 +20,7 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
 ---
 
 <BaseLayout title={`归档 · ${SITE.title}`} description="全部文章归档" pathname="/archives/">
-  <header class="mb-8">
-    <h1 class="text-3xl tracking-[0.15em] text-ink">归档</h1>
-    <p class="mt-2 text-sm text-sub">共 {posts.length} 篇文章</p>
-  </header>
+  <PageHeader title="归档" subtitle={`共 ${posts.length} 篇文章`} />
 
   <div class="space-y-10">
     {

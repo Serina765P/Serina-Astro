@@ -1,18 +1,22 @@
 ---
 import { getCollection } from 'astro:content';
+import type { GetStaticPaths } from 'astro';
 import { Icon } from 'astro-icon/components';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Giscus from '../../components/Giscus.astro';
+import PageHeader from '../../components/primitives/PageHeader.astro';
 import { SITE } from '../../site.config';
 import { TZ } from '../../lib/utils';
 
-export async function getStaticPaths({ paginate }) {
+// `satisfies GetStaticPaths` 是 Astro 推断 Astro.props 的前提：不标注时 paginate 参数
+// 隐式 any，Astro 推不出 page 类型，astro check 会整页报 14 个 never/any 错误。
+export const getStaticPaths = (async ({ paginate }) => {
   const items = (await getCollection('shuoshuo')).sort(
     (a, b) => b.data.published_at.valueOf() - a.data.published_at.valueOf(),
   );
   // 每页 10 条；[...page] 生成 /shuoshuo、/shuoshuo/2、/shuoshuo/3…
   return paginate(items, { pageSize: 10 });
-}
+}) satisfies GetStaticPaths;
 
 const { page } = Astro.props;
 const items = page.data;
@@ -35,10 +39,7 @@ const formatDateTime = (date: Date) =>
 ---
 
 <BaseLayout title={`说说 · ${SITE.title}`} description="碎碎念时间线" pathname={page.url.current}>
-  <header class="mx-auto max-w-2xl">
-    <h1 class="text-3xl tracking-[0.15em] text-ink">说说</h1>
-    <p class="mt-2 text-sm text-sub">共 {page.total} 条说说</p>
-  </header>
+  <PageHeader title="说说" subtitle={`共 ${page.total} 条说说`} class="mx-auto max-w-2xl" />
 
   <ol class="mx-auto mt-8 max-w-2xl space-y-6 border-l-2 border-line pl-5">
     {
