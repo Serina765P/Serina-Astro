@@ -3,6 +3,7 @@
 **来源**：`docs/theme-design-audit-2026-09-13.md`（审查日期 2026-09-13）
 **覆盖范围**：27 个缺陷 —— P0×3、P1×10、P2×14
 **计划日期**：2026-09-13
+**状态（2026-09-13 收尾）**：**S1–S25 全部落地**（S19 经用户否决取消）——实施记录见第六～二十二节；本批 S21–S25 拆为六个提交（哈希见各节标题）。
 **总原则**：**先立验证网 → 先加 token 不改视觉 → 小步替换 → 最后收口工程化**。每一步都要求"改完即验"，避免多点同步的返工。
 
 ---
@@ -969,6 +970,128 @@ Tailwind 的源扫描**连注释也扫**：第一版注释里写了 `prose-neutr
   按计划口径「至少 webp」达标，avif 不做。
 - `data-astro-image-fit="cover"` / `-pos="center"` 属性已输出但无对应 CSS（未开 responsiveStyles）；
   组件图靠自身 class 的 object-cover 生效，无实际影响。
+
+---
+
+## 十七、S21 + S22 实施记录（工程化基建，提交 `ea39843`）
+
+### S21（P2-1）审计接入 check
+
+`package.json` 的 `check` → `astro check && node scripts/contrast-audit.mjs`。配对表在 S4/S5/S16
+已随 token 落地补齐（chip / 6 组 cat / on-accent），本步只接线。验收：`npm run check` 0 error +
+66 项审计全过、exit 0；token 不达标即非零（S2 的负向测试仍是依据）。
+
+### S22（P2-2）Biome + CI + 构建产物断言
+
+新增 `biome.json`（v2 schema）：`preset: recommended`、`lineWidth: 100`、单引号、LF；
+`files.includes` 只含 `js/mjs/ts/json` —— **`.astro` 不在扫描范围**（Biome v2 对 .astro 只有部分
+支持，且会重排模板），.astro 的静态检查继续由 `astro check` 承担。`vcs.useIgnoreFile` 复用
+`.gitignore`（dist/.shots 等自动排除）。另加 `.editorconfig`、`.gitattributes`（`* text=auto eol=lf`）。
+
+**为什么要 .gitattributes**：本机 `core.autocrlf=true`，checkout 出的文本是 CRLF，而 Biome 与
+CI 都按 LF 比较 —— 不锁住会让 `npm run lint` 在本地变成假失败。
+
+`build` 改为 `astro build && node scripts/check-build.mjs && pagefind --site dist`。
+`scripts/check-build.mjs` 两条断言：dist 必须有 CSS 产物；全部 HTML 引用的 `/_astro/*.css`
+必须真实存在（覆盖"资产没产出 → HTML 不引用"的两种同源症状）。
+**负向测试已验**：把 CSS 移走后 exit 1，并逐页列出失效引用；放回后 exit 0。
+
+`.github/workflows/ci.yml`：`biome ci` → `npm run check` → `npm run build`；
+worker 单独 job（`npm ci --prefix worker --omit=dev` + `node worker/test.mjs`，不拉 wrangler）。
+
+**全仓格式化一次**：16 个文件被 Biome 改写，另手工清理 7 处
+（未用导入、可选链、4 处字符串拼接改模板串）。`biome ci` 全绿。
+
+偏离与坑（重要）：
+
+1. `lineWidth: 100` 而非默认 80 —— 默认值会制造无意义的大 diff。
+2. **本机 npm 环境有 `omit=dev`**（NODE_ENV=production 所致）：不带 `--include=dev` 的
+   `npm install` 会把 devDependencies 全部剪掉（astro check / tailwind / pagefind 一起消失）。
+   装依赖一律 `npm install --include=dev`。
+3. 本轮排查中还踩了 PowerShell 工具 **cwd 跨调用保持**的坑：在 worker 目录跑过命令后，
+   后续"根目录"命令实际仍在 worker 里执行，导致误判依赖丢失 —— 链式命令一律显式传 cwd。
+
+## 十八、S23 实施记录（脚本守卫统一 + 代码块合并，提交 `4097a06`）
+
+- **合并 `CodeBlock.astro`**：复制 + 折叠一套脚本、一次包裹、`pre.dataset.enhanced` 幂等，
+  消除 CodeFold/CodeCopy 的 import 顺序契约；DOM 规范化为
+  `.code-fold > .code-clip > .code-copy-wrap > pre + 复制按钮`，折叠按钮挂在 `.code-fold`。
+  删除两个旧组件，PostLayout 单引用。CSS 类名与结构未变。
+- **Lightbox 换页失联修复**：模块脚本不随 ClientRouter 换页重跑，旧代码在模块顶层捕获
+  `<dialog>`/关闭按钮 —— 换页后引用脱离文档。改为 `refreshDialog()`：`isConnected` 惰性失效
+  + 每次 `astro:page-load` 重新查询并按 `dialog.dataset.bound` 绑关闭按钮。
+- **幂等标记统一**：全部 `window.__xBound` → `document.documentElement.dataset.*`
+  （Header 菜单 / Giscus / 搜索页 / BaseLayout 主题脚本；`grep "window\.__" src/` 归零）。
+  Toc 加 `toc.dataset.bound`。
+
+验证（`.shots/s23-verify.mjs`，本地不进库）：8 次客户端换页（文章 ↔ 归档）后
+67 个代码块的 pre/wrap/复制按钮一一对应、10 个折叠块嵌套正确；换页后点图放大 → 关闭按钮
+可关 → 再开再关正常；无 pageerror。
+
+截图：CSS 产物与改动前**同名同大小**（`BaseLayout.CSYWHJDM.css` 59695 / `index.DhBbSVrP.css` 8737）；
+第一轮 1/26 张变化、第二轮 4/26 张变化且两轮互相不一致 —— 判定为本机抖动
+（`post-imas-hires` 两轮高度 5235 vs 5457，差 222px = giscus iframe 加载与否）。
+"字节哈希不能单独当判定器"的旧结论再次成立，DOM 级探针与 CSS 哈希才是硬证据。
+
+## 十九、S24a 实施记录（配置收口，提交 `d78d320`）
+
+`SIDEBAR` → `SITE_META`（消费方 `Footer.astro` / `links/index.astro` 同步），导出名与
+「站点简介/社交/友链」的内容对齐。
+
+**偏离**：计划里的「合并 data/taxonomy.json 与 site-info.json」不做 —— JSON 单一来源重构已在
+`6e066df` 完成，且本地工作台 Astro-WebUI 按文件名直接读写这两个 JSON，工作台在本工作区之外，
+合并会破坏其契约。「配置单一来源」的目标已由 re-export 满足。
+
+## 二十、S24b 实施记录（说说按年分片，提交 `96a7fd6`）
+
+- 数据：`src/data/shuoshuo.json` → `src/data/shuoshuo/2026.json`，**分片信封结构不变**
+  （`source / fetched_at / count / items`），每个分片可被工作台单独读写。
+- 站点 loader：`content.config.ts` 改自定义 loader（`shuoshuo-shards`）——扫描目录全部
+  `*.json`（排序保证确定性）、`store.clear()`、`parseData` + `generateDigest`、缺 id 跳过、
+  重复 id 告警；dev 下 `watcher` 任一分片变化即整体重载。
+- worker：新增 `yearInShanghai()`（Intl 按 Asia/Shanghai，与站内日期展示同口径）、
+  `shardPath(dir, publishedAt)`、`createShard(item)`；目标年份分片 404 → 走新建路径
+  （PUT 不带 sha）；`FILE_PATH` → `SHUOSHUO_DIR`。README / wrangler.toml 同步。
+- 测试：`worker/test.mjs` 补分片路径（含跨年用例 `2025-12-31T16:30Z → 2026`）、
+  尾斜杠目录、信封结构、新分片内幂等 —— 全过。
+- 端到端实测：临时加 `2025.json` 分片 → 构建后两条说说都在、新条目排前；删除后重建正常。
+- **外部影响（务必转达）**：本地工作台 Astro-WebUI 若仍按 `src/data/shuoshuo.json` 单文件
+  读写，需要同步改为分片目录（按 published_at 的沪年选文件），否则会说不上话。
+
+## 二十一、S24c 实施记录（URL 形态收口，提交 `944eaa1`）
+
+- `astro.config.mjs`：`trailingSlash: 'ignore'` → `'always'`（与 `build.format: 'directory'`
+  一致）；`Header.astro` 移除手工去尾斜杠比对（pathname 恒带斜杠后直接 `startsWith`）。
+- **关键实测（对计划的收窄）**：Cloudflare Pages 对目录型路径**自动 308 补尾斜杠**
+  （`/contact` → `/contact/`，官方路由行为），因此「补 `_redirects` 处理旧的无斜杠 URL」
+  **不需要**：写了只是多一份维护面。`_redirects` 只保留 `/atom.xml → /rss.xml 301` 并加注释留档。
+- 全站链接扫描（一次性工具，scripts 里不新增常驻脚本）：**1239 条 HTML 内链 / 37 条 sitemap /
+  11 条 RSS 链接全部规范**（目录链接带尾斜杠、目标存在、canonical 形态正确）；
+  扫描顺带发现并清掉 `imas-hires.md` 指向已不存在的 `/js/album-blur.js` 的死引用
+  （旧站脚本，ImasAlbum 皮肤已替代其机制）。
+- 分页形态实测：临时 `pageSize=1` + 临时分片 → `/shuoshuo/2/` 存在、canonical 为
+  `…/shuoshuo/2/`、前后页链接均带尾斜杠；已还原。
+- preview 探针：`/archives` → **404**（本地闸门会逼出漏改的链接）、`/archives/` → 200、
+  `/rss.xml` → 200、`/404.html` → 200。
+
+## 二十二、S25 实施记录（图标白名单放开，提交 `d032b4c`）
+
+`astro.config.mjs` 的 `material-symbols` 由 30 项显式列表放开为 `['*']`；simple-icons 保持显式
+列表（品牌图标数量庞大，拼错/误用更值得被构建拦住）。
+
+实测（改动前后同一工作区、两次构建对比）：
+
+| 指标 | 改动前 | 改动后 |
+|---|---|---|
+| dist 总字节 / 文件数 | 10810023 / 417 | **10810023 / 417** |
+| 客户端 JS | 16357 B / 1 个 | **16357 B / 1 个** |
+| 产物中在用图标名 | 21 个 | **21 个（集合相等）** |
+
+- 未用图标零混入：探测 `settings` / `album` / `rocket` 在全部 HTML 中出现 0 次
+  —— 图标只在构建期解析、只输出渲染过的那些，tree-shake 生效。
+- 6 个样本页（首页 / 归档 / 文章 / 404 / 说说 / 友链）HTML 与改动前**逐字节一致**。
+- 正向验证：临时把 `material-symbols:settings`（原先不在白名单）挂到 404 页 → 构建后
+  `data-icon="material-symbols:settings"` 正常渲染；已还原。
 
 ---
 
