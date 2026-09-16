@@ -7,37 +7,74 @@ interface Heading {
 
 interface Props {
   headings: Heading[];
+  mode?: 'desktop' | 'mobile' | 'both';
 }
 
-const { headings } = Astro.props;
-const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
+const { headings, mode = 'both' } = Astro.props;
+const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 5);
 ---
 
 {
   toc.length > 0 && (
-    <nav
-      id="toc"
-      aria-label="目录"
-      class="hidden text-sm lg:block"
-    >
-      <p class="mb-3 tracking-[0.3em] text-sub">目录</p>
-      <ul class="space-y-1.5 border-l border-line">
-        {toc.map((heading) => (
-          <li>
-            <a
-              href={`#${heading.slug}`}
-              data-toc-link
-              class:list={[
-                '-ml-px block border-l-2 border-transparent py-0.5 text-sub transition-colors hover:text-wash-pink-deep',
-                heading.depth === 2 ? 'pl-3' : heading.depth === 3 ? 'pl-6 text-[0.9em]' : 'pl-9 text-[0.85em]',
-              ]}
-            >
-              {heading.text}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </nav>
+    <>
+      {(mode === 'desktop' || mode === 'both') && (
+        <nav id="toc" data-toc-root aria-label="目录" class="hidden text-sm lg:block">
+          <p class="mb-3 text-xs font-medium tracking-[0.18em] text-sub">本文目录</p>
+          <ul class="space-y-1.5 border-l border-line">
+            {toc.map((heading) => (
+              <li>
+                <a
+                  href={`#${heading.slug}`}
+                  data-toc-link
+                  class:list={[
+                    '-ml-px block border-l-2 border-transparent py-1 text-sub transition-colors hover:border-wash-pink-deep hover:text-ink',
+                    heading.depth === 2
+                      ? 'pl-3'
+                      : heading.depth === 3
+                        ? 'pl-6 text-[0.9em]'
+                        : heading.depth === 4
+                          ? 'pl-9 text-[0.85em]'
+                          : 'pl-12 text-[0.8em]',
+                  ]}
+                >
+                  {heading.text}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
+
+      {(mode === 'mobile' || mode === 'both') && (
+        <details class="article-toc lg:hidden" data-toc-root>
+          <summary>本文目录 <span aria-hidden="true">⌄</span></summary>
+          <nav aria-label="目录">
+            <ul class="mt-3 space-y-1.5 border-l border-line">
+              {toc.map((heading) => (
+                <li>
+                  <a
+                    href={`#${heading.slug}`}
+                    data-toc-link
+                    class:list={[
+                      '-ml-px block border-l-2 border-transparent py-1 text-sm text-sub transition-colors hover:border-wash-pink-deep hover:text-ink',
+                      heading.depth === 2
+                        ? 'pl-3'
+                        : heading.depth === 3
+                          ? 'pl-6 text-[0.9em]'
+                          : heading.depth === 4
+                            ? 'pl-9 text-[0.85em]'
+                            : 'pl-12 text-[0.8em]',
+                    ]}
+                  >
+                    {heading.text}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </details>
+      )}
+    </>
   )
 }
 
@@ -47,26 +84,44 @@ const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
   [data-toc-link].toc-active {
     @apply border-wash-pink-deep font-medium text-ink;
   }
+
+  .article-toc {
+    @apply mb-7 rounded-2xl border border-line bg-surface-2 px-4 py-3 text-sm;
+  }
+
+  .article-toc summary {
+    @apply flex cursor-pointer list-none items-center justify-between font-medium text-ink;
+  }
+
+  .article-toc summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .article-toc summary span {
+    @apply text-lg leading-none text-sub transition-transform;
+  }
+
+  .article-toc[open] summary span {
+    transform: rotate(180deg);
+  }
 </style>
 
 <script>
   let observer: IntersectionObserver | null = null;
 
-  document.addEventListener('astro:before-swap', () => {
+  function bindToc() {
+    const roots = [...document.querySelectorAll<HTMLElement>('[data-toc-root]')];
+    if (roots.length === 0) return;
+
+    const links = roots.flatMap((root) => [...root.querySelectorAll<HTMLAnchorElement>('a[data-toc-link]')]);
+    const byId = new Map<string, HTMLAnchorElement[]>();
+    for (const link of links) {
+      const id = link.getAttribute('href')?.slice(1);
+      if (!id) continue;
+      byId.set(id, [...(byId.get(id) ?? []), link]);
+    }
+
     observer?.disconnect();
-    observer = null;
-  });
-
-  document.addEventListener('astro:page-load', () => {
-    const toc = document.getElementById('toc');
-    if (!toc || toc.dataset.bound === 'true') return;
-    toc.dataset.bound = 'true';
-
-    const links = [...toc.querySelectorAll<HTMLAnchorElement>('a[data-toc-link]')];
-    const byId = new Map(links.map((a) => [a.getAttribute('href')!.slice(1), a]));
-
-    observer?.disconnect();
-    // 跨回调持续维护可见集：entries 只含状态变化的元素，每次重建会丢状态导致高亮乱跳
     const visible = new Set<string>();
     observer = new IntersectionObserver(
       (entries) => {
@@ -75,17 +130,26 @@ const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
           else visible.delete(entry.target.id);
         }
         if (visible.size === 0) return;
-        // 单一高亮：取当前可见标题中最靠近视口顶部的一个（实时取位置，排序才准确）
         const top = [...visible]
           .map((id) => [id, document.getElementById(id)?.getBoundingClientRect().top ?? Infinity] as const)
           .sort((a, b) => a[1] - b[1])[0][0];
-        for (const [id, link] of byId) link.classList.toggle('toc-active', id === top);
+        for (const [id, matchingLinks] of byId) {
+          for (const link of matchingLinks) link.classList.toggle('toc-active', id === top);
+        }
       },
       { rootMargin: '-80px 0px -70% 0px' },
     );
-    for (const [id] of byId) {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
+    for (const id of byId.keys()) {
+      const element = document.getElementById(id);
+      if (element) observer.observe(element);
     }
+  }
+
+  document.addEventListener('astro:before-swap', () => {
+    observer?.disconnect();
+    observer = null;
   });
+
+  document.addEventListener('astro:page-load', bindToc);
+  bindToc();
 </script>

@@ -15,19 +15,19 @@ keywords:
 description: 写作Hires，读作脑放
 ---
 
-# 简介
+## 简介
 **本页所有Hires资源均由wfhtony自购，感谢大佬！**
 
-# 下载链接
+## 下载链接
 链接: [https://pan.baidu.com/s/1s0jVLa0cIBkYOpzLIHm-1w?pwd=imas](https://pan.baidu.com/s/1s0jVLa0cIBkYOpzLIHm-1w?pwd=imas)  
 提取码: imas
 
 
-# 文件目录
+## 文件目录
 
 搜索可以使用 `Ctrl+F`   
 
-#### 1 初阵公演
+##### 1 初阵公演
   - ENDLESS DANCE (葛城リーリヤ・倉本千奈・姫崎莉波 ver.).flac
   - ENDLESS DANCE (花海佑芽・秦谷美鈴・十王星南 ver.).flac
   - ENDLESS DANCE (花海咲季・月村手毬・藤田ことね ver.).flac
@@ -46,7 +46,7 @@ description: 写作Hires，读作脑放
   - がむしゃらに行こう！(葛城リーリヤ・倉本千奈・姫崎莉波 ver.).flac
   - がむしゃらに行こう！(花海咲季・月村手毬・藤田ことね ver.).flac
 
-#### 2 全体 & 团体曲
+##### 2 全体 & 团体曲
   - アイ NEED YOU(FOR WONDERFUL STORY).flac
   - Campus mode!! (Dolby-Audio to 2ch).flac
   - Campus mode!! (Dolby-Audio).m4a
@@ -57,7 +57,7 @@ description: 写作Hires，读作脑放
   - 標.flac
   - 雨上がりのアイリス.flac
 
-#### 3 个人曲 SOLO1
+##### 3 个人曲 SOLO1
   - The Rolling Riceball.flac
   - The Rolling Riceball (Remastered).flac
   - Tame-Lie-One-Step.flac
@@ -73,7 +73,7 @@ description: 写作Hires，读作脑放
   - Luna say maybe.flac
   - clumsy trick.flac
 
-#### 4 个人曲 SOLO2 (A & B)
+##### 4 个人曲 SOLO2 (A & B)
   - A面
     - アイヴイ.flac
     - アイヴイ (Remastered).flac
@@ -99,7 +99,7 @@ description: 写作Hires，读作脑放
     - 歌声は君いろ.flac
     - Fragile Heart.flac
 
-#### 5 生日曲
+##### 5 生日曲
   - たいせつなもの_37585443.flac
   - つよつよ最强エクササイズ_38539383.flac
   - メクルメ_37141490.flac
@@ -114,7 +114,7 @@ description: 写作Hires，读作脑放
   - Try it now_38539380.flac
   - marble heart_38096431.flac
 
-#### 6 个人曲 SOLO3
+##### 6 个人曲 SOLO3
   - サンフェーデッド_40156009.flac
   - 36℃ U・B・U.flac
   - Love & Joy_39763981.flac
@@ -122,7 +122,7 @@ description: 写作Hires，读作脑放
   - 空と约束.flac
   - 自己肯定感爆上げ↑↑しゅきしゅきソング_40305458.flac
 
-#### 7 季节曲
+##### 7 季节曲
   - キミとセミブルー.flac
   - 冠菊.flac
   - 仮装狂騒曲.flac
@@ -131,13 +131,13 @@ description: 写作Hires，读作脑放
   - 白 Night! White Wish!_36887861.flac
   - 雪解けに_38040888.flac
 
-#### 8 活动曲
+##### 8 活动曲
   - SUPREMACY.flac
   - ナイワ.flac
   - Let's GO!! ICHI-NO-NI!!.flac
   - 古今东西ちょちょいのちょい (花海咲季・月村手毬・藤田ことね ver.).flac
 
-### 以防有人需要伴奏
+#### 以防有人需要伴奏
 ```
   - アイヴイ [Instrumental].flac
   - アイヴイ [Instrumental] (2).flac

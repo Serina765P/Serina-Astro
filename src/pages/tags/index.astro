@@ -32,7 +32,10 @@ const fontSize = (count: number) => {
   <Container width="standard">
     <PageHeader title="标签" />
 
-    <ul class="flex flex-wrap gap-x-5 gap-y-3" aria-label="全部标签">
+    {sorted.length === 0 ? (
+      <p class="empty-state mt-6">暂无标签。</p>
+    ) : (
+      <ul class="flex flex-wrap gap-x-5 gap-y-3" aria-label="全部标签">
       {
         sorted.map(({ name, count }) => (
           <li>
@@ -47,6 +50,7 @@ const fontSize = (count: number) => {
           </li>
         ))
       }
-    </ul>
+      </ul>
+    )}
   </Container>
 </BaseLayout>

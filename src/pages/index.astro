@@ -7,12 +7,15 @@ import PostCard from '../components/PostCard.astro';
 import TagChip from '../components/primitives/TagChip.astro';
 import Container from '../components/primitives/Container.astro';
 import { formatDate } from '../lib/utils';
+import { stripShuoshuoTags } from '../lib/shuoshuo';
 import { HERO, SITE, tagSlug } from '../site.config';
 
 const posts = (await getCollection('posts')).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
 );
-const recent = posts.slice(0, 6);
+const recent = [...posts]
+  .sort((a, b) => Number(b.data.pinned) - Number(a.data.pinned) || b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 6);
 
 // 最近一条说说（截断展示，完整内容在 /shuoshuo/）
 const latestSay = (await getCollection('shuoshuo')).sort(
@@ -30,37 +33,63 @@ const days = oldest ? Math.max(1, Math.ceil((Date.now() - oldest.valueOf()) / 86
 
 const shuoshuoCount = (await getCollection('shuoshuo')).length;
 // 先压缩空白再统一截断与判断（原文换行多时长度会虚高，导致误加省略号）
-const sayPlain = latestSay ? latestSay.data.content.replace(/\s+/g, ' ') : '';
+const sayPlain = latestSay ? stripShuoshuoTags(latestSay.data.content).replace(/\s+/g, ' ') : '';
 const sayText = sayPlain.slice(0, 88) + (sayPlain.length > 88 ? '…' : '');
 const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
 ---
 
-<BaseLayout title={`${SITE.title} · ${SITE.subtitle}`} description={SITE.description} pathname="/" mainClass="w-full">
-  <!-- 水彩 hero：莫兰迪晕染 + 有机 blob 头像 + 圆体大标题 -->
-  <section class="relative overflow-hidden px-6 pt-24 pb-16 text-center sm:pt-28">
-    <div class="wash absolute h-72 w-96 left-[4%] top-2 bg-wash-pink" aria-hidden="true"></div>
-    <div class="wash absolute h-80 w-[28rem] right-0 -top-8 bg-wash-mist" aria-hidden="true"></div>
-    <div class="wash absolute h-64 w-80 left-[30%] -bottom-24 bg-wash-sand" aria-hidden="true"></div>
-    <div class="wash absolute h-52 w-60 right-[22%] -bottom-16 bg-wash-sage" aria-hidden="true"></div>
-
-    <div class="blob-wrap blob relative mx-auto mb-7 size-36 sm:size-40">
-      <!-- S20：首屏头像走 astro:assets；320 覆盖最大显示宽（160px）的 2x，fetchpriority 保留 -->
+<BaseLayout title={`${SITE.title} · ${SITE.subtitle}`} description={SITE.description} pathname="/" mainClass="py-0">
+  <!-- 个人主页已独立存在：首页保留轻量身份提示，把首屏空间还给文章。 -->
+  <section class="border-b border-line bg-surface/60">
+    <Container width="standard" class="flex items-center gap-4 py-8 sm:gap-5 sm:py-10">
       <Image
         src={HERO.avatar}
         alt={`${SITE.author} 的头像`}
-        width={320}
-        height={320}
+        width={128}
+        height={128}
         layout="fixed"
         loading="eager"
         fetchpriority="high"
-        class="blob relative size-full object-cover shadow-card-hover"
+        class="size-16 shrink-0 rounded-2xl object-cover shadow-card sm:size-20"
       />
-    </div>
-    <h1 class="font-hero text-4xl text-ink tracking-[0.22em] [text-indent:0.22em] sm:text-5xl">{SITE.subtitle}</h1>
-    <p class="mt-4 text-sm tracking-[0.3em] text-sub [text-indent:0.3em]">{SITE.description}</p>
+      <div class="min-w-0">
+        <p class="text-xs font-medium tracking-[0.18em] text-wash-mist-deep">{SITE.title}</p>
+        <h1 class="mt-1 font-hero text-3xl tracking-[0.12em] text-ink [text-wrap:balance] sm:text-4xl">
+          {SITE.subtitle}
+        </h1>
+        <p class="mt-2 max-w-2xl text-sm leading-relaxed text-sub">{SITE.description}</p>
+      </div>
+    </Container>
   </section>
 
-  <Container width="standard" class="pb-16">
+  <Container width="standard" class="flex flex-col pb-16">
+    <section class="order-1 pt-10 sm:pt-12">
+      <!-- 最近文章（spine 卡） -->
+      <div class="sec-head">
+        <h2>最近写下的</h2>
+        <span>RECENT · 按时间</span>
+      </div>
+      {
+        recent.some((post) => post.data.pinned) && (
+          <p class="mb-4 text-sm text-sub">置顶文章会优先显示，其他文章仍按发布时间排列。</p>
+        )
+      }
+      <div class="space-y-4">
+        {recent.map((post) => <PostCard post={post} />)}
+      </div>
+      {
+        posts.length > recent.length && (
+            <a
+              href="/archives/"
+              class="mt-7 inline-block text-sm text-wash-pink-deep transition-colors hover:text-wash-rose-deep"
+            >
+              查看全部 {posts.length} 篇 →
+            </a>
+        )
+      }
+    </section>
+
+    <section class="order-2 mt-12">
     <!-- 便当盒信息区 -->
     <div class="sec-head">
       <h2>小站速览</h2>
@@ -99,81 +128,28 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
       <div class="cell quick-cell lift">
         <div class="label"><span class="ico bg-wash-pink" aria-hidden="true">⚡</span>快捷入口</div>
         <div class="mt-3 grid flex-1 grid-cols-4 gap-2.5">
-          <a href="/search/" class="quick"><Icon name="material-symbols:search" class="size-5" />搜索</a>
-          <a href="/shuoshuo/" class="quick"><Icon name="material-symbols:chat" class="size-5" />说说</a>
-          <a href="/rss.xml" class="quick"><Icon name="material-symbols:send" class="size-5" />RSS</a>
-          <a href="https://github.com/Serina765P" target="_blank" rel="noopener" class="quick"><Icon name="simple-icons:github" class="size-5" />GitHub</a>
+          <a href="/search/" class="quick"><Icon name="material-symbols:search" class="size-5" aria-hidden="true" />搜索</a>
+          <a href="/shuoshuo/" class="quick"><Icon name="material-symbols:chat" class="size-5" aria-hidden="true" />说说</a>
+          <a href="/rss.xml" class="quick"><Icon name="material-symbols:send" class="size-5" aria-hidden="true" />RSS</a>
+          <a href="https://github.com/Serina765P" target="_blank" rel="noopener" class="quick"><Icon name="simple-icons:github" class="size-5" aria-hidden="true" />GitHub</a>
         </div>
       </div>
     </div>
-
-    <!-- 最近文章（spine 卡） -->
-    <div class="sec-head mt-12">
-      <h2>最近写下的</h2>
-      <span>RECENT · 按时间</span>
-    </div>
-    <div class="space-y-4">
-      {recent.map((post) => <PostCard post={post} />)}
-    </div>
-    {
-      posts.length > recent.length && (
-          <a
-            href="/archives/"
-            class="mt-7 inline-block text-sm text-wash-pink-deep transition-colors hover:text-wash-rose-deep"
-          >
-            查看全部 {posts.length} 篇 →
-          </a>
-      )
-    }
+    </section>
   </Container>
 </BaseLayout>
 
 <style>
   @reference '../styles/global.css';
 
-  /* 水彩晕染：极慢漂移，reduced-motion 时由全局规则降级 */
-  .wash {
-    pointer-events: none;
-    border-radius: 9999px;
-    filter: blur(52px);
-    opacity: 0.5;
-    animation: wash-drift 26s ease-in-out infinite alternate;
-  }
-  .wash:nth-of-type(2) {
-    animation-duration: 32s;
-    animation-direction: alternate-reverse;
-  }
-  .wash:nth-of-type(3) {
-    opacity: 0.4;
-    animation-duration: 38s;
-  }
-  .wash:nth-of-type(4) {
-    opacity: 0.35;
-    animation-duration: 30s;
-    animation-direction: alternate-reverse;
-  }
-  :global(.dark) .wash {
-    opacity: 0.34;
-  }
-
-  /* 有机 blob 头像：背景色块与图像同一形状（.blob 工具类）、居中对齐 */
-  .blob-wrap::before {
-    content: '';
-    position: absolute;
-    inset: -13px;
-    border-radius: inherit;
-    background: linear-gradient(135deg, var(--wash-pink), var(--wash-mist));
-    opacity: 0.45;
-  }
-
   .sec-head {
-    @apply mb-5 flex items-baseline gap-4;
+    @apply mb-5 flex flex-wrap items-baseline gap-x-4 gap-y-1;
   }
   .sec-head h2 {
-    @apply text-xl tracking-[0.3em] text-ink;
+    @apply text-xl tracking-[0.16em] text-ink;
   }
   .sec-head span {
-    @apply text-xs tracking-[0.2em] text-sub;
+    @apply text-xs tracking-[0.14em] text-sub;
   }
 
   /* 便当盒 */
@@ -187,16 +163,21 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
       'say say say say'
       'cloud cloud quick quick';
 
-    /* 窄屏折叠（S14）：断点走 --breakpoint-bento（55rem），不再裸写 880px */
+    /* 中小屏保持统计数据的可扫读密度；内容卡片仍然跨满整行。 */
     @variant max-bento {
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       grid-template-rows: none;
-      grid-template-areas: none;
+      grid-template-areas:
+        's1 s2'
+        's3 s4'
+        'say say'
+        'cloud cloud'
+        'quick quick';
     }
   }
   /* 抬升只给可交互的格子（标签云/快捷入口），非交互格子保持安静 —— 可供性要诚实 */
   .bento > .cell {
-    @apply rounded-3xl border border-line bg-surface p-5 shadow-card;
+    @apply rounded-2xl border border-line bg-surface p-5 shadow-card;
     min-height: 0;
   }
   .bento > .cell.lift {
@@ -210,7 +191,7 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
   .quick-cell { grid-area: quick; }
 
   .stat {
-    @apply flex flex-col justify-center gap-0.5 text-center;
+    @apply flex min-h-28 flex-col justify-center gap-0.5 bg-surface-2 text-center;
   }
   .stat .v {
     @apply text-4xl text-ink;
@@ -223,7 +204,7 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
   }
 
   .label {
-    @apply flex items-center gap-2 text-[11px] tracking-[0.25em] text-sub;
+    @apply flex items-center gap-2 text-[11px] tracking-[0.18em] text-sub;
   }
   .label .ico {
     @apply grid size-5.5 shrink-0 place-items-center rounded-lg text-[11px] text-on-wash;

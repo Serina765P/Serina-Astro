@@ -5,6 +5,7 @@ import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Lightbox from '../components/Lightbox.astro';
+import ReadingProgress from '../components/ReadingProgress.astro';
 
 interface Props {
   title: string;
@@ -14,6 +15,7 @@ interface Props {
   pathname?: string;
   /** 覆盖 <main> 的布局类。默认只留纵向留白 —— 页面级宽度一律交给 <Container>（P1-4） */
   mainClass?: string;
+  readingProgress?: boolean;
 }
 
 const {
@@ -23,6 +25,7 @@ const {
   ogType,
   pathname,
   mainClass = 'py-8 sm:py-10',
+  readingProgress = false,
 } = Astro.props;
 ---
 
@@ -40,9 +43,14 @@ const {
           }
           var dark = stored ? stored === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
           document.documentElement.classList.toggle('dark', dark);
-          // 与 global.css 的 --bg 亮/暗值保持一致
+          // 从 CSS token 读取浏览器 chrome 底色，避免主题色在 JS 中重复维护
           var themeColor = document.querySelector('meta[name="theme-color"]');
-          if (themeColor) themeColor.setAttribute('content', dark ? '#262320' : '#edeae4');
+          if (themeColor) {
+            requestAnimationFrame(function () {
+              var bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+              if (bg) themeColor.setAttribute('content', bg);
+            });
+          }
         }
         applyTheme();
         // 监听器只在首次执行时绑定：本脚本换页后会被 ClientRouter 重跑，
@@ -80,10 +88,11 @@ const {
       跳到正文
     </a>
     <Header />
-    <main id="main" tabindex="-1" class:list={['mx-auto w-full flex-1', mainClass]}>
+    <main id="main" tabindex="-1" data-pagefind-body class:list={['mx-auto w-full flex-1', mainClass]}>
       <slot />
     </main>
     <Footer />
     <Lightbox />
+    {readingProgress && <ReadingProgress />}
   </body>
 </html>

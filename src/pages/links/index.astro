@@ -9,18 +9,22 @@ import { SITE_META } from '../../site.config';
 <PageLayout title="友情链接" description="欢迎交换友链" showComments>
   <p>欢迎交换友链 ✨</p>
 
-  <ul class="not-prose mt-6 grid gap-3 sm:grid-cols-2">
-    {
-      SITE_META.friendLinks.map((link) => (
-        <li>
-          <Card as="a" href={link.href} target="_blank" rel="noopener" class="flex items-center gap-2.5 px-5 py-4">
-            <Icon name="material-symbols:link" class="size-4 shrink-0 text-sub" />
-            <span class="text-body">{link.name}</span>
-          </Card>
-        </li>
-      ))
-    }
-  </ul>
+  {SITE_META.friendLinks.length === 0 ? (
+    <p class="empty-state not-prose mt-6">暂时还没有友情链接。</p>
+  ) : (
+    <ul class="not-prose mt-6 grid gap-3 sm:grid-cols-2">
+      {
+        SITE_META.friendLinks.map((link) => (
+          <li>
+            <Card as="a" href={link.href} target="_blank" rel="noopener" class="flex items-center gap-2.5 px-5 py-4">
+              <Icon name="material-symbols:link" class="size-4 shrink-0 text-sub" aria-hidden="true" />
+              <span class="text-body">{link.name}</span>
+            </Card>
+          </li>
+        ))
+      }
+    </ul>
+  )}
 
   <h2>找到我</h2>
   <ul class="not-prose mt-4 flex flex-wrap gap-2">

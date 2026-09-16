@@ -5,7 +5,7 @@
 ## 本地开发
 
 ```bash
-npm install
+npm install --include=dev
 npm run dev       # http://localhost:4321
 npm run build     # 构建 + pagefind 搜索索引 → dist/
 npm run preview   # 预览构建产物
@@ -17,8 +17,10 @@ Cloudflare Pages 连接本仓库：Build command `npm run build`，输出目录 
 
 ## 写内容
 
-- **文章**：Markdown 丢进 `src/content/posts/`，frontmatter 必填 `title`、`date`；标签/分类可直接写中文（slug 映射见 `src/site.config.ts`）；图片放 `public/images/`。
+- **文章**：Markdown 丢进 `src/content/posts/`，frontmatter 必填 `title`、`date`；标签/分类可直接写中文（slug 映射见 `src/site.config.ts`）。正文图片放在对应文章目录中；可选封面写 `cover: ./cover.webp`，需要置顶时写 `pinned: true`。
 - **说说**：给 `shuo@serinap.top` 发封邮件（正文即内容，主题可选作标题），Email Worker 自动提交数据并触发构建；实现与部署见 [`worker/`](worker/README.md)。
+
+说说数据按上海时区分片存放于 `src/data/shuoshuo/<年份>.json`，每个文件保留 `{ source, fetched_at, count, items }` 信封结构。
 
 ## 字体
 

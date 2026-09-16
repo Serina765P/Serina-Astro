@@ -8,17 +8,16 @@ import { Icon } from 'astro-icon/components';
   aria-label="切换深浅色模式"
   class="grid size-9 place-items-center rounded-full text-sub transition-colors hover:bg-surface-2 hover:text-wash-pink-deep"
 >
-  <Icon name="material-symbols:dark-mode" class="hidden size-5 dark:block" />
-  <Icon name="material-symbols:light-mode" class="size-5 dark:hidden" />
+  <Icon name="material-symbols:dark-mode" class="hidden size-5 dark:block" aria-hidden="true" />
+  <Icon name="material-symbols:light-mode" class="size-5 dark:hidden" aria-hidden="true" />
 </button>
 
 <script>
   function applyTheme(dark: boolean) {
     document.documentElement.classList.toggle('dark', dark);
-    // 浏览器 chrome 底色跟随手动切换（与 BaseLayout 启动脚本同一套值）
-    document
-      .querySelector('meta[name="theme-color"]')
-      ?.setAttribute('content', dark ? '#262320' : '#edeae4');
+    const themeColor = document.querySelector('meta[name="theme-color"]');
+    const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+    if (themeColor && bg) themeColor.setAttribute('content', bg);
     document.querySelectorAll<HTMLIFrameElement>('iframe.giscus-frame').forEach((frame) => {
       frame.contentWindow?.postMessage(
         { giscus: { setConfig: { theme: dark ? 'dark' : 'light' } } },
@@ -31,7 +30,11 @@ import { Icon } from 'astro-icon/components';
     const target = event.target as HTMLElement | null;
     if (!target?.closest('#theme-toggle')) return;
     const dark = !document.documentElement.classList.contains('dark');
-    localStorage.setItem('theme', dark ? 'dark' : 'light');
+    try {
+      localStorage.setItem('theme', dark ? 'dark' : 'light');
+    } catch {
+      /* 存储被隐私模式阻止时仍允许本次主题切换 */
+    }
     applyTheme(dark);
   });
 </script>

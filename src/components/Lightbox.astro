@@ -1,5 +1,5 @@
-<dialog id="lightbox" class="lightbox-dialog" closedby="any">
-  <img src="" alt="" referrerpolicy="no-referrer" />
+<dialog id="lightbox" aria-label="图片预览" class="lightbox-dialog" closedby="any">
+  <img alt="图片预览" referrerpolicy="no-referrer" />
   <button
     type="button"
     aria-label="关闭预览"
@@ -17,6 +17,18 @@
   // 换页后预览关不掉。这里用 isConnected 惰性失效 + page-load 预绑定两层保证。
   let dialog: HTMLDialogElement | null = null;
   let previewImg: HTMLImageElement | null = null;
+  let lastFocused: HTMLElement | null = null;
+
+  function restoreFocus() {
+    previewImg?.removeAttribute('src');
+    lastFocused?.focus();
+    lastFocused = null;
+  }
+
+  function closeLightbox() {
+    if (!dialog?.open) return;
+    dialog.close();
+  }
 
   function refreshDialog() {
     if (dialog?.isConnected) return dialog;
@@ -24,7 +36,8 @@
     previewImg = dialog?.querySelector('img') ?? null;
     if (dialog && dialog.dataset.bound !== 'true') {
       dialog.dataset.bound = 'true';
-      dialog.querySelector('button')?.addEventListener('click', () => dialog?.close());
+      dialog.querySelector('button')?.addEventListener('click', closeLightbox);
+      dialog.addEventListener('close', restoreFocus);
     }
     return dialog;
   }
@@ -32,7 +45,10 @@
   function openLightbox(img: HTMLImageElement) {
     const el = refreshDialog();
     if (!el || !previewImg) return;
-    previewImg.src = img.getAttribute('src') ?? '';
+    const src = img.getAttribute('src');
+    if (!src) return;
+    lastFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    previewImg.src = src;
     previewImg.alt = img.alt;
     if (!el.open) el.showModal();
   }
@@ -60,7 +76,7 @@
     if (!el || !previewImg) return;
     // closedby="any" 仅 Chromium 134+ 支持：点 dialog 空白处关闭作为兜底
     if (event.target === el) {
-      el.close();
+      closeLightbox();
       return;
     }
     const target = event.target as HTMLElement | null;

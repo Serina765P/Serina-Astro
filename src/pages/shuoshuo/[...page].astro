@@ -8,139 +8,528 @@ import PageHeader from '../../components/primitives/PageHeader.astro';
 import Container from '../../components/primitives/Container.astro';
 import { SITE } from '../../site.config';
 import { TZ } from '../../lib/utils';
+import {
+  monthInShanghai,
+  serializeShuoshuo,
+  shuoshuoYear,
+  sortShuoshuo,
+  stripShuoshuoTags,
+  type ShuoshuoItem,
+} from '../../lib/shuoshuo';
 
-// `satisfies GetStaticPaths` 是 Astro 推断 Astro.props 的前提：不标注时 paginate 参数
-// 隐式 any，Astro 推不出 page 类型，astro check 会整页报 14 个 never/any 错误。
 export const getStaticPaths = (async ({ paginate }) => {
   const items = (await getCollection('shuoshuo')).sort(
     (a, b) => b.data.published_at.valueOf() - a.data.published_at.valueOf(),
   );
-  // 每页 10 条；[...page] 生成 /shuoshuo、/shuoshuo/2、/shuoshuo/3…
   return paginate(items, { pageSize: 10 });
 }) satisfies GetStaticPaths;
 
 const { page } = Astro.props;
-const items = page.data;
+const allItems = sortShuoshuo((await getCollection('shuoshuo')).map(serializeShuoshuo));
+const initialItems = page.data.map(serializeShuoshuo);
+const tagOptions = [...new Set(allItems.flatMap((item) => item.tags))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
+const yearOptions = [...new Set(allItems.map(shuoshuoYear))].sort((a, b) => b - a);
+const monthOptions = [...new Set(allItems.map((item) => monthInShanghai(new Date(item.published_at))))].sort().reverse();
 
 const escapeHtml = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 const linkify = (s: string) =>
-  escapeHtml(s).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener nofollow" class="text-wash-pink-deep hover:text-wash-rose-deep">$1</a>');
-
+  escapeHtml(s).replace(
+    /(https?:\/\/[^\s<]+)/g,
+    '<a href="$1" target="_blank" rel="noopener nofollow" class="text-wash-pink-deep underline decoration-wash-pink-deep/50 underline-offset-2 hover:text-wash-rose-deep">$1</a>',
+  );
 const formatDateTime = (date: Date) =>
-  date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
+  date.toLocaleTimeString('zh-CN', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
     timeZone: TZ,
   });
+const dateParts = (date: Date) =>
+  Object.fromEntries(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: TZ,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    })
+      .formatToParts(date)
+      .map((part) => [part.type, part.value]),
+  );
+const dateKey = (item: ShuoshuoItem) => {
+  const parts = dateParts(new Date(item.published_at));
+  return `${parts.year}-${parts.month}-${parts.day}`;
+};
+const dayNumber = (item: ShuoshuoItem) => String(Number(dateParts(new Date(item.published_at)).day));
+const groupLabel = (item: ShuoshuoItem) => {
+  const date = new Date(item.published_at);
+  return `${shuoshuoYear(item)} 年 ${monthInShanghai(date).slice(5)} 月`;
+};
+const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published_at));
 ---
 
 <BaseLayout title={`说说 · ${SITE.title}`} description="碎碎念时间线" pathname={page.url.current}>
   <Container width="narrow">
     <PageHeader title="说说" subtitle={`共 ${page.total} 条说说`} />
 
-    <ol class="mt-8 space-y-6 border-l-2 border-line pl-5">
+    <form id="shuoshuo-filter" class="shuoshuo-filter mt-7" role="search">
+      <label class="sr-only" for="shuoshuo-query">搜索说说</label>
+      <input
+        id="shuoshuo-query"
+        name="q"
+        type="search"
+        placeholder="搜索标题、正文或标签"
+        autocomplete="off"
+        enterkeyhint="search"
+      />
+      <div class="shuoshuo-filter-row">
+        <label>
+          <span>标签</span>
+          <select name="tag">
+            <option value="">全部标签</option>
+            {tagOptions.map((tag) => <option value={tag}>{`#${tag}`}</option>)}
+          </select>
+        </label>
+        <label>
+          <span>年份</span>
+          <select name="year">
+            <option value="">全部年份</option>
+            {yearOptions.map((year) => <option value={year}>{year}</option>)}
+          </select>
+        </label>
+        <label>
+          <span>月份</span>
+          <select name="month">
+            <option value="">全部月份</option>
+            {monthOptions.map((month) => <option value={month}>{month}</option>)}
+          </select>
+        </label>
+        <button type="submit">筛选</button>
+        <a href={page.url.current.split('?')[0]} data-shuoshuo-reset>重置</a>
+      </div>
+    </form>
+
+    <p id="shuoshuo-status" class="mt-4 text-sm text-sub" aria-live="polite">
+      当前显示第 {page.currentPage} 页，共 {page.total} 条
+    </p>
+
+    <ol
+      id="shuoshuo-list"
+      class="shuoshuo-timeline mt-5"
+      data-shuoshuo-list
+      data-page-size="10"
+      data-current-page={page.currentPage}
+      aria-live="polite"
+    >
       {
-        items.map((item) => (
-          <li class="relative">
-            <span
-              aria-hidden="true"
-              class="absolute top-6 -left-[1.7rem] size-2.5 rounded-full border-2 border-bg bg-wash-pink"
-            />
-            <article class="rounded-3xl border border-line bg-surface p-4 shadow-card sm:p-5">
-              {item.data.title && (
-                <h2 class="mb-1 text-base text-ink">{item.data.title}</h2>
+        initialItems.map((item, index) => {
+          const previous = initialItems[index - 1];
+          const showDay = !previous || dateKey(previous) !== dateKey(item);
+          return (
+            <>
+              {(index === 0 || groupKey(initialItems[index - 1]) !== groupKey(item)) && (
+                <li class="shuoshuo-group" aria-hidden="true"><span>{groupLabel(item)}</span></li>
               )}
-              <p
-                class="text-[0.95em] leading-relaxed break-words whitespace-pre-wrap text-body"
-                set:html={linkify(item.data.content)}
-              />
+              <li class="shuoshuo-entry">
+                <time class="shuoshuo-date" datetime={item.published_at}>
+                  {showDay && <span class="shuoshuo-day">{dayNumber(item)}</span>}
+                  <span class="shuoshuo-time">{formatDateTime(new Date(item.published_at))}</span>
+                </time>
+                {!showDay && <span aria-hidden="true" class="shuoshuo-node" />}
+                <article class="shuoshuo-card rounded-2xl border border-line bg-surface p-4 shadow-card sm:p-5">
+                {item.title && <h2 class="mb-1 text-base text-ink">{item.title}</h2>}
+                <p
+                  class="text-[0.95em] leading-relaxed break-words whitespace-pre-wrap text-body"
+                  set:html={linkify(stripShuoshuoTags(item.content))}
+                />
 
-              {item.data.images.length > 0 && (
-                <div
-                  class:list={[
-                    'shuoshuo-images mt-3 grid gap-1.5',
-                    item.data.images.length === 1 ? 'max-w-sm grid-cols-1' : 'grid-cols-3',
-                  ]}
-                >
-                  {item.data.images.slice(0, 9).map((img, i) => (
-                    <img
-                      src={img.url}
-                      alt={`配图 ${i + 1}`}
-                      loading="lazy"
-                      decoding="async"
-                      referrerpolicy="no-referrer"
-                      class="w-full cursor-zoom-in rounded-lg object-cover"
-                      style={`aspect-ratio: ${img.width} / ${img.height};`}
-                    />
-                  ))}
-                </div>
-              )}
-
-              <footer class="mt-3 flex items-center gap-4 text-xs text-sub">
-                <time datetime={item.data.published_at.toISOString()}>{formatDateTime(item.data.published_at)}</time>
-                {item.data.like > 0 && (
-                  <span class="inline-flex items-center gap-1">
-                    <Icon name="material-symbols:favorite" class="size-3.5" />
-                    {item.data.like}
-                  </span>
+                {item.tags.length > 0 && (
+                  <ul class="mt-3 flex flex-wrap gap-1.5" aria-label="说说标签">
+                    {item.tags.map((tag) => (
+                      <li><a class="shuoshuo-tag" href={`/shuoshuo/?tag=${encodeURIComponent(tag)}`}>#{tag}</a></li>
+                    ))}
+                  </ul>
                 )}
-                {
-                  item.data.link && (
-                    <a
-                      href={item.data.link}
-                      target="_blank"
-                      rel="noopener"
-                      class="inline-flex items-center gap-1 transition-colors hover:text-wash-pink-deep"
-                    >
-                      <Icon name="simple-icons:bilibili" class="size-3.5" />
-                      原动态
-                    </a>
-                  )
-                }
-              </footer>
-            </article>
-          </li>
-        ))
+
+                {item.images.length > 0 && (
+                  <div
+                    class:list={[
+                      'shuoshuo-images mt-3 grid gap-1.5',
+                      item.images.length === 1 ? 'max-w-sm grid-cols-1' : 'grid-cols-3',
+                    ]}
+                  >
+                    {item.images.slice(0, 9).map((img, i) => (
+                      <img
+                        src={img.url}
+                        alt={`配图 ${i + 1}`}
+                        width={img.width}
+                        height={img.height}
+                        loading="lazy"
+                        decoding="async"
+                        referrerpolicy="no-referrer"
+                        class="w-full cursor-zoom-in rounded-lg object-cover"
+                        style={`aspect-ratio: ${img.width} / ${img.height};`}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {(item.like > 0 || item.link) && (
+                  <footer class="mt-3 flex flex-wrap items-center gap-4 text-xs text-sub">
+                    {item.like > 0 && (
+                      <span class="inline-flex items-center gap-1">
+                        <Icon name="material-symbols:favorite" class="size-3.5" aria-hidden="true" />
+                        {item.like}
+                      </span>
+                    )}
+                    {item.link && (
+                      <a
+                        href={item.link}
+                        target="_blank"
+                        rel="noopener"
+                        class="inline-flex items-center gap-1 transition-colors hover:text-wash-pink-deep"
+                      >
+                        <Icon name="simple-icons:bilibili" class="size-3.5" aria-hidden="true" />
+                        原动态
+                      </a>
+                    )}
+                  </footer>
+                )}
+              </article>
+              </li>
+            </>
+          );
+        })
       }
     </ol>
 
-    {
-      page.lastPage > 1 && (
-        <nav class="mt-10 flex items-center justify-center gap-4 text-sm" aria-label="分页">
-          {page.url.prev ? (
-            <a
-              href={page.url.prev}
-              class="rounded-full border border-line bg-surface px-4 py-1.5 text-body transition-colors hover:text-wash-pink-deep"
-            >
-              ← 上一页
-            </a>
-          ) : (
-            <span class="rounded-full px-4 py-1.5 text-sub opacity-40">← 上一页</span>
-          )}
-          <span class="text-sub tabular-nums">
-            {page.currentPage} / {page.lastPage}
-          </span>
-          {page.url.next ? (
-            <a
-              href={page.url.next}
-              class="rounded-full border border-line bg-surface px-4 py-1.5 text-body transition-colors hover:text-wash-pink-deep"
-            >
-              下一页 →
-            </a>
-          ) : (
-            <span class="rounded-full px-4 py-1.5 text-sub opacity-40">下一页 →</span>
-          )}
-        </nav>
-      )
-    }
+    <p id="shuoshuo-empty" class="empty-state mt-8" hidden>没有找到匹配的说说，换个关键词或筛选条件试试。</p>
+    <nav id="shuoshuo-pagination" class="mt-10 flex items-center justify-center gap-4 text-sm" aria-label="分页" />
 
     <div class="mt-10">
       <Giscus />
     </div>
   </Container>
 </BaseLayout>
+
+<script>
+  type Item = {
+    id: string;
+    title: string;
+    type: string;
+    content: string;
+    tags: string[];
+    images: { url: string; width: number; height: number }[];
+    link: string;
+    like: number;
+    published_at: string;
+  };
+  type Payload = { items: Item[]; total: number };
+
+  function initializeShuoshuo() {
+    const TIME_ZONE = 'Asia/Shanghai';
+    const app = document.querySelector<HTMLOListElement>('[data-shuoshuo-list]');
+    if (!app || app.dataset.bound === 'true') return;
+    app.dataset.bound = 'true';
+    const form = document.querySelector<HTMLFormElement>('#shuoshuo-filter');
+    const status = document.querySelector<HTMLElement>('#shuoshuo-status');
+    const empty = document.querySelector<HTMLElement>('#shuoshuo-empty');
+    const pagination = document.querySelector<HTMLElement>('#shuoshuo-pagination');
+    const routePage = Number(app.dataset.currentPage ?? 1);
+    const pageSize = Number(app.dataset.pageSize ?? 10);
+    let allItems: Item[] = [];
+
+  const escapeHtml = (value: string) =>
+    value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  const linkify = (value: string) =>
+    escapeHtml(value).replace(
+      /(https?:\/\/[^\s<]+)/g,
+      '<a href="$1" target="_blank" rel="noopener nofollow" class="text-wash-pink-deep underline decoration-wash-pink-deep/50 underline-offset-2 hover:text-wash-rose-deep">$1</a>',
+    );
+  const withoutTags = (value: string) =>
+    value.replace(/(^|[\s\n])#[\p{L}\p{N}_-]+(?=$|[\s\n]|[，。！？,.!?])/gu, '$1').trim();
+  const dateParts = (value: string) => {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: TIME_ZONE,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(new Date(value));
+    return Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  };
+  const dateKey = (item: Item) => {
+    const parts = dateParts(item.published_at);
+    return `${parts.year}-${parts.month}-${parts.day}`;
+  };
+  const dayNumber = (item: Item) => String(Number(dateParts(item.published_at).day));
+  const formatTime = (value: string) =>
+    new Date(value).toLocaleTimeString('zh-CN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: TIME_ZONE,
+    });
+  const groupKey = (item: Item) => {
+    const parts = dateParts(item.published_at);
+    return `${parts.year}-${parts.month}`;
+  };
+  const groupLabel = (item: Item) => {
+    const parts = dateParts(item.published_at);
+    return `${parts.year} 年 ${parts.month} 月`;
+  };
+  const currentFilters = () => {
+    const params = new URLSearchParams(location.search);
+    return {
+      q: params.get('q')?.trim() ?? '',
+      tag: params.get('tag') ?? '',
+      year: params.get('year') ?? '',
+      month: params.get('month') ?? '',
+    };
+  };
+  const hasFilters = (filters: ReturnType<typeof currentFilters>) =>
+    Boolean(filters.q || filters.tag || filters.year || filters.month);
+  const currentPage = (filters: ReturnType<typeof currentFilters>) => {
+    const fromUrl = Number(new URLSearchParams(location.search).get('page'));
+    if (Number.isFinite(fromUrl) && fromUrl > 0) return Math.floor(fromUrl);
+    return hasFilters(filters) ? 1 : routePage;
+  };
+  const buildUrl = (page: number, filters: ReturnType<typeof currentFilters>) => {
+    const params = new URLSearchParams();
+    if (filters.q) params.set('q', filters.q);
+    if (filters.tag) params.set('tag', filters.tag);
+    if (filters.year) params.set('year', filters.year);
+    if (filters.month) params.set('month', filters.month);
+    if (page > 1) params.set('page', String(page));
+    const query = params.toString();
+    return `${location.pathname}${query ? `?${query}` : ''}`;
+  };
+  const setFormValues = (filters: ReturnType<typeof currentFilters>) => {
+    if (!form) return;
+    const q = form.elements.namedItem('q') as HTMLInputElement | null;
+    const tag = form.elements.namedItem('tag') as HTMLSelectElement | null;
+    const year = form.elements.namedItem('year') as HTMLSelectElement | null;
+    const month = form.elements.namedItem('month') as HTMLSelectElement | null;
+    if (q) q.value = filters.q;
+    if (tag) tag.value = filters.tag;
+    if (year) year.value = filters.year;
+    if (month) month.value = filters.month;
+  };
+  const matches = (item: Item, filters: ReturnType<typeof currentFilters>) => {
+    const query = filters.q.toLocaleLowerCase('zh-CN');
+    const searchable = `${item.title} ${item.content} ${item.tags.join(' ')}`.toLocaleLowerCase('zh-CN');
+    const parts = dateParts(item.published_at);
+    return (
+      (!query || searchable.includes(query)) &&
+      (!filters.tag || item.tags.includes(filters.tag)) &&
+      (!filters.year || parts.year === filters.year) &&
+      (!filters.month || `${parts.year}-${parts.month}` === filters.month)
+    );
+  };
+
+  function createItem(item: Item, previous: Item | undefined): DocumentFragment {
+    const fragment = document.createDocumentFragment();
+    if (!previous || groupKey(previous) !== groupKey(item)) {
+      const group = document.createElement('li');
+      group.className = 'shuoshuo-group';
+      group.setAttribute('aria-hidden', 'true');
+      const label = document.createElement('span');
+      label.textContent = groupLabel(item);
+      group.append(label);
+      fragment.append(group);
+    }
+
+    const entry = document.createElement('li');
+    entry.className = 'shuoshuo-entry';
+    const date = document.createElement('time');
+    date.className = 'shuoshuo-date';
+    date.dateTime = item.published_at;
+    const showDay = !previous || dateKey(previous) !== dateKey(item);
+    if (showDay) {
+      const day = document.createElement('span');
+      day.className = 'shuoshuo-day';
+      day.textContent = dayNumber(item);
+      date.append(day);
+    }
+    const time = document.createElement('span');
+    time.className = 'shuoshuo-time';
+    time.textContent = formatTime(item.published_at);
+    date.append(time);
+    const node = document.createElement('span');
+    node.className = 'shuoshuo-node';
+    node.setAttribute('aria-hidden', 'true');
+    const article = document.createElement('article');
+    article.className = 'shuoshuo-card rounded-2xl border border-line bg-surface p-4 shadow-card sm:p-5';
+
+    if (item.title) {
+      const title = document.createElement('h2');
+      title.className = 'mb-1 text-base text-ink';
+      title.textContent = item.title;
+      article.append(title);
+    }
+    const content = document.createElement('p');
+    content.className = 'text-[0.95em] leading-relaxed break-words whitespace-pre-wrap text-body';
+    content.innerHTML = linkify(withoutTags(item.content));
+    article.append(content);
+
+    if (item.tags.length > 0) {
+      const tags = document.createElement('ul');
+      tags.className = 'mt-3 flex flex-wrap gap-1.5';
+      tags.setAttribute('aria-label', '说说标签');
+      for (const tag of item.tags) {
+        const listItem = document.createElement('li');
+        const link = document.createElement('a');
+        link.className = 'shuoshuo-tag';
+        link.href = `/shuoshuo/?tag=${encodeURIComponent(tag)}`;
+        link.textContent = `#${tag}`;
+        listItem.append(link);
+        tags.append(listItem);
+      }
+      article.append(tags);
+    }
+
+    if (item.images.length > 0) {
+      const images = document.createElement('div');
+      images.className = `shuoshuo-images mt-3 grid gap-1.5 ${item.images.length === 1 ? 'max-w-sm grid-cols-1' : 'grid-cols-3'}`;
+      item.images.slice(0, 9).forEach((source, index) => {
+        const image = document.createElement('img');
+        image.src = source.url;
+        image.alt = `配图 ${index + 1}`;
+        image.width = source.width;
+        image.height = source.height;
+        image.loading = 'lazy';
+        image.decoding = 'async';
+        image.referrerPolicy = 'no-referrer';
+        image.className = 'w-full cursor-zoom-in rounded-lg object-cover';
+        image.style.aspectRatio = `${source.width} / ${source.height}`;
+        images.append(image);
+      });
+      article.append(images);
+    }
+
+    if (item.like > 0) {
+      const footer = document.createElement('footer');
+      footer.className = 'mt-3 flex flex-wrap items-center gap-4 text-xs text-sub';
+      const like = document.createElement('span');
+      like.className = 'inline-flex items-center gap-1';
+      like.textContent = `♥ ${item.like}`;
+      like.setAttribute('aria-label', `${item.like} 个赞`);
+      footer.append(like);
+      article.append(footer);
+    }
+    if (item.link) {
+      let footer = article.querySelector('footer');
+      if (!footer) {
+        footer = document.createElement('footer');
+        footer.className = 'mt-3 flex flex-wrap items-center gap-4 text-xs text-sub';
+        article.append(footer);
+      }
+      const link = document.createElement('a');
+      link.href = item.link;
+      link.target = '_blank';
+      link.rel = 'noopener';
+      link.className = 'inline-flex items-center gap-1 transition-colors hover:text-wash-pink-deep';
+      link.textContent = '原动态';
+      footer.append(link);
+    }
+    entry.append(date, ...(showDay ? [] : [node]), article);
+    fragment.append(entry);
+    return fragment;
+  }
+
+  function renderPagination(page: number, totalPages: number, filters: ReturnType<typeof currentFilters>) {
+    if (!pagination) return;
+    pagination.replaceChildren();
+    if (totalPages <= 1) return;
+    const addLink = (label: string, targetPage: number, disabled: boolean) => {
+      const element = document.createElement(disabled ? 'span' : 'a');
+      element.className = disabled
+        ? 'rounded-full px-4 py-1.5 text-sub opacity-40'
+        : 'rounded-full border border-line bg-surface px-4 py-1.5 text-body transition-colors hover:text-wash-pink-deep';
+      element.textContent = label;
+      if (!disabled) {
+        (element as HTMLAnchorElement).href = buildUrl(targetPage, filters);
+        element.addEventListener('click', (event) => {
+          event.preventDefault();
+          history.pushState({}, '', buildUrl(targetPage, filters));
+          render();
+        });
+      }
+      pagination.append(element);
+    };
+    addLink('← 上一页', page - 1, page <= 1);
+    const pageLabel = document.createElement('span');
+    pageLabel.className = 'text-sub tabular-nums';
+    pageLabel.textContent = `${page} / ${totalPages}`;
+    pagination.append(pageLabel);
+    addLink('下一页 →', page + 1, page >= totalPages);
+  }
+
+  function render() {
+    if (!app || !status || !empty) return;
+    const filters = currentFilters();
+    setFormValues(filters);
+    const filtered = sortItems(allItems.filter((item) => matches(item, filters)));
+    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    const page = Math.min(Math.max(1, currentPage(filters)), totalPages);
+    const start = (page - 1) * pageSize;
+    const visible = filtered.slice(start, start + pageSize);
+    app.replaceChildren();
+    visible.forEach((item, index) => app.append(createItem(item, index > 0 ? visible[index - 1] : undefined)));
+    empty.hidden = visible.length > 0;
+    app.hidden = visible.length === 0;
+    status.textContent = filtered.length === 0
+      ? '没有匹配结果'
+      : `当前显示第 ${page} 页，共 ${filtered.length} 条`;
+    renderPagination(page, totalPages, filters);
+  }
+
+  function sortItems(items: Item[]) {
+    return [...items].sort((a, b) => Date.parse(b.published_at) - Date.parse(a.published_at));
+  }
+
+  async function initialize() {
+    try {
+      const response = await fetch('/shuoshuo/index.json', { headers: { Accept: 'application/json' } });
+      if (!response.ok) throw new Error(`说说索引请求失败：${response.status}`);
+      const payload = (await response.json()) as Payload;
+      allItems = sortItems(payload.items ?? []);
+      render();
+    } catch (error) {
+      console.warn(error);
+    }
+  }
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const values = new FormData(form);
+    const filters = {
+      q: String(values.get('q') ?? '').trim(),
+      tag: String(values.get('tag') ?? ''),
+      year: String(values.get('year') ?? ''),
+      month: String(values.get('month') ?? ''),
+    };
+    history.pushState({}, '', buildUrl(1, filters));
+    render();
+  });
+  document.querySelector<HTMLAnchorElement>('[data-shuoshuo-reset]')?.addEventListener('click', (event) => {
+    event.preventDefault();
+    history.pushState({}, '', buildUrl(1, { q: '', tag: '', year: '', month: '' }));
+    render();
+  });
+  window.addEventListener('popstate', render);
+    initialize();
+  }
+
+  document.addEventListener('astro:page-load', initializeShuoshuo);
+  initializeShuoshuo();
+</script>

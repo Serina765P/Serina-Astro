@@ -1,0 +1,20 @@
+<button id="back-to-top" type="button" aria-label="返回顶部" class="back-to-top">
+  <span aria-hidden="true">↑</span>
+</button>
+
+<script>
+  function bindBackToTop() {
+    const button = document.getElementById('back-to-top');
+    if (!button || button.dataset.bound === 'true') return;
+    button.dataset.bound = 'true';
+
+    const update = () => button.classList.toggle('is-visible', window.scrollY > window.innerHeight * 0.75);
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    button.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    document.addEventListener('astro:page-load', update);
+    update();
+  }
+
+  bindBackToTop();
+</script>

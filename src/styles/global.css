@@ -10,86 +10,85 @@
 /* class 策略暗色模式（html.dark），由 ThemeToggle 控制 */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ── 基础语义色：亮/暗两套，随 .dark 切换 ── */
+/* ── 基础语义色：高可读性的暖中性色，亮/暗两套随 .dark 切换 ── */
 :root {
-  --bg: #edeae4;
-  --surface: #faf8f4;
-  --surface-2: #f1ede5;
-  --ink: #45403a;
-  --body: #5c564d;
-  /* 6f675b：加深后的次级文字（scripts/contrast-audit.mjs 核算 ≥4.5:1） */
-  --sub: #6f675b;
-  /* 压在 wash 淡彩底上的「墨色」（分类胶囊/ico），与 wash 底配对核算达标。
-     暗色下与 --code-bg 碰巧同值（#1e1b18），但角色无关（墨色 vs 代码底），不做别名耦合 */
-  --on-wash: #2a2724;
-  --line: rgba(93, 84, 72, 0.14);
-  --nav-bg: rgba(237, 234, 228, 0.82);
-  --code-bg: #4a443c;
-  --code-ink: #f1ebe1;
+  --bg: #f3f4f2;
+  --surface: #ffffff;
+  --surface-2: #e7ebee;
+  --ink: #20262b;
+  --body: #3f474d;
+  --sub: #5e6870;
+  --on-wash: #1f2930;
+  --line: rgba(31, 41, 48, 0.16);
+  --nav-bg: rgba(243, 244, 242, 0.9);
+  --code-bg: #262d34;
+  --code-ink: #eef3f5;
 
   /* ── 颜料阶（S13）：全站唯一允许写死色值的地方 ──
      两个家族：
-     · --paint-accent-50..950  玫瑰阶，静态（不随 .dark 翻转）——
-       ::selection / 搜索高亮 / 404 按钮的 dark:bg-accent-700 依赖这个不变性
-     · --paint-<色相>[-deep]   莫兰迪六色，亮/暗各一套（暗色见 :root.dark，亮深互换）
-     二者唯一交点：玫瑰阶 700 = 亮色莫兰迪粉的深档（#835a58），字面值只写一次。
-     消费方一律走别名：玫瑰阶走 @theme 的 --color-accent-*，色相走 --wash-*。 */
-  --paint-accent-50: #faf5f5;
-  --paint-accent-100: #f3e7e7;
-  --paint-accent-200: #e5d0d1;
-  --paint-accent-300: #d5babc;
-  --paint-accent-400: #c4a2a4;
-  --paint-accent-500: #ae8889;
-  --paint-accent-600: #9e6e6b;
-  --paint-accent-700: #835a58;
-  --paint-accent-800: #6a4948;
-  --paint-accent-900: #583d3c;
-  --paint-accent-950: #33211f;
+     · --paint-accent-50..950  蓝灰强调阶，静态（不随 .dark 翻转）
+     · --paint-<色相>[-deep]   信息蓝灰、行动陶土等语义色，亮/暗各一套
+     消费方一律走别名：强调阶走 @theme 的 --color-accent-*，语义色走 --wash-*。 */
+  --paint-accent-50: #f4f7f8;
+  --paint-accent-100: #e5ecef;
+  --paint-accent-200: #cddbe0;
+  --paint-accent-300: #aec5ce;
+  --paint-accent-400: #91acb7;
+  --paint-accent-500: #718f9a;
+  --paint-accent-600: #5b7884;
+  --paint-accent-700: #405e6a;
+  --paint-accent-800: #334c56;
+  --paint-accent-900: #2a3d45;
+  --paint-accent-950: #1c2a30;
 
-  --paint-pink: #cbb3b5;
-  --paint-pink-deep: var(--paint-accent-700); /* 与玫瑰阶 700 同源（#835a58） */
-  --paint-mist: #a9b4c0;
-  --paint-mist-deep: #7f8a9b;
-  --paint-sage: #afc0b1;
-  --paint-sage-deep: #55675a;
-  --paint-sand: #d6cbb8;
-  --paint-sand-deep: #93826a;
-  --paint-clay: #c2a8a0;
-  --paint-clay-deep: #7f574e;
-  --paint-rose: #ce918a;
-  --paint-rose-deep: #8f4a42;
+  --paint-pink: #c98b79;
+  --paint-pink-deep: #875044;
+  --paint-mist: #91a9b7;
+  --paint-mist-deep: #4b6877;
+  --paint-sage: #8fae9a;
+  --paint-sage-deep: #42634e;
+  --paint-sand: #cbb28c;
+  --paint-sand-deep: #7d6238;
+  --paint-clay: #c18b78;
+  --paint-clay-deep: #74463a;
+  --paint-rose: #cc8179;
+  --paint-rose-deep: #8c3f38;
 
   /* 压在强调色实底上的文字（404 按钮）：亮色玫瑰深底配白字，暗色玫瑰浅底配深字 */
   --on-accent: #ffffff;
+  --action-bg: var(--paint-clay-deep);
+  --on-action: #ffffff;
 }
 
 :root.dark {
-  --bg: #262320;
-  --surface: #302c27;
-  --surface-2: #3a352f;
-  --ink: #eae4d9;
-  --body: #cdc5b8;
-  --sub: #a89f90;
-  --on-wash: #1e1b18;
-  --line: rgba(234, 228, 217, 0.13);
-  --nav-bg: rgba(38, 35, 32, 0.82);
-  --code-bg: #1e1b18;
-  --code-ink: #d8cfc0;
+  --bg: #1e2327;
+  --surface: #272d32;
+  --surface-2: #333b41;
+  --ink: #eef2f3;
+  --body: #d2dadf;
+  --sub: #aeb9bf;
+  --on-wash: #eef2f3;
+  --line: rgba(238, 242, 243, 0.16);
+  --nav-bg: rgba(30, 35, 39, 0.9);
+  --code-bg: #14191d;
+  --code-ink: #e1e8eb;
 
-  --paint-pink: #b09395;
-  --paint-pink-deep: #c7a6a4;
-  --paint-mist: #93a0b0;
-  --paint-mist-deep: #a9b6c4;
-  --paint-sage: #9aab9e;
-  --paint-sage-deep: #afc0b2;
-  --paint-sand: #b8ab94;
-  --paint-sand-deep: #cfc3ab;
-  --paint-clay: #b3968c;
-  --paint-clay-deep: #c8aba1;
-  --paint-rose: #a97f79;
-  --paint-rose-deep: #c49b94;
+  --paint-pink: #7b5049;
+  --paint-pink-deep: #e0aa98;
+  --paint-mist: #506874;
+  --paint-mist-deep: #a6c1cc;
+  --paint-sage: #536b5b;
+  --paint-sage-deep: #a9c7b2;
+  --paint-sand: #6e5b3e;
+  --paint-sand-deep: #d3bd90;
+  --paint-clay: #6c4840;
+  --paint-clay-deep: #d4a08f;
+  --paint-rose: #76413c;
+  --paint-rose-deep: #d59c93;
 
   --on-accent: var(--paint-accent-950);
+  --action-bg: var(--paint-clay);
+  --on-action: #ffffff;
 }
 
 /* ── 语义层：莫兰迪色相（bg-wash-* / text-wash-* 等类名不变）──
@@ -189,12 +188,12 @@
   --color-accent-900: var(--paint-accent-900);
   --color-accent-950: var(--paint-accent-950);
 
-  --shadow-card: 0 6px 24px rgb(120 105 90 / 0.1);
-  --shadow-card-hover: 0 14px 34px rgb(120 105 90 / 0.16);
+  --shadow-card: 0 2px 12px rgb(31 41 48 / 0.08);
+  --shadow-card-hover: 0 8px 22px rgb(31 41 48 / 0.13);
   /* 素材阴影（专辑封面 / 灯箱）：收敛 ImasAlbum 与 Lightbox 的硬编码 rgb()
      hover 值先如实照搬现状（纯黑 20%），是否回暖调由消费点一并决定 */
-  --shadow-media: 0 2px 10px rgb(120 105 90 / 0.18);
-  --shadow-media-hover: 0 4px 12px rgb(0 0 0 / 0.2);
+  --shadow-media: 0 2px 10px rgb(31 41 48 / 0.16);
+  --shadow-media-hover: 0 4px 14px rgb(0 0 0 / 0.24);
 
   /* ── 布局 token 骨架：先声明、后替换 ──
      一次把接口定死，避免"边改边定接口"导致多点返工。本层暂无消费点，故零视觉变更；
@@ -253,6 +252,8 @@
   --color-scrim-backdrop: var(--scrim-backdrop);
   --color-on-scrim: var(--on-scrim);
   --color-on-accent: var(--on-accent);
+  --color-action: var(--action-bg);
+  --color-on-action: var(--on-action);
   --color-line: var(--line);
   --color-nav: var(--nav-bg);
   --color-code-bg: var(--code-bg);
@@ -275,7 +276,7 @@
 /* ── 卡片 recipe（P1-2）：Astro 侧走 <Card> 组件，JS 侧（搜索结果 li 由脚本拼 className）走这两条
    utility，两条消费路径共用同一份定义。card-surface = 静止态外观；card-lift = 悬停抬升。 ── */
 @utility card-surface {
-  @apply rounded-3xl border border-line bg-surface shadow-card;
+  @apply rounded-2xl border border-line bg-surface shadow-card;
 }
 
 @utility card-lift {
@@ -309,6 +310,12 @@
     scroll-behavior: smooth;
     /* 同族五档字重均为真实 face；禁止合成以防中间字重（如 450）被伪造 */
     font-synthesis-weight: none;
+  }
+
+  @media (min-width: 48rem) {
+    html {
+      scrollbar-gutter: stable;
+    }
   }
 
   /* 主题化焦点环：豆沙色（亮暗两套 --wash-rose-deep 均达标），替代默认黑框 */
@@ -369,13 +376,6 @@
     color: var(--code-ink);
   }
 
-  /* 水彩晕染漂移（首页 hero 背景氛围） */
-  @keyframes wash-drift {
-    to {
-      transform: translate(46px, 26px) scale(1.07);
-    }
-  }
-
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
@@ -389,7 +389,7 @@
     *::before,
     *::after {
       animation-duration: 0.01ms !important;
-      /* 无限循环动画（如首页 wash-drift）只跑一轮即静止 */
+      /* 无限循环动画只跑一轮即静止 */
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
@@ -397,6 +397,46 @@
 }
 
 @layer components {
+  #reading-progress {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: var(--z-nav);
+    height: 3px;
+    transform: scaleX(0);
+    transform-origin: left;
+    background: var(--wash-clay-deep);
+    pointer-events: none;
+  }
+
+  .back-to-top {
+    position: fixed;
+    right: max(1rem, calc((100vw - 72rem) / 2));
+    bottom: 1.25rem;
+    z-index: var(--z-sticky-head);
+    display: grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    place-items: center;
+    border: 1px solid var(--line);
+    border-radius: 9999px;
+    background: var(--surface);
+    color: var(--body);
+    box-shadow: var(--shadow-card);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(0.5rem);
+    transition: opacity 180ms ease, transform 180ms ease, background-color 180ms ease;
+  }
+  .back-to-top:hover {
+    background: var(--surface-2);
+    color: var(--wash-clay-deep);
+  }
+  .back-to-top.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
   /* 有机 blob 形状：首页头像 + 404 等处共用 */
   .blob {
     border-radius: 58% 42% 55% 45% / 52% 55% 45% 48%;
@@ -439,8 +479,23 @@
      层序压过特异性，颜色声明一直是死规则。现在只保留 typography 不管的属性。 */
   .prose :is(h1, h2, h3, h4, h5, h6) {
     letter-spacing: 0.02em;
+    text-wrap: balance;
   }
-  /* 正文引用：雾蓝水彩（background/radius/padding 是 typography 不管的部分；
+  .prose a {
+    text-decoration-thickness: 0.08em;
+  }
+  .prose img {
+    height: auto;
+  }
+  @media (max-width: 40rem) {
+    .prose table {
+      display: block;
+      max-width: 100%;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+  }
+  /* 正文引用：低饱和蓝灰（background/radius/padding 是 typography 不管的部分；
      font-style 与装饰引号的去除在 utilities 层靠特异性生效） */
   .prose blockquote {
     background: color-mix(in srgb, var(--wash-mist) 18%, var(--surface));
@@ -536,6 +591,112 @@
     background: transparent;
   }
 
+  .shuoshuo-filter {
+    @apply rounded-2xl border border-line bg-surface-2 p-4;
+  }
+  .shuoshuo-filter input,
+  .shuoshuo-filter select {
+    @apply min-h-10 rounded-xl border border-line bg-surface px-3 text-sm text-ink outline-none transition-colors;
+  }
+  .shuoshuo-filter input {
+    @apply w-full;
+  }
+  .shuoshuo-filter input:focus,
+  .shuoshuo-filter select:focus {
+    @apply border-wash-pink-deep ring-2 ring-wash-pink/20;
+  }
+  .shuoshuo-filter-row {
+    @apply mt-3 grid gap-2 sm:grid-cols-[repeat(3,minmax(0,1fr))_auto_auto];
+  }
+  .shuoshuo-filter-row label {
+    @apply flex min-w-0 flex-col gap-1 text-xs text-sub;
+  }
+  .shuoshuo-filter-row button,
+  .shuoshuo-filter-row > a {
+    @apply inline-flex min-h-10 items-center justify-center rounded-xl px-4 text-sm transition-colors;
+  }
+  .shuoshuo-filter-row button {
+    @apply bg-action text-on-action hover:opacity-85;
+  }
+  .shuoshuo-filter-row > a {
+    @apply text-sub hover:bg-surface hover:text-ink;
+  }
+
+  .shuoshuo-timeline {
+    @apply relative grid gap-5 border-l-2 border-line pl-5;
+  }
+  .shuoshuo-entry {
+    @apply relative grid items-start gap-x-4 sm:grid-cols-[5.5rem_minmax(0,1fr)];
+    animation: timeline-in 360ms ease both;
+  }
+  .shuoshuo-date {
+    @apply flex justify-end pt-2 text-sub;
+  }
+  .shuoshuo-time {
+    @apply text-xs tabular-nums tracking-[0.04em];
+  }
+  .shuoshuo-day {
+    @apply absolute -left-[3.15rem] top-0 z-[1] grid min-w-10 place-items-center rounded-xl border border-line bg-surface px-2 py-1.5 text-lg leading-none text-ink tabular-nums shadow-card;
+  }
+  .shuoshuo-node {
+    @apply absolute -left-[1.78rem] top-2 size-2.5 rounded-full border-2 border-bg bg-wash-pink;
+  }
+  .shuoshuo-card {
+    @apply min-w-0;
+  }
+  .shuoshuo-group {
+    @apply -ml-1 py-2 text-sm font-medium tracking-[0.12em] text-wash-mist-deep;
+    animation: timeline-in 360ms ease both;
+  }
+  .shuoshuo-group span {
+    @apply inline-flex rounded-xl border border-line bg-surface-2 px-3 py-1;
+  }
+  .shuoshuo-tag {
+    @apply inline-flex rounded-full bg-chip px-2.5 py-1 text-xs text-chip-fg transition-colors hover:bg-chip-hover hover:text-chip-fg-hover;
+  }
+  .empty-state {
+    @apply rounded-2xl border border-dashed border-line bg-surface-2 px-5 py-8 text-center text-sm text-sub;
+  }
+
+  @keyframes timeline-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.5rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .shuoshuo-filter-row {
+      @apply grid-cols-2;
+    }
+    .shuoshuo-filter-row label:first-child {
+      @apply col-span-2;
+    }
+    .shuoshuo-entry {
+      @apply grid-cols-1 gap-2;
+    }
+    .shuoshuo-date {
+      @apply justify-start pt-0 pl-1;
+    }
+    .shuoshuo-day {
+      @apply -top-1 -left-[2.3rem] min-w-8 px-1 py-1 text-base;
+    }
+    .shuoshuo-node {
+      @apply top-1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shuoshuo-entry,
+    .shuoshuo-group {
+      animation: none;
+    }
+  }
+
   /* 代码块超高自动折叠（CodeBlock.astro 注入）：渐隐只盖代码区，不盖按钮 */
   .code-fold .code-clip {
     position: relative;
@@ -560,6 +721,9 @@
   /* 代码块复制按钮（CodeBlock.astro 注入）：GitHub 式右上角图标，常显但低对比不抢戏 */
   .code-copy-wrap {
     position: relative;
+  }
+  .code-language {
+    @apply absolute top-2.5 left-3 z-sticky-head rounded-md bg-white/10 px-2 py-0.5 font-mono text-[0.68rem] uppercase tracking-[0.12em] text-code-ink/70;
   }
   .code-copy-btn {
     @apply absolute top-2.5 right-2.5 z-sticky-head grid size-8 place-items-center rounded-lg border-0 bg-transparent p-0 transition-colors;

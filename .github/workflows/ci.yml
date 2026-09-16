@@ -15,7 +15,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx biome ci .
+      - run: npm run lint
       - run: npm run check
       - run: npm run build
 

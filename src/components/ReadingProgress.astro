@@ -1,0 +1,23 @@
+<div id="reading-progress" aria-hidden="true"></div>
+
+<script>
+  function updateProgress() {
+    const progress = document.getElementById('reading-progress');
+    if (!progress) return;
+    const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+    const value = scrollable > 0 ? Math.min(1, Math.max(0, window.scrollY / scrollable)) : 0;
+    progress.style.transform = `scaleX(${value})`;
+  }
+
+  function bindProgress() {
+    const progress = document.getElementById('reading-progress');
+    if (!progress || document.documentElement.dataset.progressBound === 'true') return;
+    document.documentElement.dataset.progressBound = 'true';
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    window.addEventListener('resize', updateProgress);
+    document.addEventListener('astro:page-load', updateProgress);
+    updateProgress();
+  }
+
+  bindProgress();
+</script>

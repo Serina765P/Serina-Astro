@@ -8,6 +8,7 @@ const OLD_ROOT = process.argv[2] ?? 'C:/Projects/blogdev';
 const OLD_POSTS = path.join(OLD_ROOT, 'source/_posts');
 const NEW_POSTS = new URL('../src/content/posts/', import.meta.url);
 const NEW_DATA = new URL('../src/data/', import.meta.url);
+const NEW_SHUOSHUO = new URL('../src/data/shuoshuo/', import.meta.url);
 
 // 会被整体丢弃的页面级字段（主题布局遗留，与文章无关）
 const DROP_KEYS = new Set(['layout', 'type', 'comments', 'toc', 'custom_css']);
@@ -53,6 +54,7 @@ function transformBody(raw, dirName) {
 
 await mkdir(NEW_POSTS, { recursive: true });
 await mkdir(NEW_DATA, { recursive: true });
+await mkdir(NEW_SHUOSHUO, { recursive: true });
 
 const entries = await readdir(OLD_POSTS, { withFileTypes: true });
 let postCount = 0;
@@ -85,8 +87,28 @@ for (const entry of entries) {
   }
 }
 
-await cp(path.join(OLD_ROOT, 'source/_data/shuoshuo.json'), new URL('shuoshuo.json', NEW_DATA));
+const oldShuoshuo = JSON.parse(
+  await readFile(path.join(OLD_ROOT, 'source/_data/shuoshuo.json'), 'utf8'),
+);
+const shuoshuoByYear = new Map();
+for (const item of oldShuoshuo.items ?? []) {
+  const year = Number(
+    new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Shanghai', year: 'numeric' }).format(
+      new Date(item.published_at),
+    ),
+  );
+  const items = shuoshuoByYear.get(year) ?? [];
+  items.push(item);
+  shuoshuoByYear.set(year, items);
+}
+for (const [year, items] of shuoshuoByYear) {
+  await writeFile(
+    new URL(`${year}.json`, NEW_SHUOSHUO),
+    `${JSON.stringify({ ...oldShuoshuo, count: items.length, items }, null, 2)}\n`,
+    'utf8',
+  );
+}
 
 console.log(
-  `完成: ${postCount} 篇文章 (${rewritten} 篇有改动), ${assetDirs} 个资源目录, shuoshuo.json`,
+  `完成: ${postCount} 篇文章 (${rewritten} 篇有改动), ${assetDirs} 个资源目录, ${shuoshuoByYear.size} 个说说分片`,
 );

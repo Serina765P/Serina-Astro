@@ -191,6 +191,8 @@ const TOKENS = {
   chipFgHover: '--chip-fg-hover',
   catOn: '--cat-on',
   onAccent: '--on-accent',
+  actionBg: '--action-bg',
+  onAction: '--on-action',
   accent300: '--color-accent-300',
   accent700: '--color-accent-700',
   catFillPink: '--cat-fill-pink',
@@ -244,6 +246,7 @@ for (const [mode, T] of Object.entries(tables)) {
   check(mode, 'sub / surface-2（标签 chip）', T.sub, T.surface2, 4.5);
   // 代码块
   check(mode, 'code-ink / code-bg', T.codeInk, T.codeBg, 4.5);
+  check(mode, 'on-action / action-bg（筛选按钮）', T.onAction, T.actionBg, 4.5);
   // bento 小方块 .ico：on-wash 压每种 wash 底（分类胶囊已改走 cat-on / cat-fill-*，见下）
   for (const w of ['washPink', 'washMist', 'washSage', 'washSand', 'washClay', 'washRose']) {
     check(mode, `on-wash / ${w}（bento 图标底）`, T.onWash, T[w], 4.5);

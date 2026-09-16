@@ -29,7 +29,7 @@ const favicon = await getImage({ src: HERO.avatar, width: 64 });
 <link rel="canonical" href={canonical} />
 <link rel="icon" href={favicon.src} />
 <!-- 导航底色延伸到浏览器 chrome；content 由主题脚本随手动切换同步（media 写法只跟系统偏好） -->
-<meta name="theme-color" content="#edeae4" />
+<meta name="theme-color" content="var(--bg)" />
 <link rel="alternate" type="application/rss+xml" title={SITE.title} href={rssUrl} />
 <link rel="sitemap" href="/sitemap-index.xml" />
 

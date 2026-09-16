@@ -14,7 +14,7 @@ keywords:
   - 博客
 description: 偶像大师本家 CD 整理聚合贴，包含了几乎全部的 CD 资源，提供百度网盘链接供下载。感谢所有支持和帮助的朋友们！如果有缺损文件请联系我换源。
 ---
-# 前言
+## 前言
 偶像大师本家 20 年几乎全部 CD 的 flac 资源已经整理完毕并上传，目前采用百度网盘分流，每一张 CD 打包为一个 rar 文件。  
 
 整理：[芹菜P](https://space.bilibili.com/1726354044)
@@ -27,7 +27,7 @@ description: 偶像大师本家 CD 整理聚合贴，包含了几乎全部的 CD
 
 为了防止百度网盘下载出现数据丢失，压缩包已内置5%冗余数据（所以体积会大一些），如果压缩包出现问题可以直接使用解压软件修复。  
   
-# 百度网盘链接
+## 百度网盘链接
 
 **[https://pan.baidu.com/s/5_HIVXT_v-bTS85n2v-Dx8A](https://pan.baidu.com/s/5_HIVXT_v-bTS85n2v-Dx8A)**  
 可以按需保存🌹  
@@ -41,14 +41,14 @@ description: 偶像大师本家 CD 整理聚合贴，包含了几乎全部的 CD
   
   
 
-# 💿 本家CD 文件目录
+## 💿 本家CD 文件目录
 
 > 点击各系列名称可展开查看具体文件列表。
 
 
 ---
 
-## 🏆 周年曲&20周年企划 [00A]（最新）
+### 🏆 周年曲&20周年企划 [00A]（最新）
 
 <details>
 <summary><strong>偶像大师周年曲&20周年企划</strong>（9张）</summary>
@@ -69,7 +69,7 @@ description: 偶像大师本家 CD 整理聚合贴，包含了几乎全部的 CD
 
 ---
 
-## 🎵 正作游戏CD系列
+### 🎵 正作游戏CD系列
 
 <details>
 <summary><strong>[01] MASTERPIECE</strong>（5张）</summary>
@@ -351,7 +351,7 @@ description: 偶像大师本家 CD 整理聚合贴，包含了几乎全部的 CD
 
 ---
 
-## 🎬 动画相关 [00B]
+### 🎬 动画相关 [00B]
 
 <details>
 <summary><strong>[01] ANIM@TION MASTER</strong>（10张）</summary>
@@ -517,7 +517,7 @@ description: 偶像大师本家 CD 整理聚合贴，包含了几乎全部的 CD
 
 ---
 
-## 🎙️ 电台相关 [00C]
+### 🎙️ 电台相关 [00C]
 
 <details>
 <summary><strong>[01] 偶像大师RADIO</strong>（6张）</summary>
@@ -619,7 +619,7 @@ description: 偶像大师本家 CD 整理聚合贴，包含了几乎全部的 CD
 
 ---
 
-## 📖 漫画相关 [00D]
+### 📖 漫画相关 [00D]
 
 <details>
 <summary><strong>漫画相关CD</strong>（10张）</summary>
@@ -641,7 +641,7 @@ description: 偶像大师本家 CD 整理聚合贴，包含了几乎全部的 CD
 
 ---
 
-## 🎭 广播剧 [00E]
+### 🎭 广播剧 [00E]
 
 <details>
 <summary><strong>[01] Drama CD</strong>（6张）</summary>
@@ -693,7 +693,7 @@ description: 偶像大师本家 CD 整理聚合贴，包含了几乎全部的 CD
 ---
 
 
-## 🌟 其他 [00Y]
+### 🌟 其他 [00Y]
 
 <details>
 <summary><strong>[1] Birthday Commemoration Project</strong>（6张）</summary>
@@ -756,7 +756,7 @@ description: 偶像大师本家 CD 整理聚合贴，包含了几乎全部的 CD
 
 ---
 
-## 🎤 Live同捆CD&场限CD [00Z]
+### 🎤 Live同捆CD&场限CD [00Z]
 
 <details>
 <summary><strong>1 Solo Remix Original CD</strong>（15张）</summary>

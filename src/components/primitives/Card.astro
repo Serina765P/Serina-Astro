@@ -8,6 +8,7 @@
  * <Card as="a" href="/x/" lift class="group p-4">…</Card>
  */
 interface Props {
+  [key: string]: unknown;
   /** 是否带悬停抬升（默认 true）。非交互容器（如搜索结果 li）应传 false —— 可供性要诚实 */
   lift?: boolean;
   /** 渲染成什么标签，默认 article */
@@ -15,7 +16,7 @@ interface Props {
   class?: string;
 }
 
-const { lift = true, as: Tag = 'article', class: className = '', ...rest } = Astro.props;
+const { lift = true, as: Tag = 'article', class: className = '', ...rest } = Astro.props as Props & Record<string, unknown>;
 ---
 
 <Tag class:list={['card-surface', lift && 'card-lift', className]} {...rest}>

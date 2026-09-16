@@ -4,6 +4,7 @@ import BaseLayout from './BaseLayout.astro';
 import Prose from '../components/Prose.astro';
 import Toc from '../components/Toc.astro';
 import Giscus from '../components/Giscus.astro';
+import BackToTop from '../components/BackToTop.astro';
 import ImasAlbum from '../components/skins/ImasAlbum.astro';
 import CodeBlock from '../components/CodeBlock.astro';
 import Card from '../components/primitives/Card.astro';
@@ -28,6 +29,7 @@ interface Props {
       tags: string[];
       categories: string[];
       description?: string;
+      keywords?: string[];
       skin?: 'imas-album';
     };
   };
@@ -48,9 +50,11 @@ const category = data.categories[0];
 <BaseLayout
   title={`${data.title} · ${SITE.title}`}
   description={data.description}
+  keywords={data.keywords}
   ogType="article"
   pathname={`/posts/${post.id}/`}
   mainClass="py-8 sm:py-10"
+  readingProgress
 >
   {
     data.skin === 'imas-album' && <ImasAlbum />
@@ -60,7 +64,7 @@ const category = data.categories[0];
   <Container width="wide" class="flex justify-center gap-10">
     <article class="min-w-0 max-w-4xl flex-1">
       <!-- 文章面板：Apple 式大标题 + 舒适栏宽 -->
-      <div class="rounded-3xl border border-line bg-surface p-6 shadow-card sm:p-10 lg:p-12">
+      <div class="rounded-2xl border border-line bg-surface p-5 shadow-card sm:p-8 lg:p-10">
         <header class="mb-9">
           {
             category && (
@@ -75,25 +79,25 @@ const category = data.categories[0];
               </a>
             )
           }
-          <h1 class="mt-4 text-2xl leading-snug tracking-[0.04em] text-ink sm:text-[2rem]">
+          <h1 class="mt-4 text-[clamp(1.5rem,3vw,2.25rem)] leading-tight tracking-[0.02em] text-ink [text-wrap:balance]">
             {data.title}
           </h1>
 
           <div class="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-sub">
             <span class="inline-flex items-center gap-1">
-              <Icon name="material-symbols:calendar-month" class="size-3.5" />
+              <Icon name="material-symbols:calendar-month" class="size-3.5" aria-hidden="true" />
               <time datetime={data.date.toISOString()}>发布于 {formatDate(data.date)}</time>
             </span>
             {
               data.updated && data.updated.getTime() !== data.date.getTime() && (
                 <span class="inline-flex items-center gap-1">
-                  <Icon name="material-symbols:article" class="size-3.5" />
+                  <Icon name="material-symbols:article" class="size-3.5" aria-hidden="true" />
                   <time datetime={data.updated.toISOString()}>更新于 {formatDate(data.updated)}</time>
                 </span>
               )
             }
             <span class="inline-flex items-center gap-1">
-              <Icon name="material-symbols:schedule" class="size-3.5" />
+              <Icon name="material-symbols:schedule" class="size-3.5" aria-hidden="true" />
               约 {minutes} 分钟 · {formatCount(words)} 字
             </span>
           </div>
@@ -111,6 +115,8 @@ const category = data.categories[0];
           }
         </header>
 
+        <Toc headings={headings} mode="mobile" />
+
         <Prose>
           <Content />
         </Prose>
@@ -121,7 +127,7 @@ const category = data.categories[0];
           older ? (
             <Card as="a" href={`/posts/${older.id}/`} class="group p-4">
               <span class="flex items-center gap-1 text-xs text-sub">
-                <Icon name="material-symbols:keyboard-arrow-left" class="size-4" />
+                <Icon name="material-symbols:keyboard-arrow-left" class="size-4" aria-hidden="true" />
                 上一篇
               </span>
               <span class="mt-1 line-clamp-1 block text-sm text-ink group-hover:text-wash-pink-deep">
@@ -137,7 +143,7 @@ const category = data.categories[0];
             <Card as="a" href={`/posts/${newer.id}/`} class="group p-4 text-right">
               <span class="flex items-center justify-end gap-1 text-xs text-sub">
                 下一篇
-                <Icon name="material-symbols:keyboard-arrow-right" class="size-4" />
+                <Icon name="material-symbols:keyboard-arrow-right" class="size-4" aria-hidden="true" />
               </span>
               <span class="mt-1 line-clamp-1 block text-sm text-ink group-hover:text-wash-pink-deep">
                 {newer.data.title}
@@ -154,8 +160,9 @@ const category = data.categories[0];
          吸顶但容器自身可滚轮浏览长目录，随文章容器结束而结束 -->
     <aside class="hidden w-56 shrink-0 lg:block">
       <div class="toc-scroll sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto overscroll-contain">
-        <Toc headings={headings} />
+        <Toc headings={headings} mode="desktop" />
       </div>
     </aside>
   </Container>
+  <BackToTop />
 </BaseLayout>

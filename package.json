@@ -8,7 +8,7 @@
     "build": "astro build && node scripts/check-build.mjs && pagefind --site dist",
     "preview": "astro preview",
     "check": "astro check && node scripts/contrast-audit.mjs",
-    "lint": "biome check .",
+    "lint": "biome ci .",
     "contrast": "node scripts/contrast-audit.mjs",
     "shots": "node scripts/shots.mjs"
   },

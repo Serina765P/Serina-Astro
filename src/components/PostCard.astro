@@ -1,9 +1,11 @@
 ---
+import { Image } from 'astro:assets';
 import { Icon } from 'astro-icon/components';
 import Card from './primitives/Card.astro';
 import TagChip from './primitives/TagChip.astro';
 import { categoryColor, categoryFillClass, tagSlug } from '../site.config';
 import { formatDate, readingTime } from '../lib/utils';
+import { getPostCover } from '../lib/post-covers';
 
 interface Props {
   post: {
@@ -15,6 +17,8 @@ interface Props {
       description?: string;
       tags: string[];
       categories: string[];
+      cover?: string;
+      pinned: boolean;
     };
   };
 }
@@ -24,60 +28,86 @@ const href = `/posts/${post.id}/`;
 const minutes = post.body ? readingTime(post.body) : null;
 const category = post.data.categories[0];
 const spine = categoryColor(category ?? '');
+const cover = getPostCover(post.id, post.data.cover);
 ---
 
-<Card as="article" class="group relative overflow-hidden py-5 pr-5 pl-6 sm:py-6 sm:pr-6 sm:pl-7">
+<Card
+  as="article"
+  class:list={[
+    'group relative overflow-hidden',
+    cover ? 'p-0' : 'py-5 pr-5 pl-6 sm:py-6 sm:pr-6 sm:pl-7',
+  ]}
+>
+  {
+    cover && (
+      <Image
+        src={cover}
+        alt=""
+        aria-hidden="true"
+        width={cover.width}
+        height={cover.height}
+        layout="constrained"
+        loading="lazy"
+        class="post-cover h-44 w-full object-cover sm:h-52"
+      />
+    )
+  }
   <span
     aria-hidden="true"
-    class="absolute top-5 bottom-5 left-0 w-[5px] rounded-r-full"
+    class:list={['absolute left-0 w-[5px] rounded-r-full', cover ? 'top-44 bottom-0 sm:top-52' : 'top-5 bottom-5']}
     style={`background:${spine}`}
   />
-  <h2 class="text-lg leading-snug sm:text-xl">
-    <a
-      href={href}
-      class="text-ink transition-colors after:absolute after:inset-0 group-hover:text-wash-pink-deep"
-    >
-      {post.data.title}
-    </a>
-  </h2>
+  <div class:list={['relative', cover ? 'p-5 sm:p-6 sm:pl-7' : '']}>
+    <h2 class="text-lg leading-snug sm:text-xl">
+      <a
+        href={href}
+        class="text-ink transition-colors after:absolute after:inset-0 group-hover:text-wash-pink-deep"
+      >
+        {post.data.title}
+      </a>
+    </h2>
 
-  <div class="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-sub">
+    <div class="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-sub">
+      {
+        post.data.pinned && <span class="rounded-full bg-chip px-2.5 py-0.5 text-chip-fg">置顶</span>
+      }
+      {
+        category && (
+          <span class:list={['rounded-full px-3 py-0.5 text-cat-on', categoryFillClass(category)]}>
+            {category}
+          </span>
+        )
+      }
+      <span class="inline-flex items-center gap-1">
+        <Icon name="material-symbols:calendar-month" class="size-3.5" aria-hidden="true" />
+        <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+      </span>
+      {
+        minutes && (
+          <span class="inline-flex items-center gap-1">
+            <Icon name="material-symbols:schedule" class="size-3.5" aria-hidden="true" />
+            约 {minutes} 分钟
+          </span>
+        )
+      }
+    </div>
+
     {
-      category && (
-        <span class:list={['rounded-full px-3 py-0.5 text-cat-on', categoryFillClass(category)]}>
-          {category}
-        </span>
+      post.data.description && (
+        <p class="relative mt-3 line-clamp-2 text-sm leading-relaxed text-sub">{post.data.description}</p>
       )
     }
-    <span class="inline-flex items-center gap-1">
-      <Icon name="material-symbols:calendar-month" class="size-3.5" />
-      <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
-    </span>
+
     {
-      minutes && (
-        <span class="inline-flex items-center gap-1">
-          <Icon name="material-symbols:schedule" class="size-3.5" />
-          约 {minutes} 分钟
-        </span>
+      post.data.tags.length > 0 && (
+        <ul class="relative mt-3.5 flex flex-wrap gap-1.5" aria-label="标签">
+          {post.data.tags.slice(0, 4).map((tag) => (
+            <li>
+              <TagChip href={`/tags/${tagSlug(tag)}/`} label={`# ${tag}`} />
+            </li>
+          ))}
+        </ul>
       )
     }
   </div>
-
-  {
-    post.data.description && (
-      <p class="relative mt-3 line-clamp-2 text-sm leading-relaxed text-sub">{post.data.description}</p>
-    )
-  }
-
-  {
-    post.data.tags.length > 0 && (
-      <ul class="relative mt-3.5 flex flex-wrap gap-1.5" aria-label="标签">
-        {post.data.tags.slice(0, 4).map((tag) => (
-          <li>
-            <TagChip href={`/tags/${tagSlug(tag)}/`} label={`# ${tag}`} />
-          </li>
-        ))}
-      </ul>
-    )
-  }
 </Card>

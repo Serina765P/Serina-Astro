@@ -40,7 +40,7 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
                 : 'text-sub hover:bg-surface-2 hover:text-ink',
             ]}
           >
-            <Icon name={`material-symbols:${item.icon}`} class="size-4" />
+            <Icon name={`material-symbols:${item.icon}`} class="size-4" aria-hidden="true" />
             {item.label}
           </a>
         ))
@@ -53,7 +53,7 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
         aria-label="搜索"
         class="grid size-9 place-items-center rounded-full text-sub transition-colors hover:bg-surface-2 hover:text-wash-pink-deep"
       >
-        <Icon name="material-symbols:search" class="size-5" />
+        <Icon name="material-symbols:search" class="size-5" aria-hidden="true" />
       </a>
       <ThemeToggle />
 
@@ -64,10 +64,11 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
           aria-label="菜单"
           class="grid size-9 cursor-pointer list-none place-items-center rounded-full text-sub transition-colors hover:bg-surface-2 hover:text-wash-pink-deep [&::-webkit-details-marker]:hidden"
         >
-          <Icon name="material-symbols:menu" class="menu-open-icon size-5 group-open:hidden" />
+          <Icon name="material-symbols:menu" class="menu-open-icon size-5 group-open:hidden" aria-hidden="true" />
           <Icon
             name="material-symbols:close"
             class="menu-close-icon hidden size-5 group-open:block"
+            aria-hidden="true"
           />
         </summary>
 
@@ -91,7 +92,7 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
                         : 'text-sub hover:bg-surface-2',
                     ]}
                   >
-                    <Icon name={`material-symbols:${item.icon}`} class="size-4" />
+                    <Icon name={`material-symbols:${item.icon}`} class="size-4" aria-hidden="true" />
                     {item.label}
                   </a>
                 </li>

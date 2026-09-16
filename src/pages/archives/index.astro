@@ -24,7 +24,10 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
   <Container width="standard">
     <PageHeader title="归档" subtitle={`共 ${posts.length} 篇文章`} />
 
-    <div class="space-y-10">
+    {years.length === 0 ? (
+      <p class="empty-state mt-6">暂无文章归档。</p>
+    ) : (
+      <div class="space-y-10">
       {
         years.map((year) => (
           <section aria-label={`${year} 年文章`}>
@@ -54,6 +57,7 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
           </section>
         ))
       }
-    </div>
+      </div>
+    )}
   </Container>
 </BaseLayout>

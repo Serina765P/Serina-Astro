@@ -1,8 +1,9 @@
-import { defineCollection, z } from 'astro:content';
+import { defineCollection } from 'astro:content';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { glob } from 'astro/loaders';
+import { z } from 'astro/zod';
 
 const posts = defineCollection({
   loader: glob({ pattern: '*.md', base: './src/content/posts' }),
@@ -14,6 +15,8 @@ const posts = defineCollection({
     categories: z.array(z.string()).default([]),
     keywords: z.array(z.string()).optional(),
     description: z.string().optional(),
+    cover: z.string().optional(),
+    pinned: z.boolean().default(false),
     /** 文章皮肤：对应 layouts/PostLayout 中按需挂载的皮肤组件 */
     skin: z.enum(['imas-album']).optional(),
   }),

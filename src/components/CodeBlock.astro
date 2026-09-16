@@ -26,7 +26,8 @@
       ta.select();
       let ok = false;
       try {
-        ok = document.execCommand('copy');
+        // 老浏览器兜底；类型声明已移除此 API，运行时仍可能提供它。
+        ok = (document as unknown as { execCommand(command: string): boolean }).execCommand('copy');
       } catch {
         /* 忽略 */
       }
@@ -79,6 +80,14 @@
       copyWrap.className = 'code-copy-wrap';
       pre.before(copyWrap);
       copyWrap.appendChild(pre);
+      const language = pre.dataset.language;
+      if (language) {
+        const languageLabel = document.createElement('span');
+        languageLabel.className = 'code-language';
+        languageLabel.textContent = language;
+        languageLabel.setAttribute('aria-label', `代码语言：${language}`);
+        copyWrap.appendChild(languageLabel);
+      }
       copyWrap.appendChild(makeCopyButton(pre));
 
       if (pre.scrollHeight <= FOLD_THRESHOLD) return;
