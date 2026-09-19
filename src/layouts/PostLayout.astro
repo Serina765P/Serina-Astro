@@ -115,8 +115,6 @@ const category = data.categories[0];
           }
         </header>
 
-        <Toc headings={headings} mode="mobile" />
-
         <Prose>
           <Content />
         </Prose>
@@ -156,12 +154,11 @@ const category = data.categories[0];
       <Giscus />
     </article>
 
-    <!-- TOC：≥lg 双栏（原先只从 xl 起，1024–1279px 就出现「宽容器 + 无侧栏」的横向浪费）；
-         吸顶但容器自身可滚轮浏览长目录，随文章容器结束而结束 -->
-    <aside class="hidden w-56 shrink-0 lg:block">
-      <div class="toc-scroll sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto overscroll-contain">
-        <Toc headings={headings} mode="desktop" />
-      </div>
+    <!-- TOC：≥lg 是吸顶侧栏，<lg 是底部悬浮 pill —— 两种形态都在 Toc 内部（同一份树数据）。
+         aside 用 display:contents 把布局盒子摘掉：窄屏时它不参与 flex 布局、不吃 gap 宽度，
+         宽屏时恢复成 w-56 的一栏。 -->
+    <aside class="contents lg:block lg:w-56 lg:shrink-0">
+      <Toc headings={headings} />
     </aside>
   </Container>
   <BackToTop />

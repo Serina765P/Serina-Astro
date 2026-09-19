@@ -1,0 +1,136 @@
+---
+// 目录树的递归渲染。折叠形态下，含子节的一级节右侧多一个 toggle 按钮。
+// 用 Astro.self 自引用 —— 递归发生在构建期，客户端拿到的就是一层层嵌套好的 <ul>。
+import { Icon } from 'astro-icon/components';
+import type { TocNode } from '../lib/toc';
+
+interface Props {
+  nodes: TocNode[];
+  /** 是否渲染折叠开关（构建期按标题规模决定，短文章根本不渲染按钮） */
+  collapsible: boolean;
+  /** 子列表 id 前缀。桌面侧栏与移动卡片各渲染一份树，靠它避免 id 撞车 */
+  idPrefix: string;
+  /** 顶层列表自身的 id（由调用方决定是否需要） */
+  listId?: string;
+}
+
+const { nodes, collapsible, idPrefix, listId } = Astro.props;
+---
+
+<ul class="toc-list" id={listId}>
+  {
+    nodes.map((node) => {
+      const sublistId = `${idPrefix}-${node.slug}-sublist`;
+      const hasChildren = node.children.length > 0;
+      return (
+        <li class="toc-item" data-toc-item data-toc-id={node.slug}>
+          <a class="toc-link" href={`#${node.slug}`} data-toc-link>
+            <span class="toc-text">{node.text}</span>
+          </a>
+          {collapsible && hasChildren && (
+            <button
+              type="button"
+              class="toc-toggle"
+              data-toc-toggle
+              aria-expanded="false"
+              aria-controls={sublistId}
+              aria-label={`展开或收起「${node.text}」的子目录`}
+            >
+              <Icon
+                name="material-symbols:keyboard-arrow-down"
+                class="toc-toggle-icon"
+                aria-hidden="true"
+              />
+            </button>
+          )}
+          {hasChildren && (
+            <Astro.self
+              nodes={node.children}
+              collapsible={collapsible}
+              idPrefix={idPrefix}
+              listId={sublistId}
+            />
+          )}
+        </li>
+      );
+    })
+  }
+</ul>
+
+<style>
+  .toc-list {
+    width: 100%;
+    margin: 0;
+    padding-left: 0;
+    list-style: none;
+  }
+
+  /* 只有嵌套层才缩进：一级节紧贴竖线，每深一层加一档 */
+  .toc-item > .toc-list {
+    padding-left: 0.75rem;
+  }
+
+  /* 横向 flex + 换行：链接占满整行、toggle 贴右，子列表 width:100% 自然折到下一行 */
+  .toc-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .toc-link {
+    flex-grow: 1;
+    min-width: 0;
+    padding: 0.3rem 0.75rem;
+    color: var(--sub);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    text-decoration: none;
+    transition: color 160ms ease;
+  }
+
+  .toc-link:hover {
+    color: var(--ink);
+  }
+
+  .toc-item.is-active > .toc-link {
+    color: var(--wash-pink-deep);
+    font-weight: 500;
+  }
+
+  .toc-toggle {
+    display: grid;
+    flex: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    place-content: center;
+    border: 0;
+    border-radius: 9999px;
+    background: transparent;
+    color: var(--sub);
+    cursor: pointer;
+    transition: color 160ms ease, background-color 160ms ease;
+  }
+
+  .toc-toggle:hover {
+    background: var(--chip-bg);
+    color: var(--ink);
+  }
+
+  .toc-toggle-icon {
+    width: 1rem;
+    height: 1rem;
+    transition: transform 200ms ease;
+  }
+
+  /* 收起时箭头朝下（点开），展开时翻上来（收起） */
+  .toc-item.is-open > .toc-toggle .toc-toggle-icon {
+    transform: rotate(180deg);
+  }
+
+  /* 折叠态：只有一级节常驻，进入当前节时由脚本给它加 is-open。
+     :global 是必需的 —— data-toc-collapse 挂在调用方容器（Toc.astro 的元素）上，
+     不把它排除出作用域，这个选择器会被加上本组件的 scope 属性，就永远匹配不上了。 */
+  :global([data-toc-collapse]) .toc-item:not(.is-open) > .toc-list {
+    display: none;
+  }
+</style>
