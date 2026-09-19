@@ -591,71 +591,214 @@
     background: transparent;
   }
 
-  .shuoshuo-filter {
-    @apply rounded-2xl border border-line bg-surface-2 p-4;
+  .shuoshuo-tools {
+    border-block: 1px solid var(--line);
+    padding-block: 0.75rem;
   }
-  .shuoshuo-filter input,
-  .shuoshuo-filter select {
-    @apply min-h-10 rounded-xl border border-line bg-surface px-3 text-sm text-ink outline-none transition-colors;
+  .shuoshuo-tools-main {
+    @apply grid items-center gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto];
   }
-  .shuoshuo-filter input {
-    @apply w-full;
+  .shuoshuo-search {
+    @apply relative flex min-w-0 items-center;
   }
-  .shuoshuo-filter input:focus,
-  .shuoshuo-filter select:focus {
+  .shuoshuo-search > svg {
+    @apply pointer-events-none absolute left-3.5 size-4 text-sub;
+  }
+  .shuoshuo-tools input,
+  .shuoshuo-tools select {
+    @apply min-h-11 border border-line bg-surface text-sm text-ink transition-colors;
+  }
+  .shuoshuo-tools input {
+    @apply w-full rounded-xl pl-10 pr-3.5;
+  }
+  .shuoshuo-tools select {
+    @apply w-full rounded-lg px-3;
+  }
+  .shuoshuo-tools input:focus-visible,
+  .shuoshuo-tools select:focus-visible {
     @apply border-wash-pink-deep ring-2 ring-wash-pink/20;
   }
+  .shuoshuo-submit,
+  .shuoshuo-reset {
+    @apply inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-4 text-sm transition-colors;
+    touch-action: manipulation;
+  }
+  .shuoshuo-submit {
+    @apply bg-action text-on-action hover:bg-wash-clay-deep;
+  }
+  .shuoshuo-reset {
+    @apply text-sub hover:bg-surface-2 hover:text-ink;
+  }
+  .shuoshuo-refine {
+    @apply mt-3 border-t border-line pt-3;
+  }
+  .shuoshuo-refine summary {
+    @apply flex min-h-9 cursor-pointer list-none items-center justify-between gap-3 text-sm text-body;
+    touch-action: manipulation;
+  }
+  .shuoshuo-refine summary::-webkit-details-marker {
+    display: none;
+  }
+  .shuoshuo-refine summary::after {
+    content: '+';
+    @apply text-lg leading-none text-sub;
+  }
+  .shuoshuo-refine[open] summary::after {
+    content: '−';
+  }
+  .shuoshuo-refine-hint {
+    @apply ml-auto text-xs text-sub;
+  }
   .shuoshuo-filter-row {
-    @apply mt-3 grid gap-2 sm:grid-cols-[repeat(3,minmax(0,1fr))_auto_auto];
+    @apply mt-3 grid gap-3 sm:grid-cols-3;
   }
   .shuoshuo-filter-row label {
-    @apply flex min-w-0 flex-col gap-1 text-xs text-sub;
+    @apply flex min-w-0 flex-col gap-1.5 text-xs text-sub;
   }
-  .shuoshuo-filter-row button,
-  .shuoshuo-filter-row > a {
-    @apply inline-flex min-h-10 items-center justify-center rounded-xl px-4 text-sm transition-colors;
+  .shuoshuo-status {
+    @apply flex items-center gap-2 text-sm text-sub;
   }
-  .shuoshuo-filter-row button {
-    @apply bg-action text-on-action hover:opacity-85;
-  }
-  .shuoshuo-filter-row > a {
-    @apply text-sub hover:bg-surface hover:text-ink;
+  .shuoshuo-status::before {
+    content: '';
+    @apply size-1.5 rounded-full bg-wash-clay-deep;
   }
 
   .shuoshuo-timeline {
-    @apply relative grid gap-5 border-l-2 border-line pl-5;
+    --timeline-date: 6.5rem;
+    --timeline-gutter: 1.25rem;
+    @apply relative grid list-none p-0;
+  }
+  .shuoshuo-timeline::before {
+    content: '';
+    position: absolute;
+    inset: 1.5rem auto 1.5rem calc(var(--timeline-date) + (var(--timeline-gutter) / 2));
+    width: 1px;
+    background: var(--line);
+  }
+  .shuoshuo-entry,
+  .shuoshuo-group {
+    display: grid;
+    grid-template-columns: var(--timeline-date) var(--timeline-gutter) minmax(0, 1fr);
+    column-gap: 0.75rem;
   }
   .shuoshuo-entry {
-    @apply relative grid items-start gap-x-4 sm:grid-cols-[5.5rem_minmax(0,1fr)];
+    position: relative;
+    align-items: start;
+    padding-block: 0.75rem;
     animation: timeline-in 360ms ease both;
   }
   .shuoshuo-date {
-    @apply flex justify-end pt-2 text-sub;
+    grid-column: 1;
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.15rem;
+    padding-top: 0.1rem;
+    color: var(--sub);
+  }
+  .shuoshuo-day {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.2rem;
+    color: var(--ink);
+    font-size: 1rem;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+  }
+  .shuoshuo-day strong {
+    font-size: 1.25rem;
+    font-weight: 600;
   }
   .shuoshuo-time {
     @apply text-xs tabular-nums tracking-[0.04em];
   }
-  .shuoshuo-day {
-    @apply absolute -left-[3.15rem] top-0 z-[1] grid min-w-10 place-items-center rounded-xl border border-line bg-surface px-2 py-1.5 text-lg leading-none text-ink tabular-nums shadow-card;
-  }
   .shuoshuo-node {
-    @apply absolute -left-[1.78rem] top-2 size-2.5 rounded-full border-2 border-bg bg-wash-pink;
+    grid-column: 2;
+    align-self: start;
+    justify-self: center;
+    z-index: 1;
+    width: 0.55rem;
+    height: 0.55rem;
+    margin-top: 0.5rem;
+    border: 2px solid var(--bg);
+    border-radius: 9999px;
+    background: var(--wash-mist-deep);
+    box-shadow: 0 0 0 1px var(--line);
+  }
+  .shuoshuo-node-day {
+    width: 0.75rem;
+    height: 0.75rem;
+    margin-top: 0.4rem;
+    background: var(--wash-clay-deep);
   }
   .shuoshuo-card {
-    @apply min-w-0;
+    grid-column: 3;
+    min-width: 0;
+    padding-bottom: 1.35rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .shuoshuo-title {
+    @apply mb-1 text-base font-semibold text-ink;
+    text-wrap: balance;
+  }
+  .shuoshuo-content {
+    @apply m-0 break-words whitespace-pre-wrap text-[0.95em] leading-relaxed text-body;
+  }
+  .shuoshuo-content a {
+    @apply text-wash-pink-deep underline decoration-wash-pink-deep/50 underline-offset-2 transition-colors hover:text-wash-rose-deep;
   }
   .shuoshuo-group {
-    @apply -ml-1 py-2 text-sm font-medium tracking-[0.12em] text-wash-mist-deep;
+    grid-column: 1 / -1;
+    padding-top: 1.75rem;
+    padding-bottom: 0.4rem;
     animation: timeline-in 360ms ease both;
   }
-  .shuoshuo-group span {
-    @apply inline-flex rounded-xl border border-line bg-surface-2 px-3 py-1;
+  .shuoshuo-group h2 {
+    grid-column: 3;
+    @apply m-0 text-sm font-medium tracking-[0.12em] text-wash-mist-deep;
   }
   .shuoshuo-tag {
-    @apply inline-flex rounded-full bg-chip px-2.5 py-1 text-xs text-chip-fg transition-colors hover:bg-chip-hover hover:text-chip-fg-hover;
+    @apply inline-flex min-h-9 items-center rounded-full bg-chip px-3 text-xs text-chip-fg transition-colors hover:bg-chip-hover hover:text-chip-fg-hover;
+    touch-action: manipulation;
+  }
+  .shuoshuo-images {
+    display: grid;
+    align-items: start;
+    gap: 0.5rem;
+  }
+  .shuoshuo-images-gallery {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .shuoshuo-images-single {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 38rem;
+  }
+  .shuoshuo-images img {
+    display: block;
+    height: auto;
+    background: var(--surface-2);
+    object-fit: contain;
+  }
+  .shuoshuo-pagination {
+    @apply flex items-center justify-center gap-3 text-sm;
+  }
+  .shuoshuo-pagination-link,
+  .shuoshuo-pagination-current {
+    @apply inline-flex min-h-11 items-center justify-center rounded-xl px-3.5 tabular-nums transition-colors;
+  }
+  .shuoshuo-pagination-link {
+    @apply border border-line text-body hover:border-wash-pink-deep hover:text-wash-pink-deep;
+    touch-action: manipulation;
+  }
+  .shuoshuo-pagination-link.is-disabled {
+    @apply border-transparent text-sub opacity-40;
+  }
+  .shuoshuo-pagination-current {
+    @apply text-sub;
   }
   .empty-state {
-    @apply rounded-2xl border border-dashed border-line bg-surface-2 px-5 py-8 text-center text-sm text-sub;
+    @apply border-y border-dashed border-line px-5 py-8 text-center text-sm text-sub;
   }
 
   @keyframes timeline-in {
@@ -670,23 +813,55 @@
   }
 
   @media (max-width: 40rem) {
+    .shuoshuo-tools-main {
+      @apply grid-cols-[minmax(0,1fr)_auto];
+    }
+    .shuoshuo-search {
+      grid-column: 1 / -1;
+    }
     .shuoshuo-filter-row {
-      @apply grid-cols-2;
+      @apply grid-cols-1;
     }
-    .shuoshuo-filter-row label:first-child {
-      @apply col-span-2;
+    .shuoshuo-timeline {
+      --timeline-date: 1.25rem;
+      --timeline-gutter: 0.75rem;
     }
-    .shuoshuo-entry {
-      @apply grid-cols-1 gap-2;
+    .shuoshuo-timeline::before {
+      inset: 1.5rem auto 1.5rem 0.375rem;
+    }
+    .shuoshuo-entry,
+    .shuoshuo-group {
+      grid-template-columns: var(--timeline-date) minmax(0, 1fr);
+      column-gap: 0.75rem;
     }
     .shuoshuo-date {
-      @apply justify-start pt-0 pl-1;
-    }
-    .shuoshuo-day {
-      @apply -top-1 -left-[2.3rem] min-w-8 px-1 py-1 text-base;
+      grid-column: 2;
+      grid-row: 1;
+      flex-direction: row;
+      align-items: baseline;
+      justify-content: flex-start;
+      gap: 0.5rem;
+      padding-top: 0;
+      padding-bottom: 0.35rem;
     }
     .shuoshuo-node {
-      @apply top-1;
+      grid-column: 1;
+      grid-row: 1;
+      margin-top: 0.5rem;
+    }
+    .shuoshuo-card {
+      grid-column: 2;
+      grid-row: 2;
+      padding-bottom: 1.25rem;
+    }
+    .shuoshuo-group {
+      padding-top: 1.5rem;
+    }
+    .shuoshuo-group h2 {
+      grid-column: 2;
+    }
+    .shuoshuo-images-gallery {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 

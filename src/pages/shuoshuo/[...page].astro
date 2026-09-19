@@ -74,53 +74,64 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
 ---
 
 <BaseLayout title={`说说 · ${SITE.title}`} description="碎碎念时间线" pathname={page.url.current}>
-  <Container width="narrow">
+  <Container width="narrow" class="shuoshuo-page">
     <PageHeader title="说说" subtitle={`共 ${page.total} 条说说`} />
 
-    <form id="shuoshuo-filter" class="shuoshuo-filter mt-7" role="search">
-      <label class="sr-only" for="shuoshuo-query">搜索说说</label>
-      <input
-        id="shuoshuo-query"
-        name="q"
-        type="search"
-        placeholder="搜索标题、正文或标签"
-        autocomplete="off"
-        enterkeyhint="search"
-      />
-      <div class="shuoshuo-filter-row">
-        <label>
-          <span>标签</span>
-          <select name="tag">
-            <option value="">全部标签</option>
-            {tagOptions.map((tag) => <option value={tag}>{`#${tag}`}</option>)}
-          </select>
+    <form id="shuoshuo-filter" class="shuoshuo-tools mt-8" role="search">
+      <div class="shuoshuo-tools-main">
+        <label class="shuoshuo-search">
+          <span class="sr-only">搜索说说</span>
+          <Icon name="material-symbols:search" class="size-5" aria-hidden="true" />
+          <input
+            id="shuoshuo-query"
+            name="q"
+            type="search"
+            placeholder="搜索标题、正文或标签…"
+            autocomplete="off"
+            enterkeyhint="search"
+          />
         </label>
-        <label>
-          <span>年份</span>
-          <select name="year">
-            <option value="">全部年份</option>
-            {yearOptions.map((year) => <option value={year}>{year}</option>)}
-          </select>
-        </label>
-        <label>
-          <span>月份</span>
-          <select name="month">
-            <option value="">全部月份</option>
-            {monthOptions.map((month) => <option value={month}>{month}</option>)}
-          </select>
-        </label>
-        <button type="submit">筛选</button>
-        <a href={page.url.current.split('?')[0]} data-shuoshuo-reset>重置</a>
+        <button type="submit" class="shuoshuo-submit">
+          <Icon name="material-symbols:filter-alt" class="size-4" aria-hidden="true" />
+          <span>筛选</span>
+        </button>
+        <a class="shuoshuo-reset" href={page.url.current.split('?')[0]} data-shuoshuo-reset>清除</a>
       </div>
+      <details class="shuoshuo-refine" open>
+        <summary><span>细化范围</span><span class="shuoshuo-refine-hint">标签 / 年份 / 月份</span></summary>
+        <div class="shuoshuo-filter-row">
+          <label>
+            <span>标签</span>
+            <select name="tag">
+              <option value="">全部标签</option>
+              {tagOptions.map((tag) => <option value={tag}>{`#${tag}`}</option>)}
+            </select>
+          </label>
+          <label>
+            <span>年份</span>
+            <select name="year">
+              <option value="">全部年份</option>
+              {yearOptions.map((year) => <option value={year}>{year}</option>)}
+            </select>
+          </label>
+          <label>
+            <span>月份</span>
+            <select name="month">
+              <option value="">全部月份</option>
+              {monthOptions.map((month) => <option value={month}>{month}</option>)}
+            </select>
+          </label>
+        </div>
+      </details>
     </form>
 
-    <p id="shuoshuo-status" class="mt-4 text-sm text-sub" aria-live="polite">
+    <p id="shuoshuo-status" class="shuoshuo-status mt-5" aria-live="polite">
       当前显示第 {page.currentPage} 页，共 {page.total} 条
     </p>
 
     <ol
       id="shuoshuo-list"
-      class="shuoshuo-timeline mt-5"
+      class="shuoshuo-timeline mt-4"
       data-shuoshuo-list
       data-page-size="10"
       data-current-page={page.currentPage}
@@ -133,18 +144,18 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
           return (
             <>
               {(index === 0 || groupKey(initialItems[index - 1]) !== groupKey(item)) && (
-                <li class="shuoshuo-group" aria-hidden="true"><span>{groupLabel(item)}</span></li>
+                <li class="shuoshuo-group"><h2>{groupLabel(item)}</h2></li>
               )}
               <li class="shuoshuo-entry">
                 <time class="shuoshuo-date" datetime={item.published_at}>
-                  {showDay && <span class="shuoshuo-day">{dayNumber(item)}</span>}
+                  {showDay && <span class="shuoshuo-day"><strong>{dayNumber(item)}</strong><span>日</span></span>}
                   <span class="shuoshuo-time">{formatDateTime(new Date(item.published_at))}</span>
                 </time>
-                {!showDay && <span aria-hidden="true" class="shuoshuo-node" />}
-                <article class="shuoshuo-card rounded-2xl border border-line bg-surface p-4 shadow-card sm:p-5">
-                {item.title && <h2 class="mb-1 text-base text-ink">{item.title}</h2>}
+                <span aria-hidden="true" class:list={['shuoshuo-node', showDay && 'shuoshuo-node-day']} />
+                <article class="shuoshuo-card">
+                {item.title && <h3 class="shuoshuo-title">{item.title}</h3>}
                 <p
-                  class="text-[0.95em] leading-relaxed break-words whitespace-pre-wrap text-body"
+                  class="shuoshuo-content"
                   set:html={linkify(stripShuoshuoTags(item.content))}
                 />
 
@@ -159,8 +170,8 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
                 {item.images.length > 0 && (
                   <div
                     class:list={[
-                      'shuoshuo-images mt-3 grid gap-1.5',
-                      item.images.length === 1 ? 'max-w-sm grid-cols-1' : 'grid-cols-3',
+                      'shuoshuo-images mt-4',
+                      item.images.length === 1 ? 'shuoshuo-images-single' : 'shuoshuo-images-gallery',
                     ]}
                   >
                     {item.images.slice(0, 9).map((img, i) => (
@@ -172,8 +183,7 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
                         loading="lazy"
                         decoding="async"
                         referrerpolicy="no-referrer"
-                        class="w-full cursor-zoom-in rounded-lg object-cover"
-                        style={`aspect-ratio: ${img.width} / ${img.height};`}
+                        class="w-full cursor-zoom-in rounded-xl"
                       />
                     ))}
                   </div>
@@ -209,7 +219,7 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
     </ol>
 
     <p id="shuoshuo-empty" class="empty-state mt-8" hidden>没有找到匹配的说说，换个关键词或筛选条件试试。</p>
-    <nav id="shuoshuo-pagination" class="mt-10 flex items-center justify-center gap-4 text-sm" aria-label="分页" />
+    <nav id="shuoshuo-pagination" class="shuoshuo-pagination mt-10" aria-label="分页" />
 
     <div class="mt-10">
       <Giscus />
@@ -341,8 +351,7 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
     if (!previous || groupKey(previous) !== groupKey(item)) {
       const group = document.createElement('li');
       group.className = 'shuoshuo-group';
-      group.setAttribute('aria-hidden', 'true');
-      const label = document.createElement('span');
+      const label = document.createElement('h2');
       label.textContent = groupLabel(item);
       group.append(label);
       fragment.append(group);
@@ -357,7 +366,11 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
     if (showDay) {
       const day = document.createElement('span');
       day.className = 'shuoshuo-day';
-      day.textContent = dayNumber(item);
+      const number = document.createElement('strong');
+      number.textContent = dayNumber(item);
+      const suffix = document.createElement('span');
+      suffix.textContent = '日';
+      day.append(number, suffix);
       date.append(day);
     }
     const time = document.createElement('span');
@@ -365,19 +378,19 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
     time.textContent = formatTime(item.published_at);
     date.append(time);
     const node = document.createElement('span');
-    node.className = 'shuoshuo-node';
+    node.className = `shuoshuo-node${showDay ? ' shuoshuo-node-day' : ''}`;
     node.setAttribute('aria-hidden', 'true');
     const article = document.createElement('article');
-    article.className = 'shuoshuo-card rounded-2xl border border-line bg-surface p-4 shadow-card sm:p-5';
+    article.className = 'shuoshuo-card';
 
     if (item.title) {
-      const title = document.createElement('h2');
-      title.className = 'mb-1 text-base text-ink';
+      const title = document.createElement('h3');
+      title.className = 'shuoshuo-title';
       title.textContent = item.title;
       article.append(title);
     }
     const content = document.createElement('p');
-    content.className = 'text-[0.95em] leading-relaxed break-words whitespace-pre-wrap text-body';
+    content.className = 'shuoshuo-content';
     content.innerHTML = linkify(withoutTags(item.content));
     article.append(content);
 
@@ -399,7 +412,7 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
 
     if (item.images.length > 0) {
       const images = document.createElement('div');
-      images.className = `shuoshuo-images mt-3 grid gap-1.5 ${item.images.length === 1 ? 'max-w-sm grid-cols-1' : 'grid-cols-3'}`;
+      images.className = `shuoshuo-images mt-4 ${item.images.length === 1 ? 'shuoshuo-images-single' : 'shuoshuo-images-gallery'}`;
       item.images.slice(0, 9).forEach((source, index) => {
         const image = document.createElement('img');
         image.src = source.url;
@@ -409,8 +422,7 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
         image.loading = 'lazy';
         image.decoding = 'async';
         image.referrerPolicy = 'no-referrer';
-        image.className = 'w-full cursor-zoom-in rounded-lg object-cover';
-        image.style.aspectRatio = `${source.width} / ${source.height}`;
+        image.className = 'w-full cursor-zoom-in rounded-xl';
         images.append(image);
       });
       article.append(images);
@@ -441,7 +453,7 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
       link.textContent = '原动态';
       footer.append(link);
     }
-    entry.append(date, ...(showDay ? [] : [node]), article);
+    entry.append(date, node, article);
     fragment.append(entry);
     return fragment;
   }
@@ -453,8 +465,8 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
     const addLink = (label: string, targetPage: number, disabled: boolean) => {
       const element = document.createElement(disabled ? 'span' : 'a');
       element.className = disabled
-        ? 'rounded-full px-4 py-1.5 text-sub opacity-40'
-        : 'rounded-full border border-line bg-surface px-4 py-1.5 text-body transition-colors hover:text-wash-pink-deep';
+        ? 'shuoshuo-pagination-link is-disabled'
+        : 'shuoshuo-pagination-link';
       element.textContent = label;
       if (!disabled) {
         (element as HTMLAnchorElement).href = buildUrl(targetPage, filters);
@@ -468,7 +480,7 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
     };
     addLink('← 上一页', page - 1, page <= 1);
     const pageLabel = document.createElement('span');
-    pageLabel.className = 'text-sub tabular-nums';
+    pageLabel.className = 'shuoshuo-pagination-current';
     pageLabel.textContent = `${page} / ${totalPages}`;
     pagination.append(pageLabel);
     addLink('下一页 →', page + 1, page >= totalPages);
