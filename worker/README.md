@@ -22,11 +22,12 @@ push → Cloudflare Pages 构建 → https://blog.serinap.top/shuoshuo/
 1. 在本机生成至少 128 bit 随机地址。本例生成 128 bit（32 个十六进制字符）的随机本地部分；只在本机终端查看并保存，不要把实际地址写进仓库、截图或公开日志：
 
    ```powershell
+   $ErrorActionPreference = 'Stop'
    $bytes = [byte[]]::new(16)
    $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
    $rng.GetBytes($bytes)
    $rng.Dispose()
-   $localPart = 'shuo-' + [Convert]::ToHexString($bytes).ToLowerInvariant()
+   $localPart = 'shuo-' + [BitConverter]::ToString($bytes).Replace('-', '').ToLowerInvariant()
    $publishTo = "$localPart@serinap.top"
    $publishTo
    ```
