@@ -1,26 +1,70 @@
 # 说说邮件管道（shuoshuo-mailer）
 
-给 `shuo@serinap.top` 发邮件 → Cloudflare Email Worker 收信 → 校验 → 解析 → commit 进主仓库的 `src/data/shuoshuo/<沪年>.json`（按年分片）→ push 触发 Cloudflare Pages 自动构建 → 说说上线。全程免费额度，延迟约 2–3 分钟。
+给一条高熵私密收件地址发邮件 → Cloudflare Email Worker 校验 SMTP 信封收件人和发件人白名单 → 解析正文 → commit 到主仓库的 `src/data/shuoshuo/<沪年>.json` → Cloudflare Pages 自动构建并更新说说页。发信时不需要手动输入口令。
 
 ```
-你写邮件（主题=标题可选，正文=说说内容）
+你发邮件（主题=标题可选，正文=说说内容）
   │
   ▼
-Cloudflare Email Routing（serinap.top 的 MX 已托管）
-  │  路由规则：收件人 shuo@ → 发给 Worker
+Cloudflare Email Routing（serinap.top）
+  │  仅将新生成的私密地址路由到 Worker
   ▼
-本 Worker（email handler）
-  │  1. 白名单 + SPF/DKIM 校验（不在白名单 → setReject 退信）
-  │  2. 主题口令校验（可选，防地址泄露后被冒发）
-  │  3. postal-mime 解析：正文 text/plain（仅 HTML 时剥标签兜底）、去签名（`-- ` 线以下丢弃；
-  │     手机 QQ 等不加分隔线的客户端，按发件人「显示名 + 邮箱」尾部块剥离）
-  │  4. GitHub Contents API：读 src/data/shuoshuo/<沪年>.json（按年分片）→ 顶部插入新条目 → PUT commit
-  │     （分片不存在则新建；同一 Message-ID 重复投递自动跳过；GitHub 5xx/网络抖动 defer 重试）
+Worker：先对比 SMTP envelope recipient 与 PUBLISH_TO，再检查 envelope From + MIME From 白名单
+  │  postal-mime 解析正文、去签名；GitHub Contents API 更新年度分片
   ▼
-push → Cloud Pages 构建（~2 分钟）→ https://blog.serinap.top/shuoshuo/
+push → Cloudflare Pages 构建 → https://blog.serinap.top/shuoshuo/
 ```
 
-条目结构（type: `MAIL`，无点赞无外链；schema 见主仓库 `src/content.config.ts`）：
+## 私密收件地址迁移
+
+按此顺序操作，避免旧公开地址继续触发发布：
+
+1. 在本机生成至少 128 bit 随机地址。本例生成 128 bit（32 个十六进制字符）的随机本地部分；只在本机终端查看并保存，不要把实际地址写进仓库、截图或公开日志：
+
+   ```powershell
+   $bytes = [byte[]]::new(16)
+   $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+   $rng.GetBytes($bytes)
+   $rng.Dispose()
+   $localPart = 'shuo-' + [Convert]::ToHexString($bytes).ToLowerInvariant()
+   $publishTo = "$localPart@serinap.top"
+   $publishTo
+   ```
+
+2. 配置 Worker secrets。`PUBLISH_TO` 必填；缺失时 Worker 会拒绝所有邮件。为避免覆盖 Cloudflare 中已有但当前不可读取的 `ALLOWED_SENDERS`，保留现有 secret 原值，单独用 `ADDITIONAL_ALLOWED_SENDERS` 添加新 Gmail 地址：
+
+   ```bash
+   npx wrangler secret put PUBLISH_TO
+   # 粘贴上一步本机生成的完整地址
+
+   npx wrangler secret put ADDITIONAL_ALLOWED_SENDERS
+   # 输入：serina765p@gmail.com
+
+   npx wrangler secret put GITHUB_TOKEN
+   # 仅需在首次配置或轮换时执行；fine-grained PAT 只授予本仓库 Contents: Read and write
+   ```
+
+   保留当前 `ALLOWED_SENDERS`，它仍是原发件人白名单；运行时会把它与可选的 `ADDITIONAL_ALLOWED_SENDERS` 合并。若还未配置 `ALLOWED_SENDERS`，请先按已知的原有获准发件人清单设置，不能用新增 Gmail 列表代替原清单。
+
+3. 部署当前 Worker 代码：
+
+   ```bash
+   npx wrangler deploy
+   ```
+
+4. 在 Cloudflare Email Routing 中，只为刚生成的私密地址建立指向 `shuoshuo-mailer` 的规则。删除或停用原 `shuo@serinap.top` 到 Worker 的规则；不要设置会把旧公开地址或其他地址转发给此 Worker 的 catch-all 规则。确认只有新地址路由到该 Worker。
+
+5. 验证迁移：
+   - 从 `serina765p@gmail.com` 发到新地址，确认说说成功发布。
+   - 从未获准地址发到新地址，确认邮件被拒绝且 GitHub 仓库没有新提交。
+   - 检查 `shuo@serinap.top` 已不再路由到 Worker；即使旧路由误留，Worker 的信封收件人检查也会拒绝旧地址。
+   - 可用 `npx wrangler tail` 查看 Worker 运行情况；不要在日志或截图中暴露私密地址。
+
+## 邮件内容与条目
+
+主题是可选标题，正文是说说内容。Worker 优先读取 `text/plain`；只有 HTML 时才剥除标签。签名分隔线 `-- ` 及以下内容会被去掉；手机 QQ 等客户端不加分隔线时，会按发件人显示名和地址剥离尾部签名块。
+
+条目结构（`type: MAIL`，无点赞无外链；schema 见主仓库 `src/content.config.ts`）：
 
 ```json
 {
@@ -35,56 +79,18 @@ push → Cloud Pages 构建（~2 分钟）→ https://blog.serinap.top/shuoshuo/
 }
 ```
 
-## 部署步骤（一次性）
-
-1. **创建 Worker 并部署**
-
-   ```bash
-   cd worker
-   npm install
-   npx wrangler login
-   npx wrangler deploy
-   ```
-
-2. **配置三个 secret**（`wrangler.toml` 里只放公开变量，敏感项走 secret）：
-
-   ```bash
-   npx wrangler secret put GITHUB_TOKEN
-   # fine-grained PAT：Repository access 仅选 Serina-Astro，
-   # Permissions 只给 Contents: Read and write。建议设短有效期并定期轮换。
-
-   npx wrangler secret put ALLOWED_SENDERS
-   # 逗号分隔白名单，如：serinap@qq.com,serina@example.com
-
-   npx wrangler secret put SUBJECT_TOKEN
-   # 主题口令（可选）。配置后邮件主题必须包含该口令才会发布，
-   # 口令本身会从标题中剔除。强烈建议配置。
-   ```
-
-3. **开启 Email Routing 并挂路由**（Cloudflare 面板 → serinap.top → Email → Email Routing）：
-
-   - 启用 Email Routing（按提示添加 MX/TXT 记录）
-   - Routing rules → 新建：Catch-all 或指定地址 `shuo@serinap.top` → Action: **Send to a Worker** → 选 `shuoshuo-mailer`
-
-4. **验证**：从白名单地址发一封带口令的邮件，然后 `npx wrangler tail` 看日志；主仓库 `src/data/shuoshuo/<沪年>.json` 应多出一条 `type: MAIL` 的记录，Pages 构建完成后说说页可见。
-
 ## 本地测试
 
-解析/合并逻辑与 Cloudflare 解耦在 `src/lib.js`，可不依赖 CF 直接跑断言：
-
 ```bash
-npm test   # node test.mjs：解析/白名单/口令/签名/幂等/base64 往返
+npm test
 ```
 
-## 安全模型
+测试覆盖 SMTP envelope 收件人 fail-closed 校验、旧公开地址和错误地址拒绝、大小写/空格规范化、伪造 MIME To、发件人白名单合并，以及拒绝路径不访问 GitHub。
 
-- **白名单**：信封发件人（SMTP MAIL FROM）与头部 From 都必须在 `ALLOWED_SENDERS` 内。
-- **SPF/DKIM**：Authentication-Results 出现 `spf=fail` 或 `dkim=fail` 直接拒收（From 可以伪造，DMARC 校验结果是最后一道闸）。
-- **主题口令**：`SUBJECT_TOKEN` 配置后生效；即使邮箱地址泄露，没有口令的邮件进不来。
-- **权限最小化**：GitHub token 只授予单仓库的 Contents 读写，不能碰其他任何东西。
+## 安全边界
 
-## 后续计划
-
-- 图片支持：邮件附件 → R2（`statics.serinap.top`），条目 `images` 填 URL。
-- 编辑/删除命令：主题里写 `del <id>` 之类的指令。
-- 发布回执：通过 send_email 绑定回发确认邮件。
+- **私密收件人**：Worker 在解析邮件和发起任何 GitHub 请求之前，要求 SMTP envelope 的 `message.to` 与必填 `PUBLISH_TO` 完全匹配（忽略大小写与首尾空格）。MIME `To` 由发件人控制，不参与此判断。
+- **发件人白名单**：SMTP envelope From 和 MIME From 都必须在 `ALLOWED_SENDERS` 或 `ADDITIONAL_ALLOWED_SENDERS` 中。新增 Gmail 只放在附加列表，避免替换已有 secret。
+- **Authentication-Results**：不作为 SPF、DKIM 或 DMARC 的验证依据。邮件自带的该 MIME 头可伪造，Worker 不会据此宣称已完成发件域认证。
+- **邮箱安全**：私密地址降低被发现和滥用的机会；邮箱账户或获准发件人账户被盗时，攻击者仍可能向该地址发布。可选 `SUBJECT_TOKEN` 可增加一道检查，但会要求邮件主题包含口令。
+- **GitHub 权限**：token 只授予本仓库 Contents 读写权限。

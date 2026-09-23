@@ -9,7 +9,9 @@ GITHUB_BRANCH = "main"
 # 说说按年分片：<SHUOSHUO_DIR>/<沪年>.json，目标年份的分片不存在时由 worker 自动创建
 SHUOSHUO_DIR = "src/data/shuoshuo"
 
-# 以下三项为 secret，用 `wrangler secret put <NAME>` 配置，切勿写进本文件：
+# 以下为 secret，用 `wrangler secret put <NAME>` 配置，切勿写进本文件：
 #   GITHUB_TOKEN     —— fine-grained PAT，仅授予本仓库 Contents: Read and write
-#   ALLOWED_SENDERS  —— 逗号分隔的发件人白名单，如 "me@qq.com,me@example.com"
-#   SUBJECT_TOKEN    —— 主题口令（可选，不配置则只靠白名单）
+#   ALLOWED_SENDERS  —— 现有发件人白名单
+#   ADDITIONAL_ALLOWED_SENDERS —— 可选附加白名单，不覆盖 ALLOWED_SENDERS
+#   PUBLISH_TO       —— 必填的私密 SMTP 收件地址；缺失时拒绝所有邮件
+#   SUBJECT_TOKEN    —— 可选主题口令

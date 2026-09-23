@@ -58,10 +58,12 @@ export function isAllowed(from, allowList) {
   );
 }
 
-/** Authentication-Results 里出现 spf/dkim 硬失败视为校验未通过（伪造拦截） */
-export function authFailed(authResults) {
-  const s = String(authResults || '').toLowerCase();
-  return /spf\s*=\s*fail/.test(s) || /dkim\s*=\s*fail/.test(s);
+/** 合并逗号分隔的地址白名单，并统一大小写与首尾空格。 */
+export function parseAllowList(...values) {
+  return values
+    .flatMap((value) => String(value || '').split(','))
+    .map((address) => address.trim().toLowerCase())
+    .filter(Boolean);
 }
 
 /** 主题口令：SUBJECT_TOKEN 配置后，主题不含口令的邮件一律拒绝；口令从标题中剔除 */

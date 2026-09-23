@@ -2,13 +2,14 @@
 // 用法：cd worker && npm install && npm test
 import assert from 'node:assert/strict';
 import PostalMime from 'postal-mime';
+import { emailHandler } from './src/index.js';
 import {
-  authFailed,
   buildItem,
   createShard,
   fromBase64,
   isAllowed,
   mergeItem,
+  parseAllowList,
   shardPath,
   stripSignature,
   stripToken,
@@ -39,8 +40,10 @@ assert.match(mail.headers.find((h) => h.key === 'authentication-results').value,
 // ── 校验逻辑 ──
 assert.equal(isAllowed('Me@Example.com ', ['me@example.com']), true);
 assert.equal(isAllowed('stranger@evil.com', ['me@example.com']), false);
-assert.equal(authFailed('spf=fail (sender IP is ...)'), true);
-assert.equal(authFailed('spf=pass dkim=pass'), false);
+assert.deepEqual(parseAllowList(' Me@Example.com,', 'SERINA765P@GMAIL.COM '), [
+  'me@example.com',
+  'serina765p@gmail.com',
+]);
 
 const { subject, ok } = stripToken(mail.subject, '[s3cret]');
 assert.equal(ok, true);
@@ -162,6 +165,95 @@ assert.equal(shard.fetched_at, '2026-09-07T06:30:00.000Z');
 assert.equal(shard.count, 1);
 assert.deepEqual(shard.items, [item]);
 assert.equal(mergeItem(shard, item).changed, false, '同一 Message-ID 在新分片里也应跳过');
+
+// ── handler 安全边界：收件地址必须先匹配 SMTP envelope，拒绝路径不能访问 GitHub ──
+const PRIVATE_TO = 'private-inbox-test@example.test';
+const handlerEnv = {
+  PUBLISH_TO: PRIVATE_TO,
+  ALLOWED_SENDERS: 'me@example.com',
+  ADDITIONAL_ALLOWED_SENDERS: '',
+  GITHUB_REPO: 'owner/repo',
+  GITHUB_TOKEN: 'test-token',
+};
+let githubCalls = 0;
+const githubFetch = async (_url, init = {}) => {
+  githubCalls++;
+  if (init.method === 'PUT') return new Response('{}', { status: 201 });
+  return new Response('{}', { status: 404 });
+};
+function mockMessage({ to, from = 'me@example.com', raw = RAW_MAIL } = {}) {
+  const result = { rejected: null, deferred: false };
+  return {
+    result,
+    to,
+    from,
+    raw,
+    setReject(reason) {
+      result.rejected = reason;
+    },
+    defer() {
+      result.deferred = true;
+    },
+  };
+}
+
+const missingConfig = mockMessage({ to: PRIVATE_TO, raw: null });
+const missingPublishToEnv = { ...handlerEnv };
+delete missingPublishToEnv.PUBLISH_TO;
+await emailHandler(missingConfig, missingPublishToEnv, githubFetch);
+assert.equal(missingConfig.result.rejected, '发布收件地址未配置');
+assert.equal(githubCalls, 0);
+
+for (const recipient of ['shuo@serinap.top', 'another-private@example.test']) {
+  const mismatch = mockMessage({ to: recipient, raw: null });
+  await emailHandler(mismatch, handlerEnv, githubFetch);
+  assert.equal(mismatch.result.rejected, '收件地址不匹配');
+  assert.equal(githubCalls, 0, `${recipient} must not reach GitHub`);
+}
+
+const forgedMimeTo = mockMessage({
+  to: 'shuo@serinap.top',
+  raw: RAW_MAIL.replace('To: shuo@serinap.top', `To: ${PRIVATE_TO}`),
+});
+await emailHandler(forgedMimeTo, handlerEnv, githubFetch);
+assert.equal(forgedMimeTo.result.rejected, '收件地址不匹配');
+assert.equal(githubCalls, 0, 'a forged MIME To must not override the SMTP envelope recipient');
+
+const unknownSender = mockMessage({ to: PRIVATE_TO, from: 'stranger@evil.test' });
+await emailHandler(unknownSender, handlerEnv, githubFetch);
+assert.equal(unknownSender.result.rejected, '发件人不在白名单');
+assert.equal(githubCalls, 0);
+
+// SMTP 收件人匹配才控制发布；伪造 MIME To 和 Authentication-Results 不提供认证。
+const mimeToSpoof = mockMessage({ to: ` ${PRIVATE_TO.toUpperCase()} ` });
+await emailHandler(mimeToSpoof, handlerEnv, githubFetch);
+assert.equal(mimeToSpoof.result.rejected, null);
+assert.equal(
+  githubCalls,
+  2,
+  'accepted message should GET and PUT through the injected GitHub stub',
+);
+
+const gmailMail = RAW_MAIL.replace(
+  'From: 芹菜P <me@example.com>',
+  'From: Serina <serina765p@gmail.com>',
+).replace(
+  'Authentication-Results: spf=pass dkim=pass',
+  'Authentication-Results: spf=fail dkim=fail',
+);
+const gmailAllowed = mockMessage({
+  to: PRIVATE_TO,
+  from: ' SERINA765P@GMAIL.COM ',
+  raw: gmailMail,
+});
+const githubCallsBeforeGmail = githubCalls;
+await emailHandler(
+  gmailAllowed,
+  { ...handlerEnv, ADDITIONAL_ALLOWED_SENDERS: ' serina765p@gmail.com ' },
+  githubFetch,
+);
+assert.equal(gmailAllowed.result.rejected, null);
+assert.equal(githubCalls - githubCallsBeforeGmail, 2, 'additional Gmail sender should be accepted');
 
 console.log(
   '✅ 全部断言通过：解析/白名单/口令/签名（-- 线 + 手机端尾部块）/幂等/分片路径/base64 往返均符合预期',
