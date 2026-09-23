@@ -182,7 +182,7 @@ const githubFetch = async (_url, init = {}) => {
   return new Response('{}', { status: 404 });
 };
 function mockMessage({ to, from = 'me@example.com', raw = RAW_MAIL } = {}) {
-  const result = { rejected: null, deferred: false };
+  const result = { rejected: null };
   return {
     result,
     to,
@@ -191,22 +191,21 @@ function mockMessage({ to, from = 'me@example.com', raw = RAW_MAIL } = {}) {
     setReject(reason) {
       result.rejected = reason;
     },
-    defer() {
-      result.deferred = true;
-    },
   };
 }
+const callEmailHandler = (message, env, fetchImpl = githubFetch) =>
+  emailHandler(message, env, {}, fetchImpl);
 
 const missingConfig = mockMessage({ to: PRIVATE_TO, raw: null });
 const missingPublishToEnv = { ...handlerEnv };
 delete missingPublishToEnv.PUBLISH_TO;
-await emailHandler(missingConfig, missingPublishToEnv, githubFetch);
+await callEmailHandler(missingConfig, missingPublishToEnv);
 assert.equal(missingConfig.result.rejected, '发布收件地址未配置');
 assert.equal(githubCalls, 0);
 
 for (const recipient of ['shuo@serinap.top', 'another-private@example.test']) {
   const mismatch = mockMessage({ to: recipient, raw: null });
-  await emailHandler(mismatch, handlerEnv, githubFetch);
+  await callEmailHandler(mismatch, handlerEnv);
   assert.equal(mismatch.result.rejected, '收件地址不匹配');
   assert.equal(githubCalls, 0, `${recipient} must not reach GitHub`);
 }
@@ -215,18 +214,18 @@ const forgedMimeTo = mockMessage({
   to: 'shuo@serinap.top',
   raw: RAW_MAIL.replace('To: shuo@serinap.top', `To: ${PRIVATE_TO}`),
 });
-await emailHandler(forgedMimeTo, handlerEnv, githubFetch);
+await callEmailHandler(forgedMimeTo, handlerEnv);
 assert.equal(forgedMimeTo.result.rejected, '收件地址不匹配');
 assert.equal(githubCalls, 0, 'a forged MIME To must not override the SMTP envelope recipient');
 
 const unknownSender = mockMessage({ to: PRIVATE_TO, from: 'stranger@evil.test' });
-await emailHandler(unknownSender, handlerEnv, githubFetch);
+await callEmailHandler(unknownSender, handlerEnv);
 assert.equal(unknownSender.result.rejected, '发件人不在白名单');
 assert.equal(githubCalls, 0);
 
 // SMTP 收件人匹配才控制发布；伪造 MIME To 和 Authentication-Results 不提供认证。
 const mimeToSpoof = mockMessage({ to: ` ${PRIVATE_TO.toUpperCase()} ` });
-await emailHandler(mimeToSpoof, handlerEnv, githubFetch);
+await callEmailHandler(mimeToSpoof, handlerEnv);
 assert.equal(mimeToSpoof.result.rejected, null);
 assert.equal(
   githubCalls,
@@ -247,13 +246,73 @@ const gmailAllowed = mockMessage({
   raw: gmailMail,
 });
 const githubCallsBeforeGmail = githubCalls;
-await emailHandler(
-  gmailAllowed,
-  { ...handlerEnv, ADDITIONAL_ALLOWED_SENDERS: ' serina765p@gmail.com ' },
-  githubFetch,
-);
+await callEmailHandler(gmailAllowed, {
+  ...handlerEnv,
+  ADDITIONAL_ALLOWED_SENDERS: ' serina765p@gmail.com ',
+});
 assert.equal(gmailAllowed.result.rejected, null);
 assert.equal(githubCalls - githubCallsBeforeGmail, 2, 'additional Gmail sender should be accepted');
+
+const contextMessage = mockMessage({ to: PRIVATE_TO });
+const contextObject = { waitUntil() {} };
+const githubCallsBeforeContext = githubCalls;
+await emailHandler(contextMessage, handlerEnv, contextObject, githubFetch);
+assert.equal(contextMessage.result.rejected, null);
+assert.equal(
+  githubCalls - githubCallsBeforeContext,
+  2,
+  'the Cloudflare third-argument ctx must not be mistaken for fetch',
+);
+
+// ── GitHub 故障必须显式 SMTP 拒收；ForwardableEmailMessage 没有 defer() ──
+const originalConsoleError = console.error;
+const failureLogs = [];
+console.error = (...args) => failureLogs.push(args.join(' '));
+try {
+  const getThrow = mockMessage({ to: PRIVATE_TO });
+  let getThrowCalls = 0;
+  await callEmailHandler(getThrow, handlerEnv, async () => {
+    getThrowCalls++;
+    throw new Error(`connection failed ${handlerEnv.GITHUB_TOKEN} ${PRIVATE_TO}`);
+  });
+  assert.equal(getThrow.result.rejected, 'GitHub 读取失败（网络错误）');
+  assert.equal(getThrowCalls, 1, 'GET network error must not proceed to PUT');
+
+  const get5xx = mockMessage({ to: PRIVATE_TO });
+  let get5xxCalls = 0;
+  await callEmailHandler(get5xx, handlerEnv, async () => {
+    get5xxCalls++;
+    return new Response('unavailable', { status: 503 });
+  });
+  assert.equal(get5xx.result.rejected, 'GitHub 读取失败 503');
+  assert.equal(get5xxCalls, 1, 'GET 5xx must not proceed to PUT');
+
+  const putThrow = mockMessage({ to: PRIVATE_TO });
+  let putThrowCalls = 0;
+  await callEmailHandler(putThrow, handlerEnv, async (_url, init = {}) => {
+    putThrowCalls++;
+    if (init.method === 'PUT') throw new Error('connection reset');
+    return new Response('{}', { status: 404 });
+  });
+  assert.equal(putThrow.result.rejected, 'GitHub 提交失败（网络错误）');
+  assert.equal(putThrowCalls, 2);
+
+  const put5xx = mockMessage({ to: PRIVATE_TO });
+  let put5xxCalls = 0;
+  await callEmailHandler(put5xx, handlerEnv, async (_url, init = {}) => {
+    put5xxCalls++;
+    if (init.method === 'PUT') return new Response('unavailable', { status: 502 });
+    return new Response('{}', { status: 404 });
+  });
+  assert.equal(put5xx.result.rejected, 'GitHub 提交失败 502');
+  assert.equal(put5xxCalls, 2);
+} finally {
+  console.error = originalConsoleError;
+}
+assert.equal(failureLogs.length, 4, 'network errors and 5xx responses should be logged');
+assert.match(failureLogs[0], /GET/);
+assert.match(failureLogs[0], /connection failed/);
+assert.doesNotMatch(failureLogs.join('\n'), /test-token|private-inbox-test@example\.test/);
 
 console.log(
   '✅ 全部断言通过：解析/白名单/口令/签名（-- 线 + 手机端尾部块）/幂等/分片路径/base64 往返均符合预期',

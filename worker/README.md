@@ -93,5 +93,6 @@ npm test
 - **私密收件人**：Worker 在解析邮件和发起任何 GitHub 请求之前，要求 SMTP envelope 的 `message.to` 与必填 `PUBLISH_TO` 完全匹配（忽略大小写与首尾空格）。MIME `To` 由发件人控制，不参与此判断。
 - **发件人白名单**：SMTP envelope From 和 MIME From 都必须在 `ALLOWED_SENDERS` 或 `ADDITIONAL_ALLOWED_SENDERS` 中。新增 Gmail 只放在附加列表，避免替换已有 secret。
 - **Authentication-Results**：不作为 SPF、DKIM 或 DMARC 的验证依据。邮件自带的该 MIME 头可伪造，Worker 不会据此宣称已完成发件域认证。
+- **GitHub 故障处理**：Cloudflare Email Worker 的 `message.setReject()` 会以永久 SMTP 错误拒收邮件；该 API 没有延迟/暂存后重试的方法。因此 GitHub 网络异常或 5xx 时邮件不会自动重试，发件方收到拒信后需稍后手动重发。
 - **邮箱安全**：私密地址降低被发现和滥用的机会；邮箱账户或获准发件人账户被盗时，攻击者仍可能向该地址发布。可选 `SUBJECT_TOKEN` 可增加一道检查，但会要求邮件主题包含口令。
 - **GitHub 权限**：token 只授予本仓库 Contents 读写权限。

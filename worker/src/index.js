@@ -30,7 +30,27 @@ function gh(env, path, init = {}, fetchImpl = fetch) {
   });
 }
 
-export async function emailHandler(message, env, fetchImpl = fetch) {
+function safeErrorValue(value, env) {
+  let text = String(value || 'unknown error');
+  const publishTo = String(env.PUBLISH_TO || '').trim();
+  const secrets = [env.GITHUB_TOKEN, publishTo, publishTo.toLowerCase(), publishTo.toUpperCase()];
+  for (const secret of secrets) {
+    if (secret) text = text.replaceAll(String(secret), '[redacted]');
+  }
+  return text.slice(0, 500);
+}
+
+function logGitHubFailure(stage, env, { error, status } = {}) {
+  const detail = { stage };
+  if (status !== undefined) detail.status = status;
+  if (error) {
+    detail.name = safeErrorValue(error.name, env);
+    detail.message = safeErrorValue(error.message || error, env);
+  }
+  console.error('GitHub request failed', JSON.stringify(detail));
+}
+
+export async function emailHandler(message, env, _ctx, fetchImpl = fetch) {
   // ── 1. 先验证 SMTP envelope recipient；MIME To 可由发件人任意填写 ──
   const publishTo = String(env.PUBLISH_TO || '')
     .trim()
@@ -87,8 +107,9 @@ export async function emailHandler(message, env, fetchImpl = fetch) {
   let getRes;
   try {
     getRes = await gh(env, `${path}?ref=${branch}`, {}, fetchImpl);
-  } catch {
-    return message.defer(); // 网络抖动：重新入队，稍后重投
+  } catch (error) {
+    logGitHubFailure('GET', env, { error });
+    return message.setReject('GitHub 读取失败（网络错误）');
   }
 
   let meta = null;
@@ -99,9 +120,8 @@ export async function emailHandler(message, env, fetchImpl = fetch) {
     meta = await getRes.json();
     data = JSON.parse(fromBase64(meta.content));
   } else {
-    return getRes.status >= 500
-      ? message.defer()
-      : message.setReject(`GitHub 读取失败 ${getRes.status}`);
+    if (getRes.status >= 500) logGitHubFailure('GET', env, { status: getRes.status });
+    return message.setReject(`GitHub 读取失败 ${getRes.status}`);
   }
 
   if (meta) {
@@ -109,24 +129,29 @@ export async function emailHandler(message, env, fetchImpl = fetch) {
     if (!changed) return; // 同一封邮件重复投递：静默跳过
   }
 
-  const putRes = await gh(
-    env,
-    path,
-    {
-      method: 'PUT',
-      body: JSON.stringify({
-        message: `说说(mail): ${subject || item.published_at}`,
-        content: toBase64(`${JSON.stringify(data, null, 2)}\n`),
-        ...(meta ? { sha: meta.sha } : {}),
-        branch,
-      }),
-    },
-    fetchImpl,
-  );
+  let putRes;
+  try {
+    putRes = await gh(
+      env,
+      path,
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          message: `说说(mail): ${subject || item.published_at}`,
+          content: toBase64(`${JSON.stringify(data, null, 2)}\n`),
+          ...(meta ? { sha: meta.sha } : {}),
+          branch,
+        }),
+      },
+      fetchImpl,
+    );
+  } catch (error) {
+    logGitHubFailure('PUT', env, { error });
+    return message.setReject('GitHub 提交失败（网络错误）');
+  }
   if (!putRes.ok) {
-    return putRes.status >= 500
-      ? message.defer()
-      : message.setReject(`GitHub 提交失败 ${putRes.status}`);
+    if (putRes.status >= 500) logGitHubFailure('PUT', env, { status: putRes.status });
+    return message.setReject(`GitHub 提交失败 ${putRes.status}`);
   }
   // 成功：邮件照常投递入站（不 reject），无需回执
 }
