@@ -1,8 +1,18 @@
 {
   "source": "mail-to-github",
-  "fetched_at": "2026-09-23T14:33:09.542Z",
-  "count": 4,
+  "fetched_at": "2026-09-23T14:34:13.501Z",
+  "count": 5,
   "items": [
+    {
+      "id": "CAO+PAttMJUKA_=HDKY6YJiadnhfyXJUXvwZrXJxv6QyWDX3vjg@mail.gmail.com",
+      "title": "邮件说说管道验收测试 2026-09-23 B",
+      "type": "MAIL",
+      "content": "私密收件地址与 Gmail 白名单联通测试，第二封。",
+      "images": [],
+      "link": "",
+      "like": 0,
+      "published_at": "2026-09-23T14:26:44.000Z"
+    },
     {
       "id": "CAO+PAttiASDgOj59AOF3opRrREh13Tnk6p=-z9pSFSByx17cHA@mail.gmail.com",
       "title": "邮件说说管道验收测试 2026-09-23 D",
