@@ -14,127 +14,114 @@ const posts = (await getCollection('posts')).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
 );
 const recent = [...posts]
-  .sort((a, b) => Number(b.data.pinned) - Number(a.data.pinned) || b.data.date.valueOf() - a.data.date.valueOf())
+  .sort(
+    (a, b) =>
+      Number(b.data.pinned) - Number(a.data.pinned) || b.data.date.valueOf() - a.data.date.valueOf(),
+  )
   .slice(0, 6);
 
-// 最近一条说说（截断展示，完整内容在 /shuoshuo/）
-const latestSay = (await getCollection('shuoshuo')).sort(
+const shuoshuo = await getCollection('shuoshuo');
+const latestSay = [...shuoshuo].sort(
   (a, b) => b.data.published_at.valueOf() - a.data.published_at.valueOf(),
 )[0];
 
-// 高频标签
 const tagCount = new Map<string, number>();
-for (const post of posts) for (const t of post.data.tags) tagCount.set(t, (tagCount.get(t) ?? 0) + 1);
+for (const post of posts) {
+  for (const tag of post.data.tags) tagCount.set(tag, (tagCount.get(tag) ?? 0) + 1);
+}
 const topTags = [...tagCount.entries()].sort((a, b) => b[1] - a[1]).slice(0, 9);
-
-// 建站天数：以最早一篇文章的日期起算
 const oldest = posts[posts.length - 1]?.data.date;
 const days = oldest ? Math.max(1, Math.ceil((Date.now() - oldest.valueOf()) / 86400000)) : 1;
-
-const shuoshuoCount = (await getCollection('shuoshuo')).length;
-// 先压缩空白再统一截断与判断（原文换行多时长度会虚高，导致误加省略号）
 const sayPlain = latestSay ? stripShuoshuoTags(latestSay.data.content).replace(/\s+/g, ' ') : '';
-const sayText = sayPlain.slice(0, 88) + (sayPlain.length > 88 ? '…' : '');
+const sayText = sayPlain.slice(0, 120) + (sayPlain.length > 120 ? '…' : '');
 const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
 ---
 
 <BaseLayout title={`${SITE.title} · ${SITE.subtitle}`} description={SITE.description} pathname="/" mainClass="py-0">
-  <!-- 个人主页已独立存在：首页保留轻量身份提示，把首屏空间还给文章。 -->
-  <section class="border-b border-line bg-surface/60">
-    <Container width="standard" class="flex items-center gap-4 py-8 sm:gap-5 sm:py-10">
-      <Image
-        src={HERO.avatar}
-        alt={`${SITE.author} 的头像`}
-        width={128}
-        height={128}
-        layout="fixed"
-        loading="eager"
-        fetchpriority="high"
-        class="size-16 shrink-0 rounded-2xl object-cover shadow-card sm:size-20"
-      />
-      <div class="min-w-0">
-        <p class="text-xs font-medium tracking-[0.18em] text-wash-mist-deep">{SITE.title}</p>
-        <h1 class="mt-1 font-hero text-3xl tracking-[0.12em] text-ink [text-wrap:balance] sm:text-4xl">
-          {SITE.subtitle}
-        </h1>
-        <p class="mt-2 max-w-2xl text-sm leading-relaxed text-sub">{SITE.description}</p>
+  <section class="home-hero border-b border-line" aria-labelledby="home-title">
+    <Container width="standard" class="hero-inner">
+      <div class="hero-copy">
+        <h1 id="home-title">{SITE.subtitle}</h1>
+        <p class="hero-description">{SITE.description}</p>
+      </div>
+      <div class="hero-portrait">
+        <span class="hero-mark" aria-hidden="true">せりな</span>
+        <Image
+          src={HERO.avatar}
+          alt={`${SITE.author} 的头像`}
+          width={160}
+          height={160}
+          layout="fixed"
+          loading="eager"
+          fetchpriority="high"
+          class="hero-avatar"
+        />
+        <span class="hero-caption">芹菜P / SERINA</span>
       </div>
     </Container>
   </section>
 
-  <Container width="standard" class="flex flex-col pb-16">
-    <section class="order-1 pt-14 sm:pt-16">
-      <!-- 最近文章（spine 卡） -->
-      <div class="sec-head">
-        <h2>最近写下的</h2>
-        <span>RECENT · 按时间</span>
+  <Container width="standard" class="home-content">
+    <section id="recent" class="recent-section" aria-labelledby="recent-title">
+      <div class="section-heading">
+        <div>
+          <h2 id="recent-title">最近写下的</h2>
+        </div>
       </div>
-      {
-        recent.some((post) => post.data.pinned) && (
-          <p class="mb-4 text-sm text-sub">置顶文章会优先显示，其他文章仍按发布时间排列。</p>
-        )
-      }
-      <div class="space-y-4">
-        {recent.map((post) => <PostCard post={post} />)}
+      <div class="post-list">
+        {recent.map((post) => <PostCard post={post} variant="directory" />)}
       </div>
       {
         posts.length > recent.length && (
-            <a
-              href="/archives/"
-              class="mt-7 inline-block text-sm text-wash-pink-deep transition-colors hover:text-wash-rose-deep"
-            >
-              查看全部 {posts.length} 篇 →
-            </a>
+          <a href="/archives/" class="archive-link">
+            查看全部 {posts.length} 篇文章 <Icon name="material-symbols:arrow-forward" class="size-4" aria-hidden="true" />
+          </a>
         )
       }
     </section>
 
-    <section class="order-2 mt-12">
-    <!-- 便当盒信息区 -->
-    <div class="sec-head">
-      <h2>小站速览</h2>
-      <span>BENTO · 一格一格装满日常</span>
-    </div>
-    <div class="bento">
-      <div class="cell stat"><div class="v">{posts.length}<small> 篇</small></div><div class="k">文章</div></div>
-      <div class="cell stat"><div class="v">{shuoshuoCount}<small> 条</small></div><div class="k">说说</div></div>
-      <div class="cell stat"><div class="v">{days}<small> 天</small></div><div class="k">持续更新</div></div>
-      <div class="cell stat"><div class="v">{tagCount.size}<small> 个</small></div><div class="k">标签</div></div>
+    <section class="site-index" aria-labelledby="index-title">
+      <div class="section-heading index-heading">
+        <div>
+          <h2 id="index-title">小站索引</h2>
+        </div>
+      </div>
 
-      {
-        latestSay && (
-          <div class="cell say-cell">
-            <div class="label">
-              <span class="ico bg-wash-sand" aria-hidden="true">💬</span>最近的说说
-              <a href="/shuoshuo/" class="more">全部 →</a>
+      <dl class="stats-row" aria-label="站点统计">
+        <div><dt>文章</dt><dd>{posts.length}<span>篇</span></dd></div>
+        <div><dt>说说</dt><dd>{shuoshuo.length}<span>条</span></dd></div>
+        <div><dt>持续更新</dt><dd>{days}<span>天</span></dd></div>
+        <div><dt>标签</dt><dd>{tagCount.size}<span>个</span></dd></div>
+      </dl>
+
+      <div class="index-grid">
+        {
+          latestSay && (
+            <div class="latest-say">
+              <div class="index-label"><Icon name="material-symbols:chat-bubble-outline" class="size-4" aria-hidden="true" />最近的说说</div>
+              <p class="say-text">{sayText}</p>
+              <div class="say-meta"><time datetime={latestSay.data.published_at.toISOString()}>{sayTime}</time><a href="/shuoshuo/">查看时间线 <Icon name="material-symbols:arrow-forward" class="size-3.5" aria-hidden="true" /></a></div>
             </div>
-            <div class="bubble">{sayText}</div>
-            <div class="time">{sayTime} · {latestSay.data.type === 'MAIL' ? '来自邮件' : '来自哔哩哔哩'}</div>
-          </div>
-        )
-      }
-
-      <div class="cell cloud-cell lift">
-        <div class="label"><span class="ico bg-wash-mist" aria-hidden="true">◈</span>标签云</div>
-        <div class="mt-3 flex flex-wrap content-start gap-2">
-          {
-            topTags.map(([name]) => (
-              <TagChip href={`/tags/${tagSlug(name)}/`} label={name} size="cloud" />
-            ))
-          }
+          )
+        }
+        <div class="index-links">
+          <div class="index-label"><Icon name="material-symbols:link" class="size-4" aria-hidden="true" />进入其他页面</div>
+          <nav class="quick-links" aria-label="快捷入口">
+            <a href="/search/"><Icon name="material-symbols:search" class="size-4" aria-hidden="true" />搜索</a>
+            <a href="/shuoshuo/"><Icon name="material-symbols:chat-bubble-outline" class="size-4" aria-hidden="true" />说说</a>
+            <a href="/rss.xml"><Icon name="material-symbols:rss-feed" class="size-4" aria-hidden="true" />RSS</a>
+            <a href="https://github.com/Serina765P" target="_blank" rel="noopener"><Icon name="simple-icons:github" class="size-4" aria-hidden="true" />GitHub</a>
+          </nav>
         </div>
       </div>
 
-      <div class="cell quick-cell lift">
-        <div class="label"><span class="ico bg-wash-pink" aria-hidden="true">⚡</span>快捷入口</div>
-        <div class="mt-3 grid flex-1 grid-cols-4 gap-2.5">
-          <a href="/search/" class="quick"><Icon name="material-symbols:search" class="size-5" aria-hidden="true" />搜索</a>
-          <a href="/shuoshuo/" class="quick"><Icon name="material-symbols:chat" class="size-5" aria-hidden="true" />说说</a>
-          <a href="/rss.xml" class="quick"><Icon name="material-symbols:send" class="size-5" aria-hidden="true" />RSS</a>
-          <a href="https://github.com/Serina765P" target="_blank" rel="noopener" class="quick"><Icon name="simple-icons:github" class="size-5" aria-hidden="true" />GitHub</a>
+      <div class="tag-index">
+        <div class="index-label"><Icon name="material-symbols:label-outline" class="size-4" aria-hidden="true" />常用标签</div>
+        <div class="tag-list">
+          {topTags.map(([name]) => <TagChip href={`/tags/${tagSlug(name)}/`} label={name} size="cloud" />)}
+          <a href="/tags/" class="all-tags">全部标签 <Icon name="material-symbols:arrow-forward" class="size-3.5" aria-hidden="true" /></a>
         </div>
       </div>
-    </div>
     </section>
   </Container>
 </BaseLayout>
@@ -142,92 +129,394 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
 <style>
   @reference '../styles/global.css';
 
-  .sec-head {
-    @apply mb-5 flex flex-wrap items-baseline gap-x-4 gap-y-1;
-  }
-  .sec-head h2 {
-    @apply text-xl tracking-[0.16em] text-ink;
-  }
-  .sec-head span {
-    @apply text-xs tracking-[0.14em] text-sub;
+  .home-hero {
+    background: linear-gradient(112deg, var(--brand-wash) 0%, var(--surface) 68%);
   }
 
-  /* 便当盒 */
-  .bento {
+  .hero-inner {
     display: grid;
-    gap: 14px;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    grid-template-rows: auto auto auto;
-    grid-template-areas:
-      's1 s2 s3 s4'
-      'say say say say'
-      'cloud cloud quick quick';
+    grid-template-columns: minmax(0, 1fr) 12rem;
+    gap: 3rem;
+    align-items: center;
+    min-height: 20rem;
+    padding-top: 2.75rem;
+    padding-bottom: 2.75rem;
+  }
 
-    /* 中小屏保持统计数据的可扫读密度；内容卡片仍然跨满整行。 */
-    @variant max-bento {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      grid-template-rows: none;
-      grid-template-areas:
-        's1 s2'
-        's3 s4'
-        'say say'
-        'cloud cloud'
-        'quick quick';
+  .hero-copy {
+    max-width: 42rem;
+  }
+
+  .hero-caption {
+    color: var(--brand-strong);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    line-height: 1.4;
+  }
+
+  .hero-copy h1 {
+    color: var(--ink);
+    font-family: var(--font-hero);
+    font-size: clamp(2.2rem, 6vw, 4rem);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  .hero-description {
+    max-width: 34rem;
+    margin-top: 1rem;
+    color: var(--sub);
+    font-size: 0.95rem;
+    line-height: 1.8;
+  }
+
+  .archive-link,
+  .say-meta a,
+  .all-tags {
+    display: inline-flex;
+    min-height: 2.5rem;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--brand-strong);
+    font-size: 0.83rem;
+    font-weight: 600;
+    transition: color 180ms ease, background-color 180ms ease;
+  }
+
+  .archive-link:hover,
+  .say-meta a:hover,
+  .all-tags:hover {
+    color: var(--brand);
+  }
+
+  .hero-portrait {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 0.75rem;
+  }
+
+  .hero-avatar {
+    position: relative;
+    z-index: 1;
+    width: 9rem;
+    height: 9rem;
+    border: 0.35rem solid var(--surface);
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand) 42%, transparent);
+  }
+
+  .hero-mark {
+    position: absolute;
+    top: -1rem;
+    right: -0.5rem;
+    color: color-mix(in srgb, var(--brand) 35%, var(--surface));
+    font-family: var(--font-hero);
+    font-size: 2rem;
+    letter-spacing: 0.12em;
+    writing-mode: vertical-rl;
+  }
+
+  .hero-caption {
+    color: var(--sub);
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+  }
+
+  .home-content {
+    padding-bottom: 5rem;
+  }
+
+  .recent-section {
+    padding-top: 3.75rem;
+  }
+
+  .section-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-heading h2 {
+    color: var(--ink);
+    font-size: 1.45rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+  }
+
+  .post-list {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .archive-link {
+    margin-top: 1.5rem;
+  }
+
+  .site-index {
+    margin-top: 4rem;
+    border-top: 1px solid var(--line);
+    padding-top: 2rem;
+  }
+
+  .index-heading {
+    margin-bottom: 1rem;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-block: 1px solid var(--line);
+  }
+
+  .stats-row > div {
+    padding: 1.2rem 1rem;
+    border-right: 1px solid var(--line);
+  }
+
+  .stats-row > div:last-child {
+    border-right: 0;
+  }
+
+  .stats-row dt,
+  .index-label {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--sub);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+  }
+
+  .stats-row dd {
+    margin-top: 0.35rem;
+    color: var(--ink);
+    font-size: 1.8rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+  }
+
+  .stats-row dd span {
+    margin-left: 0.25rem;
+    color: var(--sub);
+    font-size: 0.72rem;
+  }
+
+  .index-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(15rem, 0.75fr);
+    gap: 2rem;
+    padding-top: 2rem;
+  }
+
+  .latest-say,
+  .index-links {
+    min-width: 0;
+  }
+
+  .say-text {
+    max-width: 42rem;
+    margin-top: 1rem;
+    color: var(--body);
+    font-size: 0.95rem;
+    line-height: 1.8;
+  }
+
+  .say-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.8rem;
+    color: var(--sub);
+    font-size: 0.75rem;
+  }
+
+  .quick-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    margin-top: 1rem;
+  }
+
+  .quick-links a {
+    display: inline-flex;
+    min-height: 2.5rem;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--body);
+    font-size: 0.82rem;
+    transition: color 180ms ease;
+  }
+
+  .quick-links a:hover {
+    color: var(--brand-strong);
+  }
+
+  .tag-index {
+    margin-top: 2rem;
+    border-top: 1px solid var(--line);
+    padding-top: 1.5rem;
+  }
+
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.9rem;
+  }
+
+  .all-tags {
+    min-height: 2rem;
+    margin-left: 0.25rem;
+    font-size: 0.75rem;
+  }
+
+  @media (max-width: 55rem) {
+    .hero-inner {
+      grid-template-columns: minmax(0, 1fr) 9rem;
+      gap: 2rem;
+    }
+
+    .hero-avatar {
+      width: 7.5rem;
+      height: 7.5rem;
     }
   }
-  /* 抬升只给可交互的格子（标签云/快捷入口），非交互格子保持安静 —— 可供性要诚实 */
-  .bento > .cell {
-    @apply rounded-2xl border border-line bg-surface p-5 shadow-card;
-    min-height: 0;
-  }
-  .bento > .cell.lift {
-    @apply transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card-hover;
-  }
-  .cell:nth-of-type(1) { grid-area: s1; }
-  .cell:nth-of-type(2) { grid-area: s2; }
-  .cell:nth-of-type(3) { grid-area: s3; }
-  .cell:nth-of-type(4) { grid-area: s4; }
-  .cloud-cell { grid-area: cloud; }
-  .quick-cell { grid-area: quick; }
 
-  .stat {
-    @apply flex min-h-28 flex-col justify-center gap-0.5 bg-surface-2 text-center;
-  }
-  .stat .v {
-    @apply text-4xl text-ink;
-  }
-  .stat .v small {
-    @apply text-sm text-sub;
-  }
-  .stat .k {
-    @apply text-xs tracking-[0.3em] text-sub;
+  @media (max-width: 48rem) {
+    .hero-inner {
+      grid-template-columns: minmax(0, 1fr) 6.5rem;
+      gap: 1rem;
+      min-height: 0;
+      padding-top: 2.75rem;
+      padding-bottom: 2.75rem;
+    }
+
+    .hero-copy h1 {
+      font-size: clamp(1.9rem, 8vw, 3rem);
+    }
+
+    .hero-description {
+      font-size: 0.86rem;
+    }
+
+    .hero-avatar {
+      width: 5.75rem;
+      height: 5.75rem;
+      border-width: 0.25rem;
+    }
+
+    .hero-mark {
+      top: -1.25rem;
+      right: -0.75rem;
+      font-size: 1.4rem;
+    }
+
+    .hero-caption {
+      font-size: 0.52rem;
+      letter-spacing: 0.08em;
+    }
+
+    .recent-section {
+      padding-top: 3.25rem;
+    }
+
+    .section-heading {
+      margin-bottom: 1.25rem;
+    }
+
+    .stats-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .stats-row > div:nth-child(2) {
+      border-right: 0;
+    }
+
+    .stats-row > div:nth-child(-n + 2) {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .index-grid {
+      grid-template-columns: 1fr;
+      gap: 1.75rem;
+    }
+
+    .site-index {
+      margin-top: 4rem;
+    }
   }
 
-  .label {
-    @apply flex items-center gap-2 text-[11px] tracking-[0.18em] text-sub;
-  }
-  .label .ico {
-    @apply grid size-5.5 shrink-0 place-items-center rounded-lg text-[11px] text-on-wash;
-  }
-  .label .more {
-    @apply ml-auto text-xs text-wash-pink-deep tracking-normal;
-  }
-  .say-cell { grid-area: say; }
-  .say-cell .bubble {
-    @apply mt-3 rounded-3xl rounded-bl-lg bg-surface-2 px-5 py-3.5 text-sm leading-relaxed text-body;
-  }
-  .say-cell .time {
-    @apply mt-2.5 text-xs text-sub;
-  }
-  .quick {
-    @apply flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-chip px-2 py-3.5 text-xs font-medium text-chip-fg transition-colors hover:bg-chip-hover hover:text-chip-fg-hover;
+  @media (max-width: 36rem) {
+    .hero-inner {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.25rem;
+      padding-top: 2rem;
+      padding-bottom: 2.25rem;
+    }
+
+    .hero-portrait {
+      grid-row: 2;
+      display: flex;
+      justify-content: flex-start;
+      gap: 1rem;
+    }
+
+    .hero-copy {
+      grid-row: 1;
+    }
+
+    .hero-copy h1 {
+      margin-top: 0.65rem;
+      font-size: clamp(2rem, 10vw, 2.75rem);
+      letter-spacing: 0.06em;
+      line-height: 1.2;
+    }
+
+    .hero-description {
+      max-width: none;
+      margin-top: 0.8rem;
+      font-size: 0.9rem;
+    }
+
+    .hero-avatar {
+      width: 4.5rem;
+      height: 4.5rem;
+      border-width: 0.25rem;
+    }
+
+    .hero-mark {
+      top: -0.4rem;
+      right: auto;
+      left: 3.2rem;
+      font-size: 1.2rem;
+    }
+
+    .hero-caption {
+      font-size: 0.65rem;
+      letter-spacing: 0.13em;
+    }
+
+    .post-list {
+      gap: 1rem;
+    }
   }
 
-  /* 窄屏折叠（S14）：让每格回到自动排布。
-     必须留在样式块最后 —— 与上面的 .cell:nth-of-type(n) 同特异性（0,2,0），靠源序压过它们 */
-  .bento > .cell {
-    @variant max-bento {
-      grid-area: auto;
+  @media (prefers-reduced-motion: reduce) {
+    .archive-link,
+    .say-meta a,
+    .all-tags,
+    .quick-links a {
+      transition: none;
     }
   }
 </style>

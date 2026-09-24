@@ -24,11 +24,23 @@
   --code-bg: #262d34;
   --code-ink: #eef3f5;
 
+  /* 首页品牌色：芹菜 / せりな的人名识别，不与分类色相混用。 */
+  --brand: var(--paint-brand);
+  --brand-strong: var(--paint-brand-strong);
+  --brand-soft: var(--paint-brand-soft);
+  --brand-wash: var(--paint-brand-wash);
+  --brand-on: var(--paint-brand-on);
+
   /* ── 颜料阶（S13）：全站唯一允许写死色值的地方 ──
      两个家族：
      · --paint-accent-50..950  蓝灰强调阶，静态（不随 .dark 翻转）
      · --paint-<色相>[-deep]   信息蓝灰、行动陶土等语义色，亮/暗各一套
      消费方一律走别名：强调阶走 @theme 的 --color-accent-*，语义色走 --wash-*。 */
+  --paint-brand: #788bc5;
+  --paint-brand-strong: #5269ad;
+  --paint-brand-soft: #eef1fa;
+  --paint-brand-wash: #f7f8fc;
+  --paint-brand-on: #ffffff;
   --paint-accent-50: #f4f7f8;
   --paint-accent-100: #e5ecef;
   --paint-accent-200: #cddbe0;
@@ -73,6 +85,12 @@
   --code-bg: #14191d;
   --code-ink: #e1e8eb;
 
+  --paint-brand: #9cace0;
+  --paint-brand-strong: #c0caf0;
+  --paint-brand-soft: color-mix(in srgb, var(--paint-brand-source) 24%, var(--surface));
+  --paint-brand-wash: color-mix(in srgb, var(--paint-brand-source) 10%, var(--surface));
+  --paint-brand-on: #20262b;
+  --paint-brand-source: #788bc5;
   --paint-pink: #7b5049;
   --paint-pink-deep: #e0aa98;
   --paint-mist: #506874;
@@ -258,6 +276,11 @@
   --color-nav: var(--nav-bg);
   --color-code-bg: var(--code-bg);
   --color-code-ink: var(--code-ink);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-wash: var(--brand-wash);
+  --color-brand-on: var(--brand-on);
 
   --color-wash-pink: var(--wash-pink);
   --color-wash-pink-deep: var(--wash-pink-deep);

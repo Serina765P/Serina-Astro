@@ -21,9 +21,12 @@ interface Props {
       pinned: boolean;
     };
   };
+  /** 首页目录式列表使用扁平变体；分类页和标签页保留原卡片样式。 */
+  variant?: 'default' | 'directory';
 }
 
-const { post } = Astro.props;
+const { post, variant = 'default' } = Astro.props;
+const isDirectory = variant === 'directory';
 const href = `/posts/${post.id}/`;
 const minutes = post.body ? readingTime(post.body) : null;
 const category = post.data.categories[0];
@@ -33,9 +36,11 @@ const cover = getPostCover(post.id, post.data.cover);
 
 <Card
   as="article"
+  lift={!isDirectory}
   class:list={[
     'group relative overflow-hidden',
-    cover ? 'p-0' : 'py-5 pr-5 pl-6 sm:py-6 sm:pr-6 sm:pl-7',
+    isDirectory ? (cover ? 'directory directory-with-cover' : 'directory') : '',
+    !isDirectory && (cover ? 'p-0' : 'py-5 pr-5 pl-6 sm:py-6 sm:pr-6 sm:pl-7'),
   ]}
 >
   {
@@ -48,22 +53,37 @@ const cover = getPostCover(post.id, post.data.cover);
         height={cover.height}
         layout="constrained"
         loading="lazy"
-        class="post-cover h-44 w-full object-cover sm:h-52"
+        class:list={['post-cover w-full object-cover', isDirectory ? 'h-full min-h-28' : 'h-44 sm:h-52']}
       />
     )
   }
   <span
     aria-hidden="true"
-    class:list={['absolute left-0 w-[5px] rounded-r-full', cover ? 'top-44 bottom-0 sm:top-52' : 'top-5 bottom-5']}
+    class:list={[
+      'absolute left-0 w-[5px] rounded-r-full',
+      isDirectory ? 'top-0 bottom-0' : cover ? 'top-44 bottom-0 sm:top-52' : 'top-5 bottom-5',
+    ]}
     style={`background:${spine}`}
   />
-  <div class:list={['relative', cover ? 'p-5 sm:p-6 sm:pl-7' : '']}>
+  <div class:list={['relative', cover && !isDirectory ? 'p-5 sm:p-6 sm:pl-7' : '']}>
     <h2 class="text-lg leading-snug sm:text-xl">
       <a
         href={href}
-        class="text-ink transition-colors after:absolute after:inset-0 group-hover:text-wash-pink-deep"
+        class:list={[
+          'text-ink transition-colors after:absolute after:inset-0',
+          isDirectory ? 'directory-title-link' : 'group-hover:text-wash-pink-deep',
+        ]}
       >
-        {post.data.title}
+        {isDirectory ? <span class="directory-title">{post.data.title}</span> : post.data.title}
+        {
+          isDirectory && (
+            <Icon
+              name="material-symbols:arrow-forward"
+              class="directory-arrow size-4 shrink-0"
+              aria-hidden="true"
+            />
+          )
+        }
       </a>
     </h2>
 
@@ -111,3 +131,93 @@ const cover = getPostCover(post.id, post.data.cover);
     }
   </div>
 </Card>
+
+<style>
+  .directory {
+    border-radius: 0;
+    border-inline: 0;
+    border-top-color: transparent;
+    background: transparent;
+    box-shadow: none;
+    transition: background-color 180ms ease, border-color 180ms ease;
+  }
+
+  .directory:hover,
+  .directory:focus-within {
+    border-bottom-color: color-mix(in srgb, var(--brand) 44%, var(--line));
+    background: var(--brand-wash);
+  }
+
+  .directory-title-link {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .directory-title {
+    min-width: 0;
+  }
+
+  .directory-title-link:hover,
+  .directory:focus-within .directory-title-link {
+    color: var(--brand-strong);
+  }
+
+  .directory-arrow {
+    margin-top: 0.15em;
+    color: var(--brand-strong);
+    transition: transform 180ms ease;
+  }
+
+  .directory:hover .directory-arrow,
+  .directory:focus-within .directory-arrow {
+    transform: translateX(0.2rem);
+  }
+
+  .directory-with-cover {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+  }
+
+  .directory-with-cover .post-cover {
+    grid-column: 1;
+    grid-row: 1;
+    min-height: 10rem;
+  }
+
+  .directory-with-cover > div {
+    grid-column: 2;
+    grid-row: 1;
+    padding: 1.25rem 1.25rem 1.25rem 1.5rem;
+  }
+
+  .directory:not(.directory-with-cover) > div {
+    padding: 1.25rem 1.5rem 1.25rem 1.25rem;
+  }
+
+  @media (max-width: 48rem) {
+    .directory-with-cover {
+      grid-template-columns: 5.5rem minmax(0, 1fr);
+    }
+
+    .directory-with-cover .post-cover {
+      min-height: 9rem;
+    }
+
+    .directory-with-cover > div,
+    .directory:not(.directory-with-cover) > div {
+      padding: 1rem 0.75rem 1rem 1rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .directory {
+      transition: none;
+    }
+
+    .directory-arrow {
+      transition: none;
+    }
+  }
+</style>
