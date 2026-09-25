@@ -81,6 +81,28 @@ const {
     <ClientRouter />
   </head>
   <body class="flex min-h-screen flex-col">
+    <div class="page-loading" data-page-loading>
+      <div class="page-loading__content" role="status" aria-live="polite">
+        <span class="page-loading__person" aria-hidden="true">
+          <svg class="page-loading__fallback" viewBox="0 0 64 96" fill="none">
+            <circle cx="32" cy="12" r="8" fill="currentColor" />
+            <path d="m30 25-8 22 14 8m-9-30 17 12 8-8m-22 18-10 24m20-16 12 18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="7" />
+          </svg>
+          <picture class="page-loading__image">
+            <source
+              srcset="https://millionlive-theaterdays.idolmaster-official.jp/assets/data/webp/common/load/17/sd.png.webp"
+              type="image/webp"
+            />
+            <img
+              src="https://millionlive-theaterdays.idolmaster-official.jp/assets/img/common/load/17/sd.png"
+              alt=""
+              onload="this.closest('.page-loading__person').classList.add('has-image')"
+            />
+          </picture>
+        </span>
+        <span class="page-loading__label">Now Loading...</span>
+      </div>
+    </div>
     <a
       href="#main"
       class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-skip focus:rounded-full focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:text-ink focus:shadow-card"
@@ -94,5 +116,41 @@ const {
     <Footer />
     <Lightbox />
     {readingProgress && <ReadingProgress />}
+    <script is:inline>
+      (function () {
+        var root = document.documentElement;
+        if (root.__pageLoadingState) return;
+        var state = { timer: 0, visible: false, activeSignal: null };
+        root.__pageLoadingState = state;
+
+        function setVisible(visible) {
+          state.visible = visible;
+          var overlay = document.querySelector('[data-page-loading]');
+          if (overlay) overlay.classList.toggle('is-visible', visible);
+        }
+
+        document.addEventListener('astro:before-preparation', function (event) {
+          window.clearTimeout(state.timer);
+          state.activeSignal = event.signal;
+          setVisible(false);
+          state.timer = window.setTimeout(function () {
+            if (state.activeSignal && !state.activeSignal.aborted) setVisible(true);
+          }, 140);
+        });
+
+        document.addEventListener('astro:after-swap', function () {
+          if (state.visible) setVisible(true);
+        });
+
+        function finish() {
+          window.clearTimeout(state.timer);
+          state.timer = 0;
+          state.activeSignal = null;
+          setVisible(false);
+        }
+
+        document.addEventListener('astro:page-load', finish);
+      })();
+    </script>
   </body>
 </html>

@@ -138,6 +138,7 @@
   --z-sticky-head: 10;
   --z-nav: 40;
   --z-skip: 50;
+  --z-page-loading: 60;
 
   --scrim: rgb(0 0 0 / 0.5);          /* 灯箱关闭钮的常驻底 */
   --scrim-strong: rgb(0 0 0 / 0.7);   /* 同上，悬停加深 */
@@ -321,6 +322,10 @@
   z-index: var(--z-skip);
 }
 
+@utility z-page-loading {
+  z-index: var(--z-page-loading);
+}
+
 @layer base {
   :root {
     color-scheme: light;
@@ -420,6 +425,80 @@
 }
 
 @layer components {
+  .page-loading {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    color: var(--wash-sand-deep);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 180ms ease, visibility 180ms ease;
+    @apply z-page-loading;
+    backdrop-filter: blur(10px);
+  }
+  .page-loading.is-visible {
+    opacity: 1;
+    visibility: visible;
+  }
+  .page-loading__content {
+    display: grid;
+    justify-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .page-loading__person {
+    position: relative;
+    display: block;
+    width: 5rem;
+    height: 6rem;
+    line-height: 1;
+    transform-origin: center bottom;
+    animation: page-loading-jump 1.2s ease-in-out infinite;
+  }
+  .page-loading__fallback,
+  .page-loading__image,
+  .page-loading__image img {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .page-loading__fallback {
+    padding: 0.25rem;
+  }
+  .page-loading__image {
+    visibility: hidden;
+  }
+  .page-loading__person.has-image .page-loading__fallback {
+    visibility: hidden;
+  }
+  .page-loading__person.has-image .page-loading__image {
+    visibility: visible;
+  }
+  .page-loading__image img {
+    object-fit: contain;
+  }
+  @keyframes page-loading-jump {
+    0%, 100% { transform: translateY(0); }
+    45% { transform: translateY(-1rem); }
+    60% { transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .page-loading,
+    .page-loading__person {
+      animation: none;
+      transition: none;
+    }
+  }
+
   #reading-progress {
     position: fixed;
     inset: 0 0 auto;
