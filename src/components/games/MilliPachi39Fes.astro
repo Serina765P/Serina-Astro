@@ -1,0 +1,823 @@
+---
+// ミリパチ 39 FES 模拟器组件
+// 原作脚本：Cupisme (https://live-theater.net/@Cupisme)
+// 图像素材版权：© 2023 LIVE THE@TER NET
+import { SITE } from '../../site.config';
+
+const canonicalUrl = `${SITE.url}/posts/milli-pachi-39fes/`;
+---
+
+<milli-pachi-game class="not-prose block my-6 font-sans" data-canonical-url={canonicalUrl}>
+  <div class="relative mx-auto max-w-2xl overflow-hidden rounded-3xl border border-line/80 bg-surface shadow-2xl transition-all">
+    <!-- 机台精简顶栏 (Compact Header) -->
+    <div class="px-4 py-2 bg-gradient-to-r from-amber-500/10 via-pink-500/15 to-purple-600/10 border-b border-line flex items-center justify-between gap-2 select-none">
+      <div class="flex items-center gap-2">
+        <span class="inline-flex size-2 rounded-full bg-pink-500 animate-pulse"></span>
+        <h2 class="text-xs sm:text-sm font-bold tracking-wide text-ink flex items-center gap-1.5">
+          ミリパチ 39 FES 模拟器
+          <span class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-cat-fill-rose text-cat-on">1/199.8</span>
+        </h2>
+      </div>
+      <div class="flex items-center gap-2 text-[11px] text-sub font-mono">
+        <span>天井: 500转</span>
+        <span class="opacity-40">·</span>
+        <span>4円/玉</span>
+      </div>
+    </div>
+
+    <!-- 紧凑数显仪表条 (Streamlined Meter Strip) -->
+    <div class="grid grid-cols-4 divide-x divide-line/60 bg-surface border-b border-line text-center py-2 px-1 select-none">
+      <div class="px-1">
+        <span class="block text-[10px] text-sub">投入金额</span>
+        <div data-field="money" class="text-sm sm:text-base font-extrabold font-mono text-ink mt-0.5">¥0</div>
+      </div>
+      <div class="px-1">
+        <span class="block text-[10px] text-sub">持有弹珠</span>
+        <div data-field="balls" class="text-sm sm:text-base font-extrabold font-mono text-amber-600 dark:text-amber-400 mt-0.5">0 <span class="text-[10px] font-normal text-sub">发</span></div>
+      </div>
+      <div class="px-1">
+        <span class="block text-[10px] text-sub">累计转数</span>
+        <div data-field="spins" class="text-sm sm:text-base font-extrabold font-mono text-cyan-600 dark:text-cyan-400 mt-0.5">0 <span class="text-[10px] font-normal text-sub">/ 500</span></div>
+      </div>
+      <div class="px-1">
+        <span class="block text-[10px] text-sub">当前收支</span>
+        <div data-field="profit" class="text-sm sm:text-base font-extrabold font-mono text-ink mt-0.5">¥0</div>
+      </div>
+    </div>
+
+    <!-- 游Time 天井进度条 -->
+    <div class="h-1 w-full bg-surface-2 overflow-hidden border-b border-line/40">
+      <div data-field="spin-progress" class="h-full bg-gradient-to-r from-cyan-500 via-pink-500 to-amber-500 transition-all duration-300" style="width: 0%"></div>
+    </div>
+
+    <!-- 液晶演出主荧幕 (LCD Screen：浅色/深色模式智能自适应) -->
+    <div class="p-4 sm:p-5 bg-surface-2/60 dark:bg-neutral-950 text-ink dark:text-neutral-100 relative min-h-[250px] flex flex-col justify-between overflow-hidden select-none border-b border-line">
+      <!-- 荧幕背景网格点阵 -->
+      <div class="absolute inset-0 opacity-25 dark:opacity-15 pointer-events-none bg-[radial-gradient(var(--line)_1px,transparent_1px)] [background-size:14px_14px]"></div>
+      <div class="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-transparent to-black/[0.04] dark:to-black/50"></div>
+
+      <!-- 荧幕顶栏状态标签 -->
+      <div class="relative z-10 flex items-center justify-between text-xs text-sub dark:text-neutral-400 border-b border-line/60 dark:border-neutral-800/80 pb-2">
+        <div class="flex items-center gap-2 font-mono">
+          <span data-screen="indicator" class="size-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span data-screen="mode-name" class="font-bold text-ink dark:text-neutral-200">通常抽选中</span>
+        </div>
+        <div data-screen="live-counter" class="font-mono text-sub dark:text-neutral-300 hidden items-center gap-2">
+          <span class="text-pink-600 dark:text-pink-400 font-bold"><span data-screen="koen-count">0</span> 公演</span>
+          <span class="text-line">|</span>
+          <span class="text-amber-600 dark:text-amber-300 font-bold"><span data-screen="ariga-count">0</span> 感谢点数</span>
+        </div>
+      </div>
+
+      <!-- 荧幕中心主舞台演出 -->
+      <div class="relative z-10 my-auto py-5 flex flex-col items-center justify-center text-center min-h-[150px]">
+        <!-- 默认待机状态徽标 -->
+        <div data-stage="idle" class="flex flex-col items-center gap-2.5">
+          <div class="flex items-center justify-center gap-3">
+            <img src="/images/games/pachi-39fes/princess.png" alt="Princess" class="size-11 object-contain transition-transform hover:scale-110 pointer-events-none select-none border-0 ring-0 shadow-none" />
+            <img src="/images/games/pachi-39fes/fairy.png" alt="Fairy" class="size-11 object-contain transition-transform hover:scale-110 pointer-events-none select-none border-0 ring-0 shadow-none" />
+            <img src="/images/games/pachi-39fes/angel.png" alt="Angel" class="size-11 object-contain transition-transform hover:scale-110 pointer-events-none select-none border-0 ring-0 shadow-none" />
+          </div>
+          <p class="text-xs sm:text-sm text-sub dark:text-neutral-400 tracking-wider">投币买珠，点击【摇起来！】抽选大当！</p>
+        </div>
+
+        <!-- 转动中动画 -->
+        <div data-stage="spinning" class="hidden flex-col items-center gap-1.5">
+          <div class="flex items-center gap-2 text-xl sm:text-2xl font-black tracking-widest text-ink dark:text-neutral-200 animate-pulse">
+            <span class="inline-block animate-spin text-cyan-600 dark:text-cyan-400">✦</span>
+            <span>抽选快速转动中...</span>
+            <span class="inline-block animate-spin text-pink-600 dark:text-pink-400">✦</span>
+          </div>
+          <span class="text-[11px] text-sub dark:text-neutral-500 font-mono">入赏口抽选中 (1/199.8)</span>
+        </div>
+
+        <!-- FEVER 触发大当演出 -->
+        <div data-stage="fever" class="hidden flex-col items-center gap-2 animate-bounce">
+          <div class="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-rose-500 to-amber-600 dark:from-amber-300 dark:via-yellow-100 dark:to-amber-400 drop-shadow-[0_2px_12px_rgba(245,158,11,0.4)] tracking-widest">
+            ★ FEVER ★
+          </div>
+          <div class="text-xs sm:text-sm font-bold text-amber-700 dark:text-amber-200 tracking-widest uppercase">初大当击中！请点击【右打】突入挑战！</div>
+        </div>
+
+        <!-- 美咲特写：南斗！(nanto) -->
+        <div data-stage="nanto" class="hidden flex-col items-center gap-2">
+          <img src="/images/games/pachi-39fes/nanto.png" alt="南斗！" class="h-16 sm:h-20 max-w-full object-contain animate-pulse pointer-events-none select-none border-0 ring-0 shadow-none" />
+          <div class="text-2xl sm:text-3xl font-black text-pink-600 dark:text-pink-400 tracking-wider">
+            南斗！？
+          </div>
+        </div>
+
+        <!-- Million Fes 演出横幅 -->
+        <div data-stage="millionfes" class="hidden flex-col items-center gap-2">
+          <img src="/images/games/pachi-39fes/millionfes.png" alt="Million Fes" class="h-9 sm:h-11 max-w-full object-contain pachi-rgb-chroma pointer-events-none select-none border-0 ring-0 shadow-none" />
+          <div data-stage-text="millionfes" class="text-sm sm:text-base font-bold tracking-wider pachi-rainbow-text">
+            突入挑战中！
+          </div>
+        </div>
+
+        <!-- 超·花周末 开始演出横幅 -->
+        <div data-stage="hanazakari-start" class="hidden flex-col items-center gap-2">
+          <img src="/images/games/pachi-39fes/hanazakari_weekend_kaishi.png" alt="超·花周末 开始" class="h-9 sm:h-11 max-w-full object-contain pachi-rainbow-fast pointer-events-none select-none border-0 ring-0 shadow-none" />
+          <div class="text-xs sm:text-sm font-bold tracking-widest animate-pulse pachi-rainbow-text">
+            ★ 上位特化 RUSH 突入 ★
+          </div>
+        </div>
+
+        <!-- 超·花周末 结束演出横幅 -->
+        <div data-stage="hanazakari-end" class="hidden flex-col items-center gap-2">
+          <img src="/images/games/pachi-39fes/hanazakari_weekend_shuuryou.png" alt="超·花周末 结束" class="h-9 sm:h-11 max-w-full object-contain pointer-events-none select-none border-0 ring-0 shadow-none" />
+          <div class="text-xs text-sub dark:text-neutral-400 tracking-wider">花周末特化公演圆满闭幕</div>
+        </div>
+
+        <!-- 辛苦啦！遊Time保底发动 (miriottsuu) -->
+        <div data-stage="miriottsuu" class="hidden flex-col items-center gap-2">
+          <img src="/images/games/pachi-39fes/miriottsuu.png" alt="辛苦啦！" class="h-9 sm:h-11 max-w-full object-contain pointer-events-none select-none border-0 ring-0 shadow-none" />
+          <div class="text-xs sm:text-sm font-bold text-cyan-700 dark:text-cyan-300 tracking-wider">500 转遊Time天井达成！请立即右打！</div>
+        </div>
+
+        <!-- 结束退场 (owari) -->
+        <div data-stage="owari" class="hidden flex-col items-center gap-2">
+          <img src="/images/games/pachi-39fes/owari.png" alt="演出结束" class="h-9 sm:h-11 max-w-full object-contain opacity-90 pointer-events-none select-none border-0 ring-0 shadow-none" />
+          <div class="text-xs text-sub dark:text-neutral-400">本次 RUSH 演出结束，请结账查收战报</div>
+        </div>
+
+        <!-- 300 / 900 赏球大字翻转动效 -->
+        <div data-stage="spin-prize" class="hidden flex-col items-center">
+          <div data-field="prize-num" class="text-5xl sm:text-6xl font-black font-mono tracking-tighter text-amber-600 dark:text-amber-400 drop-shadow-md animate-pulse">
+            900
+          </div>
+          <span class="text-xs font-bold text-amber-700 dark:text-amber-200 mt-1 uppercase tracking-widest">FEVER 赏球入袋！</span>
+        </div>
+      </div>
+
+      <!-- 荧幕底部：掉球属性图标跳动栏与提示 -->
+      <div class="relative z-10 border-t border-line/60 dark:border-neutral-800/80 pt-2 flex items-center justify-between text-xs min-h-[36px]">
+        <div class="flex items-center gap-1.5 overflow-x-auto py-1 max-w-[70%]" data-screen="icon-stream">
+          <span class="text-[11px] text-sub dark:text-neutral-500">出球槽：</span>
+          <!-- 动态插入属性小图标 -->
+        </div>
+        <div data-screen="hint" class="text-[11px] text-sub dark:text-neutral-400 font-mono text-right truncate">
+          准备就绪
+        </div>
+      </div>
+    </div>
+
+    <!-- 机台操作按键区 -->
+    <div class="p-4 sm:p-5 bg-surface border-t border-line flex flex-wrap items-center justify-between gap-3">
+      <!-- 左打按钮群 -->
+      <div class="flex flex-wrap items-center gap-2.5">
+        <button
+          type="button"
+          data-action="keizai"
+          class="inline-flex items-center justify-center rounded-xl bg-surface-2 border border-line px-4 py-2.5 text-xs sm:text-sm font-semibold text-ink shadow-sm transition-all hover:bg-line/70 active:scale-95"
+        >
+          投币买珠 (+250发)
+        </button>
+
+        <button
+          type="button"
+          data-action="mawashi"
+          class="inline-flex items-center justify-center rounded-xl bg-pink-600 hover:bg-pink-700 active:scale-95 text-white px-4 py-2.5 text-xs sm:text-sm font-bold shadow-md transition-all disabled:opacity-40 disabled:pointer-events-none"
+        >
+          摇起来！
+        </button>
+      </div>
+
+      <!-- 核心右打按钮（大当高亮发光） -->
+      <div class="flex items-center gap-2.5">
+        <button
+          type="button"
+          data-action="migi"
+          disabled
+          class="relative group inline-flex items-center justify-center rounded-xl px-6 py-2.5 text-xs sm:text-sm font-black tracking-wider uppercase transition-all shadow-lg text-white bg-gradient-to-r from-amber-500 via-rose-500 to-pink-600 hover:from-amber-400 hover:to-pink-500 active:scale-95 disabled:opacity-30 disabled:grayscale disabled:pointer-events-none disabled:shadow-none"
+        >
+          <span class="inline-block animate-bounce mr-1">⚡</span>
+          右打！
+        </button>
+
+        <!-- 结算离场按钮 -->
+        <button
+          type="button"
+          data-action="seisan"
+          class="inline-flex items-center justify-center rounded-xl border border-line bg-surface-2/80 px-3.5 py-2.5 text-xs font-medium text-sub hover:text-ink hover:bg-line/50 transition-colors"
+        >
+          结算离场
+        </button>
+      </div>
+    </div>
+
+    <!-- 战绩结算弹层 / 结果面板 -->
+    <div data-panel="report" class="hidden border-t border-line bg-surface-2/70 p-5 sm:p-6 transition-all">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-bold text-ink flex items-center gap-1.5">
+          <span>📊</span> LIVE REPORT 战绩结算单
+        </h3>
+        <button type="button" data-action="close-report" class="text-xs text-sub hover:text-ink">✕ 关闭</button>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4 text-center">
+        <div class="rounded-xl border border-line bg-surface p-3">
+          <div class="text-[11px] text-sub">最大连庄公演</div>
+          <div data-report="max-koen" class="text-lg font-bold font-mono text-pink-600 dark:text-pink-400 mt-0.5">0 场</div>
+        </div>
+        <div class="rounded-xl border border-line bg-surface p-3">
+          <div class="text-[11px] text-sub">最高感谢分数</div>
+          <div data-report="max-ariga" class="text-lg font-bold font-mono text-amber-500 mt-0.5">0 点</div>
+        </div>
+        <div class="col-span-2 sm:col-span-1 rounded-xl border border-line bg-surface p-3">
+          <div class="text-[11px] text-sub">最终收支</div>
+          <div data-report="final-profit" class="text-lg font-bold font-mono text-ink mt-0.5">¥0</div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="text-[11px] text-sub">
+          数据已就绪，可一键复制文本分享到社交媒体或动态。
+        </div>
+        <button
+          type="button"
+          data-action="copy-report"
+          class="inline-flex items-center gap-1.5 rounded-lg bg-cat-fill-rose text-cat-on px-4 py-2 text-xs font-semibold hover:opacity-90 transition-opacity active:scale-95"
+        >
+          <span>📋</span> 复制战绩分享文本
+        </button>
+      </div>
+    </div>
+
+    <!-- 机台底衬与版权致敬 -->
+    <div class="px-5 py-3 bg-surface-2/30 border-t border-line/60 text-[11px] text-sub/80 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span>游戏原帖：<a href="https://live-theater.net/play/9rdl1v95qr" target="_blank" rel="noopener noreferrer" class="text-pink-600 dark:text-pink-400 hover:underline">LTN Play</a></span>
+        <span>·</span>
+        <span>原作脚本：<a href="https://live-theater.net/@Cupisme" target="_blank" rel="noopener noreferrer" class="text-pink-600 dark:text-pink-400 hover:underline">Cupisme</a></span>
+        <span>·</span>
+        <span>素材版权：© 2023 LIVE THE@TER NET</span>
+      </div>
+      <div class="text-[10px] text-sub/60">
+        机台原型：P Fever 偶像大师百万现场！39 FES ver. (SANKYO)
+      </div>
+    </div>
+  </div>
+</milli-pachi-game>
+<style is:inline>
+  milli-pachi-game img {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    cursor: default !important;
+    pointer-events: none !important;
+    user-select: none !important;
+    -webkit-user-drag: none;
+    background: transparent !important;
+  }
+
+  /* 柏青哥机台级 RGB 炫彩色彩流光 (对应原版 $[rainbow.speed=1s]) */
+  .pachi-rgb-chroma {
+    display: inline-block !important;
+    will-change: filter;
+    animation: pachi-rgb-flow 1s linear infinite !important;
+  }
+
+  /* 花周末特化快速炫彩流光 (对应原版 $[rainbow.speed=0.3s]) */
+  .pachi-rainbow-fast {
+    display: inline-block !important;
+    will-change: filter;
+    animation: pachi-rgb-flow 0.35s linear infinite !important;
+  }
+
+  /* 彩虹流动发光文字 */
+  .pachi-rainbow-text {
+    background: linear-gradient(90deg, #ff0055, #ffaa00, #10b981, #06b6d4, #8b5cf6, #ff0055);
+    background-size: 200% auto;
+    color: transparent !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    animation: pachi-text-flow 1.5s linear infinite !important;
+  }
+
+  @keyframes pachi-text-flow {
+    0% { background-position: 0% center; }
+    100% { background-position: 200% center; }
+  }
+
+  @keyframes pachi-rgb-flow {
+    0% {
+      filter: hue-rotate(0deg) saturate(2.8) brightness(1.1) drop-shadow(0 0 10px rgba(255, 0, 100, 0.75));
+    }
+    16% {
+      filter: hue-rotate(60deg) saturate(2.8) brightness(1.1) drop-shadow(0 0 10px rgba(255, 180, 0, 0.75));
+    }
+    33% {
+      filter: hue-rotate(120deg) saturate(2.8) brightness(1.1) drop-shadow(0 0 10px rgba(16, 185, 129, 0.75));
+    }
+    50% {
+      filter: hue-rotate(180deg) saturate(2.8) brightness(1.1) drop-shadow(0 0 10px rgba(6, 182, 212, 0.75));
+    }
+    66% {
+      filter: hue-rotate(240deg) saturate(2.8) brightness(1.1) drop-shadow(0 0 10px rgba(139, 92, 246, 0.75));
+    }
+    83% {
+      filter: hue-rotate(300deg) saturate(2.8) brightness(1.1) drop-shadow(0 0 10px rgba(236, 72, 153, 0.75));
+    }
+    100% {
+      filter: hue-rotate(360deg) saturate(2.8) brightness(1.1) drop-shadow(0 0 10px rgba(255, 0, 100, 0.75));
+    }
+  }
+</style>
+
+<script>
+  class MilliPachiGame extends HTMLElement {
+    private money = 0;
+    private tamaNum = 0;
+    private kai = 0;
+    private koen = 0;
+    private arigatou = 0;
+    private koenMax = 0;
+    private arigaMax = 0;
+    private chusen = 0;
+    private yutime = false;
+    private isSpinning = false;
+    private canRightHit = false;
+    private spinTimer: number | null = null;
+
+    private readonly icons = [
+      { name: 'princess', src: '/images/games/pachi-39fes/princess.png' },
+      { name: 'fairy', src: '/images/games/pachi-39fes/fairy.png' },
+      { name: 'angel', src: '/images/games/pachi-39fes/angel.png' },
+    ];
+
+    connectedCallback() {
+      this.bindEvents();
+      this.updateDisplay();
+      this.setStage('idle');
+      this.setRightButtonEnabled(false);
+      this.setLeftButtonsEnabled(true);
+    }
+
+    disconnectedCallback() {
+      this.stopSpinning();
+    }
+
+    private stopSpinning() {
+      if (this.spinTimer) {
+        clearInterval(this.spinTimer);
+        this.spinTimer = null;
+      }
+      this.isSpinning = false;
+    }
+
+    private bindEvents() {
+      this.querySelector('[data-action="keizai"]')?.addEventListener('click', () => this.handleKeizai());
+      this.querySelector('[data-action="mawashi"]')?.addEventListener('click', () => this.handleMawashi());
+      this.querySelector('[data-action="migi"]')?.addEventListener('click', () => this.handleRightHit());
+      this.querySelector('[data-action="seisan"]')?.addEventListener('click', () => this.handleSeisan());
+      this.querySelector('[data-action="close-report"]')?.addEventListener('click', () => this.toggleReport(false));
+      this.querySelector('[data-action="copy-report"]')?.addEventListener('click', () => this.copyReportText());
+    }
+
+    private sleep(ms: number): Promise<void> {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    /** 投币买珠 (+250发 / 1000円) - 仅买珠，绝不自动转 */
+    private handleKeizai() {
+      if (this.isSpinning || this.canRightHit) return;
+      this.money += 1000;
+      this.tamaNum += 250;
+      this.setHint('已投入 1000 円，获得 250 发弹珠！点击【摇起来！】开始抽选');
+      this.updateDisplay();
+    }
+
+    /** 点击【摇起来！】：一次性转完现有全部弹珠，直到触发大当、天井或耗尽 */
+    private handleMawashi() {
+      if (this.isSpinning || this.canRightHit) return;
+      if (this.tamaNum <= 0) {
+        this.setHint('持有弹珠不足，请先【投币买珠】！');
+        return;
+      }
+
+      this.isSpinning = true;
+      this.setLeftButtonsEnabled(false);
+      this.setStage('spinning');
+      this.setHint('抽选快速转动中... (遇大当/天井自动停止)');
+
+      if (this.spinTimer) clearInterval(this.spinTimer);
+      // 高速平滑抽选：每 16ms 批量处理 15 发（约 900 发/秒，250 发约 0.25 秒），遇大当/天井瞬间制动
+      this.spinTimer = window.setInterval(() => {
+        if (!this.isSpinning) {
+          if (this.spinTimer) clearInterval(this.spinTimer);
+          return;
+        }
+
+        for (let i = 0; i < 15; i++) {
+          if (this.tamaNum <= 0) {
+            this.stopSpinning();
+            this.setStage('idle');
+            this.setHint('弹珠已耗尽，请【投币买珠】！');
+            this.setLeftButtonsEnabled(true);
+            this.updateDisplay();
+            return;
+          }
+
+          if (this.kai >= 500) {
+            // 500 转天井游Time发动
+            this.stopSpinning();
+            this.chusen = 1;
+            this.yutime = true;
+            this.canRightHit = true;
+            this.setLeftButtonsEnabled(false);
+            this.setRightButtonEnabled(true);
+            this.setStage('miriottsuu');
+            this.setHint('500 转达成！游Time 天井发动！请按【右打】突入！');
+            this.updateDisplay();
+            return;
+          }
+
+          this.tamaNum -= 1;
+
+          // 入赏口判定：Math:rnd(0, 240) < 14 (约 5.8%)
+          const inHeso = Math.floor(Math.random() * 241) < 14;
+          if (inHeso) {
+            this.kai += 1;
+            this.tamaNum += 3; // 赏球
+
+            // 入赏抽选：Math:rnd(0, 1997) < 10 (约 1/199.8)
+            const hitFever = Math.floor(Math.random() * 1998) < 10;
+            if (hitFever) {
+              this.stopSpinning();
+              this.chusen = 0;
+              this.canRightHit = true;
+              this.setLeftButtonsEnabled(false);
+              this.setRightButtonEnabled(true);
+              this.setStage('fever');
+              this.setHint('★ FEVER 初大当！请点击【右打】开始突入挑战！');
+              this.updateDisplay();
+              return;
+            }
+          }
+        }
+
+        this.updateDisplay();
+      }, 16);
+    }
+
+    /** 点击【右打！】按钮 */
+    private async handleRightHit() {
+      if (!this.canRightHit) return;
+      this.canRightHit = false;
+      this.setRightButtonEnabled(false);
+      this.setLeftButtonsEnabled(false);
+
+      // 初大当突入挑战逻辑 fever(c)
+      if (this.chusen === 0) {
+        // 首次右打：演出 + 抽选
+        await this.koenPlus();
+        await this.runR1();
+
+        this.setStage('millionfes', '突入挑战中！');
+        this.setHint('突入挑战抽选就绪！再次点击【右打】决胜突入！');
+        this.chusen = Math.floor(Math.random() * 100) + 1; // 1 ~ 100
+        await this.sleep(400);
+
+        // 再次启用右打让玩家决胜
+        this.canRightHit = true;
+        this.setRightButtonEnabled(true);
+        return;
+      }
+
+      const c = this.chusen;
+      if (c > 0 && c < 51) {
+        // 50% 突入普通 Million Fes
+        this.setStage('millionfes', '【Million Fes 盛典突入！】');
+        this.setHint('恭喜突入 Million Fes 盛典！连续公演开始！');
+        await this.sleep(1000);
+        await this.runNovFes();
+      } else if (c === 51) {
+        // 1% 极小几率直击 超·花周末
+        if (!this.yutime) {
+          await this.showNanto();
+        }
+        this.setStage('hanazakari-start');
+        this.setHint('直击！超·花周末 上位特化 RUSH 突入！');
+        if (this.yutime) {
+          await this.koenPlus();
+          await this.runR1();
+        }
+        await this.runR1();
+        await this.runR1();
+        await this.runHanaFes();
+      } else {
+        // 49% 挑战失败通常退场
+        this.setStage('owari');
+        this.setHint('未能突入 RUSH... 本轮挑战遗憾退场。');
+        await this.sleep(2000);
+        this.handleRepo();
+      }
+    }
+
+    /** 突入 Million Fes (普通 RUSH 循环) */
+    private async runNovFes() {
+      while (true) {
+        this.chusen = Math.floor(Math.random() * 100) + 1;
+        await this.koenPlus();
+        await this.runR1();
+
+        if (this.chusen < 23) {
+          // 22% 几率升格为 超·花周末
+          await this.showNanto();
+          this.setStage('hanazakari-start');
+          this.setHint('升格！超·花周末 特化 RUSH 突入！');
+          await this.runR1();
+          await this.runR1();
+          await this.runHanaFes();
+          break;
+        } else if (this.chusen > 94) {
+          // 6% 几率退场
+          this.setStage('owari');
+          this.setHint('公演结束，盛典谢幕。');
+          await this.sleep(2000);
+          this.handleRepo();
+          break;
+        }
+
+        // 72% 几率持续公演
+        this.setStage('millionfes', '【继续公演！连庄中】');
+        this.setHint(`第 ${this.koen} 场公演大成功！持续连庄！`);
+        await this.sleep(600);
+      }
+    }
+
+    /** 突入 超·花周末 (上位特化 RUSH 循环) */
+    private async runHanaFes() {
+      while (true) {
+        const hanaChu = Math.floor(Math.random() * 100) + 1;
+
+        if (hanaChu > 78) {
+          // 22% 几率 900 赏球大奖
+          await this.showSpinPrize(900);
+          await this.koenPlus();
+          await this.runR1();
+          await this.runR1();
+          await this.runR1();
+          this.setStage('hanazakari-start');
+        } else if (hanaChu < 7 && hanaChu > 0) {
+          // 6% 几率 花周末结束
+          this.setStage('hanazakari-end');
+          await this.koenPlus();
+          await this.runR1();
+          this.setHint('超·花周末 结束，谢幕结算。');
+          await this.sleep(2000);
+          this.handleRepo();
+          break;
+        } else {
+          // 72% 几率 300 赏球
+          await this.showSpinPrize(300);
+          await this.koenPlus();
+          await this.runR1();
+          this.setStage('hanazakari-start');
+        }
+
+        await this.sleep(500);
+      }
+    }
+
+    /** 南斗！(nanto) 特写动画 */
+    private async showNanto() {
+      this.setStage('nanto');
+      this.setHint('南斗！？ 奇迹降临！');
+      await this.sleep(1500);
+    }
+
+    /** 300 / 900 赏球翻转特效 */
+    private async showSpinPrize(num: number) {
+      const prizeEl = this.querySelector('[data-field="prize-num"]');
+      if (prizeEl) prizeEl.textContent = String(num);
+      this.setStage('spin-prize');
+      await this.sleep(700);
+    }
+
+    /** 公演数递增与历史记录刷新 */
+    private async koenPlus() {
+      this.koen += 1;
+      if (this.koen > this.koenMax) this.koenMax = this.koen;
+      this.updateDisplay();
+    }
+
+    /** 出球演出：随机属性图标 + 连续加珠加点 */
+    private async runR1() {
+      const stream = this.querySelector('[data-screen="icon-stream"]');
+      for (let i = 0; i < 3; i++) {
+        const randomIcon = this.icons[Math.floor(Math.random() * this.icons.length)];
+        if (stream) {
+          const img = document.createElement('img');
+          img.src = randomIcon.src;
+          img.alt = randomIcon.name;
+          img.className = 'size-5 inline-block animate-bounce object-contain pointer-events-none select-none border-0 ring-0 shadow-none';
+          stream.appendChild(img);
+          if (stream.children.length > 9) {
+            stream.removeChild(stream.children[1]); // 保留文字提示
+          }
+        }
+
+        for (let j = 0; j < 10; j++) {
+          this.tamaNum += 9;
+          this.arigatou += 10;
+          if (this.arigatou > this.arigaMax) this.arigaMax = this.arigatou;
+          this.updateDisplay();
+          await this.sleep(40);
+        }
+      }
+    }
+
+    /** 战报结算与重置本局状态 */
+    private handleRepo() {
+      const stream = this.querySelector('[data-screen="icon-stream"]');
+      if (stream) {
+        stream.innerHTML = '<span class="text-[11px] text-neutral-500">演出出球槽：</span>';
+      }
+
+      this.chusen = 0;
+      this.arigatou = 0;
+      this.koen = 0;
+      this.kai = 0;
+      this.yutime = false;
+      this.canRightHit = false;
+      this.isSpinning = false;
+
+      this.setLeftButtonsEnabled(true);
+      this.setRightButtonEnabled(false);
+      this.setStage('idle');
+      this.setHint('本轮公演已结算。可查看战报或继续投币游玩！');
+      this.updateDisplay();
+      this.toggleReport(true);
+    }
+
+    /** 打开或关闭战报面板 */
+    private toggleReport(open: boolean) {
+      const panel = this.querySelector('[data-panel="report"]');
+      if (!panel) return;
+      if (open) {
+        panel.classList.remove('hidden');
+        this.querySelector('[data-report="max-koen"]')!.textContent = `${this.koenMax} 场`;
+        this.querySelector('[data-report="max-ariga"]')!.textContent = `${this.arigaMax} 点`;
+        const profit = this.getProfit();
+        const profitText = profit >= 0 ? `+¥${profit}` : `-¥${Math.abs(profit)}`;
+        const profitEl = this.querySelector('[data-report="final-profit"]')!;
+        profitEl.textContent = profitText;
+        profitEl.className = `text-lg font-bold font-mono mt-0.5 ${profit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
+      } else {
+        panel.classList.add('hidden');
+      }
+    }
+
+    /** 点击【结算离场】按钮 */
+    private handleSeisan() {
+      this.toggleReport(true);
+    }
+
+    /** 复制战报到剪贴板 */
+    private async copyReportText() {
+      const profit = this.getProfit();
+      const profitStr = profit >= 0 ? `+${profit}` : `${profit}`;
+      const text = [
+        `【ミリパチ 39 FES 模拟器 · 战报】`,
+        `收支：${profitStr} 円`,
+        `LIVE REPORT：最大 ${this.koenMax} 连续公演`,
+        `SCORE：最大 ${this.arigaMax} 感谢点数`,
+        `机台：P Fever 偶像大师百万现场！39 FES ver. (1/199.8)`,
+        `游戏原帖：https://live-theater.net/play/9rdl1v95qr`,
+        `原作脚本：Cupisme (@live-theater.net)`,
+        `素材版权：© 2023 LIVE THE@TER NET`,
+        `#39フェスシミュレーター #偶像大师 #百万现场 #LTN`,
+        this.getAttribute('data-canonical-url') || window.location.href,
+      ].join('\n');
+
+      try {
+        await navigator.clipboard.writeText(text);
+        this.setHint('战报文本已复制到剪贴板！');
+      } catch {
+        this.setHint('复制失败，请手动选择复制。');
+      }
+    }
+
+    private getProfit(): number {
+      return this.tamaNum * 4 - this.money;
+    }
+
+    private updateDisplay() {
+      const profit = this.getProfit();
+      const profitText = profit >= 0 ? `+¥${profit}` : `-¥${Math.abs(profit)}`;
+
+      this.querySelector('[data-field="money"]')!.textContent = `¥${this.money}`;
+      this.querySelector('[data-field="balls"]')!.innerHTML = `${this.tamaNum} <span class="text-xs font-normal text-sub">发</span>`;
+      this.querySelector('[data-field="spins"]')!.innerHTML = `${this.kai} <span class="text-xs font-normal text-sub">/ 500</span>`;
+      
+      const profitEl = this.querySelector('[data-field="profit"]')!;
+      profitEl.textContent = profitText;
+      profitEl.className = `text-lg font-extrabold font-mono tracking-tight mt-0.5 ${profit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
+
+      // 游Time 天井进度条
+      const progress = Math.min(100, Math.floor((this.kai / 500) * 100));
+      (this.querySelector('[data-field="spin-progress"]') as HTMLElement).style.width = `${progress}%`;
+
+      // 荧幕顶部连庄显示
+      const liveCounter = this.querySelector('[data-screen="live-counter"]') as HTMLElement;
+      if (this.koen > 0) {
+        liveCounter.classList.remove('hidden');
+        liveCounter.classList.add('flex');
+        this.querySelector('[data-screen="koen-count"]')!.textContent = String(this.koen);
+        this.querySelector('[data-screen="ariga-count"]')!.textContent = String(this.arigaNum);
+      } else {
+        liveCounter.classList.remove('flex');
+        liveCounter.classList.add('hidden');
+      }
+    }
+
+    private get arigaNum(): number {
+      return this.arigatou;
+    }
+
+    private setStage(stage: string, customText?: string) {
+      const stages = [
+        'idle',
+        'spinning',
+        'fever',
+        'nanto',
+        'millionfes',
+        'hanazakari-start',
+        'hanazakari-end',
+        'miriottsuu',
+        'owari',
+        'spin-prize',
+      ];
+
+      for (const s of stages) {
+        const el = this.querySelector(`[data-stage="${s}"]`);
+        if (el) {
+          if (s === stage) {
+            el.classList.remove('hidden');
+            el.classList.add('flex');
+          } else {
+            el.classList.remove('flex');
+            el.classList.add('hidden');
+          }
+        }
+      }
+
+      const modeName = this.querySelector('[data-screen="mode-name"]');
+      if (modeName) {
+        switch (stage) {
+          case 'idle':
+            modeName.textContent = '通常抽选中';
+            break;
+          case 'fever':
+            modeName.textContent = '★ FEVER 初大当 ★';
+            break;
+          case 'millionfes':
+            modeName.textContent = customText || 'Million Fes 盛典';
+            break;
+          case 'hanazakari-start':
+            modeName.textContent = '★ 超·花周末 特化 RUSH ★';
+            break;
+          case 'hanazakari-end':
+            modeName.textContent = '超·花周末 闭幕';
+            break;
+          case 'miriottsuu':
+            modeName.textContent = '遊Time 天井保底';
+            break;
+          case 'owari':
+            modeName.textContent = '演出结束';
+            break;
+          default:
+            break;
+        }
+      }
+
+      if (customText) {
+        const customEl = this.querySelector('[data-stage-text="millionfes"]');
+        if (customEl) customEl.textContent = customText;
+      }
+    }
+
+    private setHint(hint: string) {
+      const hintEl = this.querySelector('[data-screen="hint"]');
+      if (hintEl) hintEl.textContent = hint;
+    }
+
+    private setLeftButtonsEnabled(enabled: boolean) {
+      const b1 = this.querySelector('[data-action="keizai"]') as HTMLButtonElement | null;
+      const b2 = this.querySelector('[data-action="mawashi"]') as HTMLButtonElement | null;
+      if (b1) b1.disabled = !enabled;
+      if (b2) b2.disabled = !enabled;
+    }
+
+    private setRightButtonEnabled(enabled: boolean) {
+      const btn = this.querySelector('[data-action="migi"]') as HTMLButtonElement | null;
+      if (btn) btn.disabled = !enabled;
+    }
+  }
+
+  if (!customElements.get('milli-pachi-game')) {
+    customElements.define('milli-pachi-game', MilliPachiGame);
+  }
+</script>

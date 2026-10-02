@@ -31,6 +31,7 @@ interface Props {
       description?: string;
       keywords?: string[];
       skin?: 'imas-album';
+      toc?: boolean;
     };
   };
   Content: (...args: any[]) => any;
@@ -45,6 +46,7 @@ const { data } = post;
 const words = wordcount(post.body ?? '');
 const minutes = readingTime(post.body ?? '');
 const category = data.categories[0];
+const showToc = data.toc !== false && !data.categories.includes('小游戏');
 ---
 
 <BaseLayout
@@ -157,9 +159,13 @@ const category = data.categories[0];
     <!-- TOC：≥lg 是吸顶侧栏，<lg 是底部悬浮 pill —— 两种形态都在 Toc 内部（同一份树数据）。
          aside 用 display:contents 把布局盒子摘掉：窄屏时它不参与 flex 布局、不吃 gap 宽度，
          宽屏时恢复成 w-56 的一栏。 -->
-    <aside class="contents lg:block lg:w-56 lg:shrink-0">
-      <Toc headings={headings} />
-    </aside>
+    {
+      showToc && (
+        <aside class="contents lg:block lg:w-56 lg:shrink-0">
+          <Toc headings={headings} />
+        </aside>
+      )
+    }
   </Container>
   <BackToTop />
 </BaseLayout>
