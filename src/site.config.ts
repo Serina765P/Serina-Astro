@@ -33,6 +33,7 @@ export const NAV = [
   { label: '标签', icon: 'label', href: '/tags/' },
   { label: '友链', icon: 'link', href: '/links/' },
   { label: '说说', icon: 'chat', href: '/shuoshuo/' },
+  { label: '表情', icon: 'mood', href: '/emoji/' },
   { label: '关于', icon: 'person', href: '/about/' },
 ];
 

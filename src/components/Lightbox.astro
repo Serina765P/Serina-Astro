@@ -56,9 +56,9 @@
   // 给正文/说说/专辑里的内容图补键盘入口（tabindex + button 语义）
   function enhanceImages() {
     document
-      .querySelectorAll<HTMLImageElement>('.prose img, .album-grid img, .shuoshuo-images img')
+      .querySelectorAll<HTMLImageElement>('.prose img:not(.custom-emoji), .album-grid img, .shuoshuo-images img')
       .forEach((img) => {
-        if (img.closest('a, dialog, .not-prose, milli-pachi-game')) return;
+        if (img.closest('.custom-emoji, a, dialog, .not-prose, milli-pachi-game')) return;
         if (img.getAttribute('role') === 'button') return;
         img.setAttribute('role', 'button');
         img.setAttribute('tabindex', '0');
@@ -82,7 +82,7 @@
     const target = event.target as HTMLElement | null;
     const img = target?.closest('img');
     if (!img || !img.closest('.prose, .album-grid, .shuoshuo-images')) return;
-    if (img.closest('a, dialog, .not-prose, milli-pachi-game')) return;
+    if (img.closest('.custom-emoji, a, dialog, .not-prose, milli-pachi-game')) return;
     event.preventDefault();
     openLightbox(img);
   });
@@ -94,7 +94,7 @@
     const img = target instanceof HTMLImageElement ? target : null;
     if (!img || img.getAttribute('role') !== 'button') return;
     if (!img.closest('.prose, .album-grid, .shuoshuo-images')) return;
-    if (img.closest('a, dialog, .not-prose, milli-pachi-game')) return;
+    if (img.closest('.custom-emoji, a, dialog, .not-prose, milli-pachi-game')) return;
     event.preventDefault();
     openLightbox(img);
   });

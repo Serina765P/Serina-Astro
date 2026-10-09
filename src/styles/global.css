@@ -1046,6 +1046,18 @@
     --tw-prose-th-borders: var(--line);
     --tw-prose-td-borders: var(--line);
   }
+  img.custom-emoji {
+    display: inline-block;
+    width: auto;
+    height: 3em;
+    margin: 0 0.08em;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    object-fit: contain;
+    vertical-align: middle;
+    cursor: default;
+  }
   /* 字重阶：大标题 700 / 小标题 600 / 强调 600 / 行内 code 400 / 引用不正体。
      值与此前 !important 版本一致，只是换用特异性（(0,1,1) > typography 的 (0,1,0)） */
   .prose h1 {

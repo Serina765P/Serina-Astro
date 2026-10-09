@@ -8,6 +8,7 @@ import PageHeader from '../../components/primitives/PageHeader.astro';
 import Container from '../../components/primitives/Container.astro';
 import { SITE } from '../../site.config';
 import { TZ } from '../../lib/utils';
+import { renderShuoshuoContent } from '../../lib/emoji';
 import {
   monthInShanghai,
   serializeShuoshuo,
@@ -31,18 +32,6 @@ const tagOptions = [...new Set(allItems.flatMap((item) => item.tags))].sort((a, 
 const yearOptions = [...new Set(allItems.map(shuoshuoYear))].sort((a, b) => b - a);
 const monthOptions = [...new Set(allItems.map((item) => monthInShanghai(new Date(item.published_at))))].sort().reverse();
 
-const escapeHtml = (s: string) =>
-  s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-const linkify = (s: string) =>
-  escapeHtml(s).replace(
-    /(https?:\/\/[^\s<]+)/g,
-    '<a href="$1" target="_blank" rel="noopener nofollow" class="text-wash-pink-deep underline decoration-wash-pink-deep/50 underline-offset-2 hover:text-wash-rose-deep">$1</a>',
-  );
 const formatDateTime = (date: Date) =>
   date.toLocaleTimeString('zh-CN', {
     hour: '2-digit',
@@ -156,7 +145,7 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
                 {item.title && <h3 class="shuoshuo-title">{item.title}</h3>}
                 <p
                   class="shuoshuo-content"
-                  set:html={linkify(stripShuoshuoTags(item.content))}
+                  set:html={renderShuoshuoContent(stripShuoshuoTags(item.content))}
                 />
 
                 {item.tags.length > 0 && (
@@ -228,6 +217,8 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
 </BaseLayout>
 
 <script>
+  import { renderShuoshuoContent } from '../../lib/emoji';
+
   type Item = {
     id: string;
     title: string;
@@ -254,18 +245,6 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
     const pageSize = Number(app.dataset.pageSize ?? 10);
     let allItems: Item[] = [];
 
-  const escapeHtml = (value: string) =>
-    value
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  const linkify = (value: string) =>
-    escapeHtml(value).replace(
-      /(https?:\/\/[^\s<]+)/g,
-      '<a href="$1" target="_blank" rel="noopener nofollow" class="text-wash-pink-deep underline decoration-wash-pink-deep/50 underline-offset-2 hover:text-wash-rose-deep">$1</a>',
-    );
   const withoutTags = (value: string) =>
     value.replace(/(^|[\s\n])#[\p{L}\p{N}_-]+(?=$|[\s\n]|[，。！？,.!?])/gu, '$1').trim();
   const dateParts = (value: string) => {
@@ -391,7 +370,7 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
     }
     const content = document.createElement('p');
     content.className = 'shuoshuo-content';
-    content.innerHTML = linkify(withoutTags(item.content));
+    content.innerHTML = renderShuoshuoContent(withoutTags(item.content));
     article.append(content);
 
     if (item.tags.length > 0) {

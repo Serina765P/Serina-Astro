@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build && node scripts/check-build.mjs && pagefind --site dist",
+    "emoji:import": "node scripts/import-emoji.mjs",
     "preview": "astro preview",
     "check": "astro check && node scripts/contrast-audit.mjs",
     "lint": "biome ci .",
@@ -14,6 +15,7 @@
   },
   "dependencies": {
     "@astrojs/mdx": "^8.0.0",
+    "@astrojs/markdown-satteri": "^0.4.0",
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.4",
     "@iconify-json/material-symbols": "^1.2.0",
@@ -28,6 +30,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "pagefind": "^1.5.2",
     "playwright-core": "^1.63.0",
+    "sharp": "0.35.4",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.0"
   }

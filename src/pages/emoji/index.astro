@@ -1,0 +1,257 @@
+---
+import { Icon } from 'astro-icon/components';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/primitives/PageHeader.astro';
+import Container from '../../components/primitives/Container.astro';
+import { EMOJI, renderShuoshuoContent } from '../../lib/emoji';
+import { SITE } from '../../site.config';
+
+const sets = [...new Map(EMOJI.map((emoji) => [emoji.set, emoji.setLabel])).entries()]
+  .map(([key, label]) => ({ key, label, items: EMOJI.filter((emoji) => emoji.set === key) }));
+const examples = [
+  '今天状态不错，做完事情来喝茶 :afterglow_饮茶:',
+  '这也太可爱了 :sweet_比心:',
+  '发现一个好点子 :scclassic_灵光一现: 先记在这里。',
+];
+---
+
+<BaseLayout title={`表情图鉴 · ${SITE.title}`} description="搜索、预览并复制站内自定义表情短代码。" pathname="/emoji/">
+  <Container width="standard" class="emoji-page">
+    <section data-pagefind-ignore>
+    <PageHeader title="表情图鉴" subtitle={`${EMOJI.length} 张表情 · 选中即可复制短代码`} />
+
+    <section class="emoji-composer mt-7" aria-labelledby="emoji-preview-title">
+      <h2 id="emoji-preview-title" class="text-sm font-semibold text-ink">试写预览</h2>
+      <p class="mt-1 text-xs text-sub">输入普通文字和短代码，例如 <code>:765pro_wink:</code></p>
+      <label class="sr-only" for="emoji-composer-input">输入要预览的内容</label>
+      <textarea id="emoji-composer-input" rows="2" spellcheck="false">今天状态不错 :765pro_微笑: 做完事情来喝茶 :afterglow_饮茶:</textarea>
+      <p class="emoji-preview-label">预览</p>
+      <p id="emoji-composer-preview" class="emoji-preview" aria-live="polite"></p>
+    </section>
+
+    <section class="mt-9" aria-labelledby="emoji-samples-title">
+      <h2 id="emoji-samples-title" class="text-sm font-semibold text-ink">行内效果</h2>
+      <div class="emoji-examples mt-3">
+        {examples.map((example) => <p set:html={renderShuoshuoContent(example)} />)}
+      </div>
+    </section>
+
+    <section class="mt-10" aria-labelledby="emoji-catalog-title">
+      <h2 id="emoji-catalog-title" class="text-sm font-semibold text-ink">全部表情</h2>
+      <form id="emoji-filter" class="emoji-filter mt-3" role="search">
+        <label class="emoji-search">
+          <span class="sr-only">搜索表情</span>
+          <Icon name="material-symbols:search" class="size-5" aria-hidden="true" />
+          <input id="emoji-query" type="search" placeholder="搜索名称、套装或短代码…" autocomplete="off" />
+        </label>
+        <label class="emoji-set-select">
+          <span class="sr-only">按套装筛选</span>
+          <select id="emoji-set">
+            <option value="">全部套装</option>
+            {sets.map((set) => <option value={set.key}>{set.label}</option>)}
+          </select>
+        </label>
+      </form>
+      <p id="emoji-status" class="mt-3 text-xs text-sub" aria-live="polite">共 {EMOJI.length} 张表情</p>
+      <p id="emoji-copy-status" class="emoji-copy-status mt-2" role="status" aria-live="polite"></p>
+      <label id="emoji-manual-wrap" class="emoji-manual-wrap mt-2" hidden>
+        <span>自动复制不可用，请手动复制：</span>
+        <input id="emoji-manual-copy" readonly aria-label="要复制的表情短代码" />
+      </label>
+      <div class="emoji-set-groups mt-4">
+        {sets.map((set) => (
+          <section class="emoji-set-group" data-emoji-set-group data-set={set.key} aria-labelledby={`emoji-set-${set.key}`}>
+            <h3 id={`emoji-set-${set.key}`} class="emoji-set-heading">
+              <span>{set.label}</span>
+              <span class="emoji-set-count" data-set-count>{set.items.length} 张</span>
+            </h3>
+            <div class="emoji-grid" data-emoji-grid>
+              {set.items.map((emoji) => (
+                <button
+                  class="emoji-tile"
+                  type="button"
+                  data-emoji-tile
+                  data-code={emoji.code}
+                  data-set={emoji.set}
+                  data-search={`${emoji.code} ${emoji.label} ${emoji.setLabel} ${emoji.keywords.join(' ')}`.toLocaleLowerCase('zh-CN')}
+                  aria-label={`复制 :${emoji.code}:，${emoji.label}`}
+                  title={`复制 :${emoji.code}:`}
+                >
+                  <img src={emoji.src} alt={emoji.label} width={emoji.width} height={emoji.height} loading="lazy" decoding="async" />
+                  <span class="emoji-tile-label">{emoji.label}</span>
+                  <code>:{emoji.code}:</code>
+                </button>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+      <p id="emoji-empty" class="empty-state mt-7" hidden>没有找到匹配的表情。</p>
+    </section>
+    </section>
+  </Container>
+</BaseLayout>
+
+<script>
+  import { renderShuoshuoContent } from '../../lib/emoji';
+
+  function initializeEmojiPage() {
+    const page = document.querySelector<HTMLElement>('.emoji-page');
+    if (!page || page.dataset.bound === 'true') return;
+    page.dataset.bound = 'true';
+    const input = page.querySelector<HTMLInputElement>('#emoji-query');
+    const setFilter = page.querySelector<HTMLSelectElement>('#emoji-set');
+    const status = page.querySelector<HTMLElement>('#emoji-status');
+    const copyStatus = page.querySelector<HTMLElement>('#emoji-copy-status');
+    const empty = page.querySelector<HTMLElement>('#emoji-empty');
+    const tiles = [...page.querySelectorAll<HTMLButtonElement>('[data-emoji-tile]')];
+    const groups = [...page.querySelectorAll<HTMLElement>('[data-emoji-set-group]')];
+    const previewInput = page.querySelector<HTMLTextAreaElement>('#emoji-composer-input');
+    const preview = page.querySelector<HTMLElement>('#emoji-composer-preview');
+    const manualWrap = page.querySelector<HTMLElement>('#emoji-manual-wrap');
+    const manualInput = page.querySelector<HTMLInputElement>('#emoji-manual-copy');
+
+    function filterTiles() {
+      const query = input?.value.trim().toLocaleLowerCase('zh-CN') ?? '';
+      const selectedSet = setFilter?.value ?? '';
+      let visibleCount = 0;
+      for (const tile of tiles) {
+        const visible = (!query || (tile.dataset.search ?? '').includes(query)) &&
+          (!selectedSet || tile.dataset.set === selectedSet);
+        tile.hidden = !visible;
+        if (visible) visibleCount += 1;
+      }
+      for (const group of groups) {
+        const groupTiles = [...group.querySelectorAll<HTMLButtonElement>('[data-emoji-tile]')];
+        const groupCount = groupTiles.filter((tile) => !tile.hidden).length;
+        const count = group.querySelector<HTMLElement>('[data-set-count]');
+        group.hidden = groupCount === 0;
+        if (count) count.textContent = `${groupCount} 张`;
+      }
+      if (status) status.textContent = `显示 ${visibleCount} / ${tiles.length} 张表情`;
+      if (empty) empty.hidden = visibleCount > 0;
+    }
+
+    function updatePreview() {
+      if (preview && previewInput) preview.innerHTML = renderShuoshuoContent(previewInput.value);
+    }
+
+    async function copyCode(code: string) {
+      const shortcode = `:${code}:`;
+      if (manualWrap) manualWrap.hidden = true;
+      try {
+        if (!navigator.clipboard?.writeText) throw new Error('Clipboard API unavailable');
+        await navigator.clipboard.writeText(shortcode);
+        if (copyStatus) copyStatus.textContent = `已复制 ${shortcode}`;
+      } catch {
+        if (manualInput && manualWrap) {
+          manualInput.value = shortcode;
+          manualWrap.hidden = false;
+          manualInput.focus();
+          manualInput.select();
+          if (copyStatus) copyStatus.textContent = '浏览器没有授予剪贴板权限，请使用 Ctrl+C（Mac 使用 ⌘C）复制选中的短代码。';
+        }
+      }
+    }
+
+    input?.addEventListener('input', filterTiles);
+    setFilter?.addEventListener('change', filterTiles);
+    previewInput?.addEventListener('input', updatePreview);
+    for (const tile of tiles) tile.addEventListener('click', () => void copyCode(tile.dataset.code ?? ''));
+    updatePreview();
+  }
+
+  initializeEmojiPage();
+  document.addEventListener('astro:page-load', initializeEmojiPage);
+</script>
+
+<style>
+  @reference '../../styles/global.css';
+
+  .emoji-composer,
+  .emoji-examples {
+    @apply rounded-2xl border border-line bg-surface p-4;
+  }
+  @media (min-width: 40rem) {
+    .emoji-composer,
+    .emoji-examples {
+      padding: 1.25rem;
+    }
+  }
+  .emoji-composer textarea {
+    @apply mt-3 block w-full resize-y rounded-xl border border-line bg-surface-2 px-3 py-2.5 text-sm leading-relaxed text-body outline-none transition-colors focus:border-wash-pink-deep;
+  }
+  .emoji-composer code {
+    @apply rounded bg-surface-2 px-1 py-0.5 font-mono text-[0.9em] text-ink;
+  }
+  .emoji-preview-label {
+    @apply mt-3 text-xs text-sub;
+  }
+  .emoji-preview {
+    @apply mt-1 min-h-10 whitespace-pre-wrap break-words rounded-xl bg-surface-2 px-3 py-2 text-sm leading-relaxed text-body;
+  }
+  .emoji-examples p {
+    @apply m-0 py-2 text-sm leading-relaxed text-body;
+  }
+  .emoji-examples p + p {
+    @apply border-t border-line;
+  }
+  .emoji-filter {
+    @apply flex flex-col gap-2 sm:flex-row;
+  }
+  .emoji-search {
+    @apply flex min-h-11 flex-1 items-center gap-2 rounded-xl border border-line bg-surface px-3 text-sub focus-within:border-wash-pink-deep;
+  }
+  .emoji-search input,
+  .emoji-set-select select {
+    @apply min-w-0 flex-1 bg-transparent text-sm text-ink outline-none;
+  }
+  .emoji-search input::placeholder {
+    color: var(--sub);
+  }
+  .emoji-set-select {
+    @apply flex min-h-11 items-center rounded-xl border border-line bg-surface px-3 sm:min-w-48;
+  }
+  .emoji-set-select select {
+    @apply cursor-pointer;
+  }
+  .emoji-copy-status {
+    @apply min-h-5 text-xs text-wash-sage-deep;
+  }
+  .emoji-manual-wrap {
+    @apply flex flex-wrap items-center gap-2 text-xs text-sub;
+  }
+  .emoji-manual-wrap input {
+    @apply min-h-9 rounded-lg border border-line bg-surface px-2 font-mono text-ink;
+  }
+  .emoji-grid {
+    @apply grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5;
+  }
+  .emoji-set-groups {
+    @apply space-y-8;
+  }
+  .emoji-set-group {
+    min-width: 0;
+  }
+  .emoji-set-heading {
+    @apply mb-3 flex items-center gap-2 text-sm font-semibold text-ink;
+  }
+  .emoji-set-count {
+    @apply rounded-full bg-chip px-2 py-0.5 text-[0.65rem] font-normal text-chip-fg;
+  }
+  .emoji-tile {
+    @apply flex min-w-0 flex-col items-center rounded-xl border border-line bg-surface p-3 text-center transition-colors hover:border-wash-pink-deep hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wash-pink-deep;
+    cursor: pointer;
+  }
+  .emoji-tile img {
+    width: 4.25rem;
+    height: 4.25rem;
+    object-fit: contain;
+  }
+  .emoji-tile-label {
+    @apply mt-2 max-w-full truncate text-xs font-medium text-ink;
+  }
+  .emoji-tile code {
+    @apply mt-1 max-w-full truncate font-mono text-[0.62rem] text-sub;
+  }
+</style>

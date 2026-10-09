@@ -1,10 +1,12 @@
 // @ts-check
 
+import { satteri } from '@astrojs/markdown-satteri';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'astro/config';
 import icon from 'astro-icon';
+import markdownEmoji from './src/lib/markdown-emoji.ts';
 
 export default defineConfig({
   site: 'https://blog.serinap.top',
@@ -23,7 +25,7 @@ export default defineConfig({
     layout: 'constrained',
   },
   integrations: [
-    mdx(),
+    mdx({ processor: satteri({ hastPlugins: [markdownEmoji] }) }),
     sitemap(),
     icon({
       include: {
@@ -36,6 +38,7 @@ export default defineConfig({
     }),
   ],
   markdown: {
+    processor: satteri({ hastPlugins: [markdownEmoji] }),
     shikiConfig: {
       // 亮/暗都用暗色 token：底色由 global.css 按模式切换为暖炭（亮 #4a443c / 暗 #1e1b18）
       themes: {
