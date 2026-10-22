@@ -4,7 +4,8 @@
     "资源分享": "resources",
     "技术分享": "tech",
     "学习笔记": "notes",
-    "小游戏": "games"
+    "小游戏": "games",
+    "考据分析": "analysis"
   },
   "tagSlugs": {
     "站务": "site",
@@ -25,13 +26,17 @@
     "小游戏": "games",
     "百万现场": "millionlive",
     "Misskey": "misskey",
-    "柏青哥": "pachinko"
+    "柏青哥": "pachinko",
+    "MLTD": "mltd",
+    "考据": "research",
+    "数据分析": "data-analysis"
   },
   "categoryColors": {
     "资源分享": "var(--wash-clay)",
     "技术分享": "var(--wash-mist)",
     "学习笔记": "var(--wash-sage)",
     "公告": "var(--wash-sand)",
-    "小游戏": "var(--wash-rose)"
+    "小游戏": "var(--wash-rose)",
+    "考据分析": "var(--wash-pink)"
   }
 }
