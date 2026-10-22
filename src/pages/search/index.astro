@@ -28,7 +28,9 @@ import { SITE } from '../../site.config';
       />
     </div>
 
-    <p id="search-status" class="mt-3 hidden text-xs text-sub tabular-nums" aria-live="polite"></p>
+    <!-- 状态行必须常驻可访问树：display:none 的 live region 不会被播报。
+         高度用 min-h-4 预留一行，避免出现/消失时把下方结果推来推去。 -->
+    <p id="search-status" class="mt-3 min-h-4 text-xs text-sub tabular-nums" aria-live="polite"></p>
     <ul id="search-results" class="mt-4 space-y-3 pb-16"></ul>
   </Container>
 </BaseLayout>
@@ -75,10 +77,9 @@ import { SITE } from '../../site.config';
         resultsEl.innerHTML = '';
         syncUrl(query);
         if (!query) {
-          statusEl.hidden = true;
+          statusEl.textContent = '';
           return;
         }
-        statusEl.hidden = false;
         statusEl.textContent = '搜索中…';
 
         getPagefind()
@@ -115,7 +116,6 @@ import { SITE } from '../../site.config';
           })
           .catch(function () {
             if (current !== seq) return;
-            statusEl.hidden = false;
             statusEl.textContent = '搜索索引仅在构建后可用（npm run build 后预览）';
           });
       }

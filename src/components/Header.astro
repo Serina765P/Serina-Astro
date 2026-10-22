@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import { Icon } from 'astro-icon/components';
 import { HERO, NAV, SITE } from '../site.config';
+import Container from './primitives/Container.astro';
 import ThemeToggle from './ThemeToggle.astro';
 
 // trailingSlash: 'always' 后 pathname 恒带尾斜杠（/archives/），NAV 的 href 也全部以 / 结尾，
@@ -11,7 +12,11 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
 ---
 
 <header class="sticky top-0 z-nav border-b border-line bg-nav backdrop-blur-md backdrop-saturate-150">
-  <div class="flex h-16 w-full items-center justify-between gap-4 px-4 sm:px-6 lg:px-10">
+  <!-- 与页脚、首页/归档/分类/标签页共用同一个 Container 档位（standard = 64rem）：
+       原先 w-full + lg:px-10 没有任何上限，宽屏下站点名/图标贴视口两端，而正文与页脚居中，
+       视觉上等于两套网格；1024px 处内边距还比 Container 多 16px，左边缘也对不齐。
+       文章页正文是 wide（72rem），比这层外壳宽 4rem，仍在同一中轴上，不影响阅读。 -->
+  <Container width="standard" class="flex h-16 items-center justify-between gap-4">
     <a href="/" class="flex min-w-0 items-center gap-2.5 rounded-full py-1 pr-2">
       <!-- S20：头像走 astro:assets，按显示尺寸缩放输出（32px 显示，2x 取 64）；
            fixed 布局只出 densities srcset；每页首屏元素，显式 eager -->
@@ -48,10 +53,11 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
     </nav>
 
     <div class="flex items-center gap-1">
+      <!-- 触摸目标：移动端 44px（size-11），≥sm 回到 36px 的紧凑密度 -->
       <a
         href="/search/"
         aria-label="搜索"
-        class="grid size-9 place-items-center rounded-full text-sub transition-colors hover:bg-surface-2 hover:text-wash-pink-deep"
+        class="grid size-11 place-items-center rounded-full text-sub transition-colors hover:bg-surface-2 hover:text-wash-pink-deep sm:size-9"
       >
         <Icon name="material-symbols:search" class="size-5" aria-hidden="true" />
       </a>
@@ -62,7 +68,7 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
       <details class="mobile-menu group lg:hidden" data-mobile-menu>
         <summary
           aria-label="菜单"
-          class="grid size-9 cursor-pointer list-none place-items-center rounded-full text-sub transition-colors hover:bg-surface-2 hover:text-wash-pink-deep [&::-webkit-details-marker]:hidden"
+          class="grid size-11 cursor-pointer list-none place-items-center rounded-full text-sub transition-colors hover:bg-surface-2 hover:text-wash-pink-deep sm:size-9 [&::-webkit-details-marker]:hidden"
         >
           <Icon name="material-symbols:menu" class="menu-open-icon size-5 group-open:hidden" aria-hidden="true" />
           <Icon
@@ -102,7 +108,7 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
         </nav>
       </details>
     </div>
-  </div>
+  </Container>
 </header>
 
 <script>

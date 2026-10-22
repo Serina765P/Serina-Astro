@@ -37,7 +37,13 @@ const sayText = sayPlain.slice(0, 120) + (sayPlain.length > 120 ? '…' : '');
 const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
 ---
 
-<BaseLayout title={`${SITE.title} · ${SITE.subtitle}`} description={SITE.description} pathname="/" mainClass="py-0">
+<BaseLayout
+  title={`${SITE.title} · ${SITE.subtitle}`}
+  description={SITE.description}
+  pathname="/"
+  mainClass="py-0"
+  heroFont
+>
   <section class="home-hero border-b border-line" aria-labelledby="home-title">
     <Container width="standard" class="hero-inner">
       <div class="hero-copy">
@@ -45,7 +51,7 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
         <p class="hero-description">{SITE.description}</p>
       </div>
       <div class="hero-portrait">
-        <span class="hero-mark" aria-hidden="true">せりな</span>
+        <span class="hero-mark" aria-hidden="true">{HERO.mark}</span>
         <Image
           src={HERO.avatar}
           alt={`${SITE.author} 的头像`}
@@ -147,14 +153,6 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
     max-width: 42rem;
   }
 
-  .hero-caption {
-    color: var(--brand-strong);
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.18em;
-    line-height: 1.4;
-  }
-
   .hero-copy h1 {
     color: var(--ink);
     font-family: var(--font-hero);
@@ -221,10 +219,14 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
     writing-mode: vertical-rl;
   }
 
+  /* 唯一来源：此前还有一份同名定义（brand-strong / 0.7rem），是死规则 —— 改它没有任何反应。
+     字号不低于 12px：0.62rem≈9.9px 已低于中文可读下限。 */
   .hero-caption {
     color: var(--sub);
-    font-size: 0.62rem;
-    letter-spacing: 0.16em;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    line-height: 1.5;
   }
 
   .home-content {
@@ -375,11 +377,14 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
   }
 
   .all-tags {
-    min-height: 2rem;
+    /* 与同排 TagChip 的 44px 目标对齐：这一项只有文字，靠 min-height 撑出可点区域 */
+    min-height: 2.75rem;
     margin-left: 0.25rem;
     font-size: 0.75rem;
   }
 
+  /* 55rem = 旧的 --breakpoint-bento。该 token 在 global.css 里没有任何消费点，已随本次收口移除；
+     scoped style 的裸媒体查询取不到 Tailwind 的 --breakpoint-*，所以这里是它的唯一真值。 */
   @media (max-width: 55rem) {
     .hero-inner {
       grid-template-columns: minmax(0, 1fr) 9rem;
@@ -422,8 +427,9 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
     }
 
     .hero-caption {
-      font-size: 0.52rem;
-      letter-spacing: 0.08em;
+      /* 窄屏不再下探：0.52rem≈8.3px 已无法辨读，与桌面同档 12px */
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
     }
 
     .recent-section {
@@ -502,8 +508,9 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
     }
 
     .hero-caption {
-      font-size: 0.65rem;
-      letter-spacing: 0.13em;
+      /* 与 48rem 断点保持同一档：0.65rem≈10.4px 仍然低于可读下限 */
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
     }
 
     .post-list {

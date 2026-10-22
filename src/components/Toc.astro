@@ -124,7 +124,11 @@ const collapseAttr = collapsible ? '' : undefined;
     display: flex;
     gap: 0.5rem;
     align-items: center;
-    max-width: calc(100vw - 2rem);
+    /* 右侧必须给「返回顶部」让位：5.5rem = 左外距 1rem + 右外距 1rem + 按钮 2.5rem + 间距 1rem。
+       用 100vw - 2rem 时，长章节名会把胶囊撑到视口右缘，正好盖住 bottom 固定的返回顶部按钮
+       （两者 z-index 同为 --z-sticky-head，胶囊在 DOM 中靠后，点不到按钮）。 */
+    max-width: min(21rem, calc(100vw - 5.5rem));
+    min-height: 2.75rem;
     padding: 0.5rem 0.9rem;
     border: 1px solid var(--line);
     border-radius: 9999px;

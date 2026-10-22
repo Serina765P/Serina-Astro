@@ -6,7 +6,7 @@ import { Icon } from 'astro-icon/components';
   id="theme-toggle"
   type="button"
   aria-label="切换深浅色模式"
-  class="grid size-9 place-items-center rounded-full text-sub transition-colors hover:bg-surface-2 hover:text-wash-pink-deep"
+  class="grid size-11 place-items-center rounded-full text-sub transition-colors hover:bg-surface-2 hover:text-wash-pink-deep sm:size-9"
 >
   <Icon name="material-symbols:dark-mode" class="hidden size-5 dark:block" aria-hidden="true" />
   <Icon name="material-symbols:light-mode" class="size-5 dark:hidden" aria-hidden="true" />
@@ -26,15 +26,22 @@ import { Icon } from 'astro-icon/components';
     });
   }
 
-  document.addEventListener('click', (event) => {
-    const target = event.target as HTMLElement | null;
-    if (!target?.closest('#theme-toggle')) return;
-    const dark = !document.documentElement.classList.contains('dark');
-    try {
-      localStorage.setItem('theme', dark ? 'dark' : 'light');
-    } catch {
-      /* 存储被隐私模式阻止时仍允许本次主题切换 */
-    }
-    applyTheme(dark);
-  });
+  // ClientRouter 换页会重跑本模块：监听器只绑一次。幂等标记挂 <html>
+  // （documentElement 不随换页替换），与 Header / Giscus / 搜索脚本同一约定。
+  // 不加这一步时，换页一次后每次点击会被处理两次：先切暗再切回亮，等于失灵。
+  if (document.documentElement.dataset.themeClickBound !== 'true') {
+    document.documentElement.dataset.themeClickBound = 'true';
+
+    document.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement | null;
+      if (!target?.closest('#theme-toggle')) return;
+      const dark = !document.documentElement.classList.contains('dark');
+      try {
+        localStorage.setItem('theme', dark ? 'dark' : 'light');
+      } catch {
+        /* 存储被隐私模式阻止时仍允许本次主题切换 */
+      }
+      applyTheme(dark);
+    });
+  }
 </script>

@@ -8,9 +8,14 @@ import heroImage from './assets/images/hero.webp';
 import siteInfo from './data/site-info.json';
 import taxonomy from './data/taxonomy.json';
 
+// 首页标题 / 竖排标记的唯一真值在 site-info.json（工作台可改写）。
+// scripts/build-hero-font.mjs 按同一份文案生成字体子集 —— 两边共用一个来源，
+// 改字后重新构建就会自动重算需要哪些字体分片，不需要动代码。
+const heroText = siteInfo as { heroTitle?: string; heroMark?: string };
+
 export const SITE = {
   title: "SerinaP's Blog",
-  subtitle: '芹菜P的部落阁',
+  subtitle: heroText.heroTitle ?? '芹菜P的部落阁',
   description: '已经不再是低眉顺眼的昨日，从今天开始我的传说',
   author: '芹菜P',
   keywords: ['blog', '博客', '个人博客', '芹菜P', '偶像大师', 'THE iDOLM@STER'],
@@ -24,6 +29,8 @@ export const SITE = {
 export const HERO = {
   avatar: avatarImage,
   image: heroImage,
+  /** 头像旁的竖排装饰字（同一套 --font-hero 字体，进入子集计算） */
+  mark: heroText.heroMark ?? 'せりな',
 };
 
 export const NAV = [

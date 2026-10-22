@@ -4,8 +4,11 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "predev": "npm run hero:font",
     "dev": "astro dev",
+    "prebuild": "npm run hero:font",
     "build": "astro build && node scripts/check-build.mjs && pagefind --site dist",
+    "hero:font": "node scripts/build-hero-font.mjs",
     "emoji:import": "node scripts/import-emoji.mjs",
     "preview": "astro preview",
     "check": "astro check && node scripts/contrast-audit.mjs",
@@ -14,8 +17,8 @@
     "shots": "node scripts/shots.mjs"
   },
   "dependencies": {
-    "@astrojs/mdx": "^8.0.0",
     "@astrojs/markdown-satteri": "^0.4.0",
+    "@astrojs/mdx": "^8.0.0",
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.4",
     "@iconify-json/material-symbols": "^1.2.0",
@@ -31,6 +34,7 @@
     "pagefind": "^1.5.2",
     "playwright-core": "^1.63.0",
     "sharp": "0.35.4",
+    "subset-font": "^2.9.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.0"
   }

@@ -98,6 +98,9 @@ const { nodes, collapsible, idPrefix, listId } = Astro.props;
   }
 
   .toc-toggle {
+    /* ::after 热区以本元素为参照；不要直接改 width/height —— 目录行之间没有空隙，
+       按钮一变大就会挤行高、把整棵树的节奏改掉。 */
+    position: relative;
     display: grid;
     flex: none;
     width: 1.5rem;
@@ -109,6 +112,13 @@ const { nodes, collapsible, idPrefix, listId } = Astro.props;
     color: var(--sub);
     cursor: pointer;
     transition: color 160ms ease, background-color 160ms ease;
+  }
+
+  /* 视觉仍是 24px，实际可点区域 ≈37px（24 + 0.4rem×2） */
+  .toc-toggle::after {
+    content: '';
+    position: absolute;
+    inset: -0.4rem;
   }
 
   .toc-toggle:hover {

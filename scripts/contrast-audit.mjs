@@ -5,11 +5,13 @@
 // 并解析 var() 别名链与 color-mix()。改了 CSS 忘记同步审计时会直接报错退出，
 // 而不是拿着过期色值给出绿灯。阈值：正文 4.5，大字（≥24px 或 ≥18.66px 粗体）3.0。
 
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 // 相对脚本自身定位而非 cwd：npm run contrast 与 CI 在任何工作目录下结果一致
-const CSS_FILE = path.join(import.meta.dirname, '..', 'src', 'styles', 'global.css');
+const ROOT_DIR = path.join(import.meta.dirname, '..');
+const CSS_FILE = path.join(ROOT_DIR, 'src', 'styles', 'global.css');
+const SRC_DIR = path.join(ROOT_DIR, 'src');
 
 /* ── 取值层：解析 global.css ── */
 
@@ -234,6 +236,17 @@ function check(mode, name, fg, bg, min) {
   );
 }
 
+/**
+ * 前景带 alpha 时先与背景合成再核算（`text-sub/60` 这类组件级写法）。
+ * mix(a, b, pct) 的口径是「a 占 pct%」：合成色 = 前景 alpha + 背景 (1-alpha)
+ *   → mix(fg, bg, alpha*100)
+ */
+function checkComposite(mode, name, fgToken, alpha, bgToken, min) {
+  const fg = resolveColor(`var(${fgToken})`, vars[mode]);
+  const bg = resolveColor(`var(${bgToken})`, vars[mode]);
+  check(mode, name, mix(fg, bg, alpha * 100), bg, min);
+}
+
 for (const [mode, T] of Object.entries(tables)) {
   // 基础文字
   check(mode, 'body / bg', T.body, T.bg, 4.5);
@@ -285,6 +298,64 @@ for (const [mode, T] of Object.entries(tables)) {
   }
   // blockquote 边框为非文字 UI，3:1 即可
   check(mode, 'mist-deep / surface（blockquote 边）', T.mistDeep, T.surface, 3.0);
+}
+
+/* ── 深底上的组件级半透明前景 ──
+   扫描器（见下）按浅色页面背景核算，代码块这类深底会被误判，故显式声明配对与阈值。 */
+for (const mode of Object.keys(tables)) {
+  checkComposite(
+    mode,
+    'code-ink 55% / code-bg（复制图标，UI 3:1）',
+    '--code-ink',
+    0.55,
+    '--code-bg',
+    3.0,
+  );
+  checkComposite(mode, 'code-ink 70% / code-bg（语言标签）', '--code-ink', 0.7, '--code-bg', 4.5);
+}
+
+/* ── 扫描源码：禁止把正文色叠成半透明再当正文用 ──
+   配对表只认「token × token」，`text-sub/60` 压白底只有 ≈2.4:1，却因为没有显式背景
+   而一路绿灯（S24 之前 10px 版权行就是这么漏掉的）。这里直接扫 `text-(sub|body)/NN`，
+   按最差背景（bg / surface / surface-2）逐项核算。 */
+const ALPHA_FG = { sub: '--sub', body: '--body' };
+const ALPHA_BG = ['--bg', '--surface', '--surface-2'];
+const SCAN_EXT = /\.(astro|css|ts|tsx|md|mdx)$/;
+
+function walkSource(dir) {
+  const files = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) files.push(...walkSource(full));
+    else if (SCAN_EXT.test(entry.name)) files.push(full);
+  }
+  return files;
+}
+
+// 注释里写反例（「不要用 text-sub/60」）不能被当成用法
+const stripAllComments = (source) =>
+  source.replace(/<!--[\s\S]*?-->/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+
+let alphaUsage = 0;
+for (const file of walkSource(SRC_DIR)) {
+  const source = stripAllComments(readFileSync(file, 'utf8'));
+  for (const match of source.matchAll(/text-(sub|body)\/(\d{1,3})\b/g)) {
+    const [, name, raw] = match;
+    const alpha = Number(raw) / 100;
+    const rel = path.relative(ROOT_DIR, file);
+    for (const mode of Object.keys(tables)) {
+      const fg = resolveColor(`var(${ALPHA_FG[name]})`, vars[mode]);
+      for (const bgName of ALPHA_BG) {
+        const bg = resolveColor(`var(${bgName})`, vars[mode]);
+        alphaUsage += 1;
+        check(mode, `text-${name}/${raw} @ ${rel}`, mix(fg, bg, alpha * 100), bg, 4.5);
+      }
+    }
+  }
+}
+if (alphaUsage === 0) {
+  console.log('PASS  半透明前景扫描：src/ 下没有 text-<token>/NN 这类正文写法');
 }
 
 console.log(fails === 0 ? '\n全部通过 ✅' : `\n${fails} 项不达标 ❌`);

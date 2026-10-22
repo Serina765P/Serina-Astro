@@ -75,12 +75,16 @@ function debounce(fn: () => void, wait: number): () => void {
   };
 }
 
-/** 与 Vector/Citizen 同源：用文档的 scroll-padding-top 当视口上沿阈值 */
+/**
+ * 视口上沿阈值 = 锚点实际停靠位置。
+ * 站点的锚点偏移唯一来源是 global.css 的 `[id] { scroll-margin-top }`，html 上的
+ * `scroll-padding-top` 从未设置（此前读它恒为空，一直走 75px 兜底，比实际的 88px 少 13px，
+ * 表现为「当前章节」比落点提前一格）。这里直接量一个真实锚点的计算值，与浏览器同源。
+ */
 function getTopMargin(): number {
-  const raw = window
-    .getComputedStyle(document.documentElement)
-    .getPropertyValue('scroll-padding-top');
-  return Number.parseInt(raw, 10) || FALLBACK_TOP_MARGIN;
+  const probe = document.querySelector<HTMLElement>('main [id]') ?? document.getElementById('main');
+  const margin = probe ? Number.parseFloat(getComputedStyle(probe).scrollMarginTop) : Number.NaN;
+  return Number.isFinite(margin) && margin > 0 ? margin : FALLBACK_TOP_MARGIN;
 }
 
 function readRoot(el: HTMLElement): TocRoot {

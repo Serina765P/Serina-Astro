@@ -7,11 +7,13 @@ import Giscus from '../../components/Giscus.astro';
 import PageHeader from '../../components/primitives/PageHeader.astro';
 import Container from '../../components/primitives/Container.astro';
 import { SITE } from '../../site.config';
-import { TZ } from '../../lib/utils';
 import { renderShuoshuoContent } from '../../lib/emoji';
 import {
+  formatShuoshuoTime,
   monthInShanghai,
   serializeShuoshuo,
+  shuoshuoDayKey,
+  shuoshuoDayNumber,
   shuoshuoYear,
   sortShuoshuo,
   stripShuoshuoTags,
@@ -32,34 +34,15 @@ const tagOptions = [...new Set(allItems.flatMap((item) => item.tags))].sort((a, 
 const yearOptions = [...new Set(allItems.map(shuoshuoYear))].sort((a, b) => b - a);
 const monthOptions = [...new Set(allItems.map((item) => monthInShanghai(new Date(item.published_at))))].sort().reverse();
 
-const formatDateTime = (date: Date) =>
-  date.toLocaleTimeString('zh-CN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-    timeZone: TZ,
-  });
-const dateParts = (date: Date) =>
-  Object.fromEntries(
-    new Intl.DateTimeFormat('en-US', {
-      timeZone: TZ,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    })
-      .formatToParts(date)
-      .map((part) => [part.type, part.value]),
-  );
-const dateKey = (item: ShuoshuoItem) => {
-  const parts = dateParts(new Date(item.published_at));
-  return `${parts.year}-${parts.month}-${parts.day}`;
-};
-const dayNumber = (item: ShuoshuoItem) => String(Number(dateParts(new Date(item.published_at)).day));
-const groupLabel = (item: ShuoshuoItem) => {
-  const date = new Date(item.published_at);
-  return `${shuoshuoYear(item)} 年 ${monthInShanghai(date).slice(5)} 月`;
-};
+// 日期逻辑全部来自 lib/shuoshuo.ts —— 客户端脚本引用同一组函数，
+// 否则首屏（SSR）与筛选/翻页后（客户端渲染）会各有一套分组与时间格式。
+const dateKey = (item: ShuoshuoItem) => shuoshuoDayKey(item.published_at);
+const dayNumber = (item: ShuoshuoItem) => shuoshuoDayNumber(item.published_at);
 const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published_at));
+const groupLabel = (item: ShuoshuoItem) => {
+  const [year, month] = groupKey(item).split('-');
+  return `${year} 年 ${month} 月`;
+};
 ---
 
 <BaseLayout title={`说说 · ${SITE.title}`} description="碎碎念时间线" pathname={page.url.current}>
@@ -138,7 +121,7 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
               <li class="shuoshuo-entry">
                 <time class="shuoshuo-date" datetime={item.published_at}>
                   {showDay && <span class="shuoshuo-day"><strong>{dayNumber(item)}</strong><span>日</span></span>}
-                  <span class="shuoshuo-time">{formatDateTime(new Date(item.published_at))}</span>
+                  <span class="shuoshuo-time">{formatShuoshuoTime(item.published_at)}</span>
                 </time>
                 <span aria-hidden="true" class:list={['shuoshuo-node', showDay && 'shuoshuo-node-day']} />
                 <article class="shuoshuo-card">
@@ -218,6 +201,12 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
 
 <script>
   import { renderShuoshuoContent } from '../../lib/emoji';
+  import {
+    formatShuoshuoTime as formatTime,
+    monthInShanghai,
+    shuoshuoDayKey,
+    shuoshuoDayNumber,
+  } from '../../lib/shuoshuo';
 
   type Item = {
     id: string;
@@ -233,10 +222,12 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
   type Payload = { items: Item[]; total: number };
 
   function initializeShuoshuo() {
-    const TIME_ZONE = 'Asia/Shanghai';
     const app = document.querySelector<HTMLOListElement>('[data-shuoshuo-list]');
     if (!app || app.dataset.bound === 'true') return;
     app.dataset.bound = 'true';
+    // <html> 上记录「当前实例的 render」，供只绑一次的 popstate 转发（见函数末尾）
+    type ShuoshuoHost = HTMLElement & { __shuoshuoRender?: () => void };
+    const host = document.documentElement as ShuoshuoHost;
     const form = document.querySelector<HTMLFormElement>('#shuoshuo-filter');
     const status = document.querySelector<HTMLElement>('#shuoshuo-status');
     const empty = document.querySelector<HTMLElement>('#shuoshuo-empty');
@@ -247,34 +238,13 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
 
   const withoutTags = (value: string) =>
     value.replace(/(^|[\s\n])#[\p{L}\p{N}_-]+(?=$|[\s\n]|[，。！？,.!?])/gu, '$1').trim();
-  const dateParts = (value: string) => {
-    const parts = new Intl.DateTimeFormat('en-US', {
-      timeZone: TIME_ZONE,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).formatToParts(new Date(value));
-    return Object.fromEntries(parts.map((part) => [part.type, part.value]));
-  };
-  const dateKey = (item: Item) => {
-    const parts = dateParts(item.published_at);
-    return `${parts.year}-${parts.month}-${parts.day}`;
-  };
-  const dayNumber = (item: Item) => String(Number(dateParts(item.published_at).day));
-  const formatTime = (value: string) =>
-    new Date(value).toLocaleTimeString('zh-CN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-      timeZone: TIME_ZONE,
-    });
-  const groupKey = (item: Item) => {
-    const parts = dateParts(item.published_at);
-    return `${parts.year}-${parts.month}`;
-  };
+  // 与 SSR 模板共用 lib/shuoshuo.ts 的实现，避免首屏与筛选后两套分组规则
+  const dateKey = (item: Item) => shuoshuoDayKey(item.published_at);
+  const dayNumber = (item: Item) => shuoshuoDayNumber(item.published_at);
+  const groupKey = (item: Item) => monthInShanghai(new Date(item.published_at));
   const groupLabel = (item: Item) => {
-    const parts = dateParts(item.published_at);
-    return `${parts.year} 年 ${parts.month} 月`;
+    const [year, month] = groupKey(item).split('-');
+    return `${year} 年 ${month} 月`;
   };
   const currentFilters = () => {
     const params = new URLSearchParams(location.search);
@@ -316,12 +286,13 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
   const matches = (item: Item, filters: ReturnType<typeof currentFilters>) => {
     const query = filters.q.toLocaleLowerCase('zh-CN');
     const searchable = `${item.title} ${item.content} ${item.tags.join(' ')}`.toLocaleLowerCase('zh-CN');
-    const parts = dateParts(item.published_at);
+    // monthInShanghai 返回 YYYY-MM，年份筛选取前四位即可，不必再解析一次日期
+    const monthKey = monthInShanghai(new Date(item.published_at));
     return (
       (!query || searchable.includes(query)) &&
       (!filters.tag || item.tags.includes(filters.tag)) &&
-      (!filters.year || parts.year === filters.year) &&
-      (!filters.month || `${parts.year}-${parts.month}` === filters.month)
+      (!filters.year || monthKey.slice(0, 4) === filters.year) &&
+      (!filters.month || monthKey === filters.month)
     );
   };
 
@@ -494,7 +465,18 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
       if (!response.ok) throw new Error(`说说索引请求失败：${response.status}`);
       const payload = (await response.json()) as Payload;
       allItems = sortItems(payload.items ?? []);
-      render();
+      // 首屏没有筛选条件时，SSR 已经把同一份列表渲染出来了。整列 replaceChildren 只会让
+      // 图片重新请求、滚动锚点抖动；这里只补 SSR 留空的分页区，列表交给用户操作再接管。
+      const filters = currentFilters();
+      if (hasFilters(filters)) {
+        render();
+      } else {
+        renderPagination(
+          routePage,
+          Math.max(1, Math.ceil(allItems.length / pageSize)),
+          filters,
+        );
+      }
     } catch (error) {
       console.warn(error);
     }
@@ -517,7 +499,19 @@ const groupKey = (item: ShuoshuoItem) => monthInShanghai(new Date(item.published
     history.pushState({}, '', buildUrl(1, { q: '', tag: '', year: '', month: '' }));
     render();
   });
-  window.addEventListener('popstate', render);
+  // popstate 只绑一次：本函数按列表元素幂等（每次换页都是新元素），但 window 监听器会
+  // 随每次进入本页累积，且闭包指向已被替换的旧列表。改为「绑一次 + 转发给当前实例」：
+  // 幂等标记与新实例的 render 都挂在 <html>（documentElement 不随换页替换）。
+  host.__shuoshuoRender = render;
+  if (host.dataset.shuoshuoPopBound !== 'true') {
+    host.dataset.shuoshuoPopBound = 'true';
+    window.addEventListener('popstate', () => {
+      // 当前页面不是说说页时，旧实例不应再接管 history 变化
+      const current = document.querySelector<HTMLOListElement>('[data-shuoshuo-list]');
+      if (!current || current.dataset.bound !== 'true') return;
+      host.__shuoshuoRender?.();
+    });
+  }
     initialize();
   }
 

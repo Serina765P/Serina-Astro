@@ -245,15 +245,17 @@ const canonicalUrl = `${SITE.url}/posts/milli-pachi-39fes/`;
     </div>
 
     <!-- 机台底衬与版权致敬 -->
-    <div class="px-5 py-3 bg-surface-2/30 border-t border-line/60 text-[11px] text-sub/80 flex flex-wrap items-center justify-between gap-2">
-      <div class="flex items-center gap-2">
-        <span>游戏原帖：<a href="https://live-theater.net/play/9rdl1v95qr" target="_blank" rel="noopener noreferrer" class="text-pink-600 dark:text-pink-400 hover:underline">LTN Play</a></span>
-        <span>·</span>
-        <span>原作脚本：<a href="https://live-theater.net/@Cupisme" target="_blank" rel="noopener noreferrer" class="text-pink-600 dark:text-pink-400 hover:underline">Cupisme</a></span>
-        <span>·</span>
+    <!-- 出处 / 版权信息：不得用 text-sub/60 这类半透明前景 —— 合成后亮色只有 ≈2.4:1，
+         且 10px 字号远低于可读下限。此处统一 12px + 全不透明 --sub，链接走 wash token 随主题翻转。 -->
+    <div class="px-5 py-3 bg-surface-2/30 border-t border-line/60 text-xs text-sub flex flex-wrap items-center justify-between gap-2">
+      <div class="flex flex-wrap items-center gap-2">
+        <span>游戏原帖：<a href="https://live-theater.net/play/9rdl1v95qr" target="_blank" rel="noopener noreferrer" class="text-wash-pink-deep hover:underline">LTN Play</a></span>
+        <span aria-hidden="true">·</span>
+        <span>原作脚本：<a href="https://live-theater.net/@Cupisme" target="_blank" rel="noopener noreferrer" class="text-wash-pink-deep hover:underline">Cupisme</a></span>
+        <span aria-hidden="true">·</span>
         <span>素材版权：© 2023 LIVE THE@TER NET</span>
       </div>
-      <div class="text-[10px] text-sub/60">
+      <div class="text-xs text-sub">
         机台原型：P Fever 偶像大师百万现场！39 FES ver. (SANKYO)
       </div>
     </div>
@@ -321,6 +323,19 @@ const canonicalUrl = `${SITE.url}/posts/milli-pachi-39fes/`;
     }
     100% {
       filter: hue-rotate(360deg) saturate(2.8) brightness(1.1) drop-shadow(0 0 10px rgba(255, 0, 100, 0.75));
+    }
+  }
+
+  /* 减少动态效果：关停必须写在**本组件的无层样式表**里，且特异性高于 .pachi-*。
+     上面的动画带 !important 且不属于任何 @layer；global.css 的兜底是 @layer base 中的
+     `*`（特异性 0,0,0）—— 同层比特异性输、跨层则无层 important 优先，两条路都压不住。
+     所以别把它「统一」回 `*` 规则，否则 reduce 用户仍会看到 0.35s 的色相循环（接近 3 次/秒）。 */
+  @media (prefers-reduced-motion: reduce) {
+    milli-pachi-game .pachi-rgb-chroma,
+    milli-pachi-game .pachi-rainbow-fast,
+    milli-pachi-game .pachi-rainbow-text {
+      animation: none !important;
+      will-change: auto;
     }
   }
 </style>

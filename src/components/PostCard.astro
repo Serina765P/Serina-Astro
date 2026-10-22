@@ -27,6 +27,9 @@ interface Props {
 
 const { post, variant = 'default' } = Astro.props;
 const isDirectory = variant === 'directory';
+// 层级按上下文取：index.astro 的 directory 列表上层已有 <h2>（「最近写下的」），
+// 卡片标题再写 <h2> 会与区块标题平级；标签/分类页的卡片直接跟在 h1 之后，仍是 h2。
+const Heading = isDirectory ? 'h3' : 'h2';
 const href = `/posts/${post.id}/`;
 const minutes = post.body ? readingTime(post.body) : null;
 const category = post.data.categories[0];
@@ -66,7 +69,7 @@ const cover = getPostCover(post.id, post.data.cover);
     style={`background:${spine}`}
   />
   <div class:list={['relative', cover && !isDirectory ? 'p-5 sm:p-6 sm:pl-7' : '']}>
-    <h2 class="text-lg leading-snug sm:text-xl">
+    <Heading class="text-lg leading-snug sm:text-xl">
       <a
         href={href}
         class:list={[
@@ -85,7 +88,7 @@ const cover = getPostCover(post.id, post.data.cover);
           )
         }
       </a>
-    </h2>
+    </Heading>
 
     <div class="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-sub">
       {

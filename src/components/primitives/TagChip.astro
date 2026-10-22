@@ -23,7 +23,8 @@ interface Props {
 const { href, label, size = 'compact', icon, class: className = '', ...rest } = Astro.props;
 
 const SIZES = {
-  compact: 'inline-flex items-center px-2.5 py-0.5 text-xs text-sub',
+  // min-h-6：标签本身很小，但可点区域不低于 WCAG 2.5.8 的 24×24
+  compact: 'inline-flex min-h-6 items-center px-2.5 py-0.5 text-xs text-sub',
   cloud: 'inline-flex items-center px-3.5 py-1 text-xs text-chip-fg',
   social: 'inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs text-chip-fg',
 } as const;

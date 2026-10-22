@@ -75,3 +75,38 @@ export function sortShuoshuo<T extends { published_at: string }>(items: T[]): T[
 export function shuoshuoYear(item: Pick<ShuoshuoItem, 'published_at'>): number {
   return yearInShanghai(new Date(item.published_at));
 }
+
+/* ── 展示层日期格式化：SSR 模板与客户端脚本共用同一实现 ──
+   这两个消费方此前各写一份 dateParts / dateKey / dayNumber / formatTime，
+   改时区或改格式必须同步两处，否则首屏与筛选后的时间线会呈现两套分组。 */
+
+function datePartsInShanghai(publishedAt: string): Record<string, string> {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date(publishedAt));
+  return Object.fromEntries(parts.map((part) => [part.type, part.value]));
+}
+
+/** 东八区日期键（YYYY-MM-DD），用于「同日只显示一次日期」的判定 */
+export function shuoshuoDayKey(publishedAt: string): string {
+  const parts = datePartsInShanghai(publishedAt);
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+/** 日号（去掉前导零），时间线左侧大字用 */
+export function shuoshuoDayNumber(publishedAt: string): string {
+  return String(Number(datePartsInShanghai(publishedAt).day));
+}
+
+/** 东八区 HH:mm */
+export function formatShuoshuoTime(publishedAt: string): string {
+  return new Date(publishedAt).toLocaleTimeString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: TZ,
+  });
+}

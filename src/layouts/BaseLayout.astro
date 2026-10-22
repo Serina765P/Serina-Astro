@@ -1,4 +1,6 @@
 ---
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
 import BaseHead from '../components/BaseHead.astro';
@@ -16,6 +18,8 @@ interface Props {
   /** 覆盖 <main> 的布局类。默认只留纵向留白 —— 页面级宽度一律交给 <Container>（P1-4） */
   mainClass?: string;
   readingProgress?: boolean;
+  /** 首页 hero 专用的标题明朝体（item 2101）。只有首页消费 --font-hero，默认不加载 */
+  heroFont?: boolean;
 }
 
 const {
@@ -26,7 +30,13 @@ const {
   pathname,
   mainClass = 'py-8 sm:py-10',
   readingProgress = false,
+  heroFont = false,
 } = Astro.props;
+
+// 构建期由 scripts/build-hero-font.mjs 生成，只含标题与竖排标记用到的字形。
+// 生成失败（离线 / 分片改版）时该文件不存在，下面回退到 CDN 的完整 CSS —— 旧行为
+// 是 202KB CSS + 最多 325KB 分片，慢但正确，不会退化成系统衬线。
+const heroFontBuilt = existsSync(path.join(process.cwd(), 'public', 'fonts', 'hero-mincho.css'));
 ---
 
 <!doctype html>
@@ -70,14 +80,24 @@ const {
     </script>
     <BaseHead title={title} description={description} keywords={keywords} ogType={ogType} pathname={pathname} />
     <!-- 字体（均走 ZeoSeven CDN，OFL-1.1）：
-         正文 IBM Plex Sans SC（item 389，同族四档字重：Regular400 默认 / Medium500 / SemiBold600 加粗与小标题 / Bold700 大标题）；
-         首页 hero 朝华标题明朝体（item 2101，单字重 Bold，家族 ZhaohuaMinA Bold，global.css --font-hero） -->
+         正文 IBM Plex Sans SC（item 389，同族四档字重：Regular400 默认 / Medium500 / SemiBold600 加粗与小标题 / Bold700 大标题）。
+         首页 hero 的朝华标题明朝体（item 2101）不再直接引用 CDN：它的 result.css 是 202KB / 385 条
+         @font-face，标题这 10 个字会触发 10 个分片共 325KB。改为构建期生成「只含用到的字形」的
+         本地子集（scripts/build-hero-font.mjs → public/fonts/hero-mincho.css），字体家族名不变，
+         global.css 的 --font-hero 无需改动。 -->
     <link rel="preconnect" href="https://fontsapi.zeoseven.com" crossorigin />
     <link rel="stylesheet" href="https://fontsapi.zeoseven.com/389/main/result.css" />
     <link rel="stylesheet" href="https://fontsapi.zeoseven.com/389/medium/result.css" />
     <link rel="stylesheet" href="https://fontsapi.zeoseven.com/389/semi-bold/result.css" />
     <link rel="stylesheet" href="https://fontsapi.zeoseven.com/389/bold/result.css" />
-    <link rel="stylesheet" href="https://fontsapi.zeoseven.com/2101/main/result.css" />
+    {
+      heroFont &&
+        (heroFontBuilt ? (
+          <link rel="stylesheet" href="/fonts/hero-mincho.css" />
+        ) : (
+          <link rel="stylesheet" href="https://fontsapi.zeoseven.com/2101/main/result.css" />
+        ))
+    }
     <ClientRouter />
   </head>
   <body class="flex min-h-screen flex-col">

@@ -28,6 +28,11 @@ pnpm-debug.log*
 # 视觉回归截图（本地比对用，不进版本库）
 .shots/
 
+# 构建期生成的首页标题字体子集 + 下载缓存（生成物，不进版本库）
+public/fonts/hero-mincho.css
+public/fonts/hero-mincho/
+.cache/
+
 # 工作台本地数据（项目记忆 / 会话任务），只在本机有效
 .workbuddy/
 .codebuddy/

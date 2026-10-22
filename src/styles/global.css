@@ -217,8 +217,10 @@
   /* ── 布局 token 骨架：先声明、后替换 ──
      一次把接口定死，避免"边改边定接口"导致多点返工。本层暂无消费点，故零视觉变更；
      消费点：断点 → index.astro 的 bento 媒体查询；容器 → <Container>；圆角/阴影 → 逃逸值收敛。 */
-  /* 非标断点：替代 index.astro 里裸写的 880px（既非 md 768 也非 lg 1024） */
-  --breakpoint-bento: 55rem;
+  /* 非标断点 55rem（既非 md 768 也非 lg 1024）目前只服务 index.astro 的 hero/post-list 布局。
+     Tailwind 的 --breakpoint-* 只被「屏幕变体生成」读取，scoped <style> 里的裸媒体查询取不到它；
+     此前这里声明了 --breakpoint-bento 却无任何消费点，改它不会有任何效果，故移除。
+     要调整请直接改 index.astro 的 @media (max-width: 55rem)（三处，见文件内注释）。 */
   /* 容器宽度：全站「页面级宽度」的唯一来源，消费方是 <Container>（页面里不要再手写 max-w-*）。
      口径 = **容器总宽（含 sm+ 的 1.5rem×2 横向内边距）**，因为 max-width 是 border-box，
      内边距会吃掉宽度。所以：
@@ -231,10 +233,10 @@
   --container-content: 51rem;
   --container-standard: 64rem;
   --container-wide: 72rem;
-  /* 语义圆角 */
-  --radius-chip: 9999px;
-  --radius-card: 1.5rem;
-  --radius-panel: 2rem;
+  /* 语义圆角：取值必须等于实现。card-surface 用的是 rounded-2xl（1rem），
+     这里若写 1.5rem 就只是文档 —— 改它不会有任何视觉变化，反而形成第二份真值。
+     --radius-chip / --radius-panel 目前没有任何消费点，故不保留：需要时先接入 @utility 再加回。 */
+  --radius-card: 1rem;
   /* 素材圆角（S16）：专辑封面 / 无封面占位 —— 比卡片小一档，小图上比例更合适 */
   --radius-media: 0.75rem;
 
@@ -512,7 +514,8 @@
 
   .back-to-top {
     position: fixed;
-    right: max(1rem, calc((100vw - 72rem) / 2));
+    /* 对齐 <Container width="wide"> 的右边缘：宽度只认 --container-wide，别再写第二份 72rem */
+    right: max(1rem, calc((100vw - var(--container-wide)) / 2));
     bottom: 1.25rem;
     z-index: var(--z-sticky-head);
     display: grid;
@@ -985,6 +988,12 @@
     @apply absolute top-2.5 right-2.5 z-sticky-head grid size-8 place-items-center rounded-lg border-0 bg-transparent p-0 transition-colors;
     color: color-mix(in srgb, var(--code-ink) 55%, transparent);
   }
+  /* 视觉仍为 32px，热区扩到 ≈45px。按钮在代码块右上角、四周无相邻交互元素，扩热区不会抢点击 */
+  .code-copy-btn::after {
+    content: '';
+    position: absolute;
+    inset: -0.4rem;
+  }
   .code-copy-btn svg {
     display: block;
   }
@@ -1114,56 +1123,8 @@
     content: none;
   }
 
-  /* 柏青哥机台级 RGB 炫彩色彩流光 (对应原版 $[rainbow.speed=1s]) */
-  .pachi-rgb-chroma {
-    display: inline-block !important;
-    will-change: filter;
-    animation: pachi-rgb-flow 1s linear infinite !important;
-  }
-
-  /* 花周末特化快速炫彩流光 (对应原版 $[rainbow.speed=0.3s]) */
-  .pachi-rainbow-fast {
-    display: inline-block !important;
-    will-change: filter;
-    animation: pachi-rgb-flow 0.35s linear infinite !important;
-  }
-
-  /* 彩虹流动发光文字 */
-  .pachi-rainbow-text {
-    background: linear-gradient(90deg, #ff0055, #ffaa00, #10b981, #06b6d4, #8b5cf6, #ff0055);
-    background-size: 200% auto;
-    color: transparent !important;
-    -webkit-background-clip: text !important;
-    background-clip: text !important;
-    animation: pachi-text-flow 1.5s linear infinite !important;
-  }
-
-  @keyframes pachi-text-flow {
-    0% { background-position: 0% center; }
-    100% { background-position: 200% center; }
-  }
-
-  @keyframes pachi-rgb-flow {
-    0% {
-      filter: hue-rotate(0deg) saturate(2.8) brightness(1.1) drop-shadow(0 0 10px rgba(255, 0, 100, 0.75));
-    }
-    16% {
-      filter: hue-rotate(60deg) saturate(2.8) brightness(1.1) drop-shadow(0 0 10px rgba(255, 180, 0, 0.75));
-    }
-    33% {
-      filter: hue-rotate(120deg) saturate(2.8) brightness(1.1) drop-shadow(0 0 10px rgba(16, 185, 129, 0.75));
-    }
-    50% {
-      filter: hue-rotate(180deg) saturate(2.8) brightness(1.1) drop-shadow(0 0 10px rgba(6, 182, 212, 0.75));
-    }
-    66% {
-      filter: hue-rotate(240deg) saturate(2.8) brightness(1.1) drop-shadow(0 0 10px rgba(139, 92, 246, 0.75));
-    }
-    83% {
-      filter: hue-rotate(300deg) saturate(2.8) brightness(1.1) drop-shadow(0 0 10px rgba(236, 72, 153, 0.75));
-    }
-    100% {
-      filter: hue-rotate(360deg) saturate(2.8) brightness(1.1) drop-shadow(0 0 10px rgba(255, 0, 100, 0.75));
-    }
-  }
+  /* 柏青哥的 .pachi-* 炫彩流光 + @keyframes 只在 MilliPachi39Fes.astro 里定义
+     （该组件用 <style is:inline> 自带一份副本，且无层样式必然压过这里的 utilities 层）。
+     这里曾有一份同值副本，属死规则：改它不会有任何视觉变化，还会让产物 CSS 虚胖。
+     减少动态效果下的关停也放在组件内（那里才压得住 !important），不要在此重建。 */
 }
