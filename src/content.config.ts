@@ -94,4 +94,16 @@ const shuoshuo = defineCollection({
   }),
 });
 
-export const collections = { posts, shuoshuo };
+// 独立页面（关于等）：正文走 Markdown，和文章共用同一套写作与排版链路。
+// id 取文件名（about.md → about），页面用 getEntry('pages', 'about') 取。
+const pages = defineCollection({
+  loader: glob({ pattern: '*.md', base: './src/content/pages' }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string().optional(),
+    /** 是否在该页底部挂 Giscus（沿用 PageLayout 的开关语义） */
+    showComments: z.boolean().default(false),
+  }),
+});
+
+export const collections = { posts, shuoshuo, pages };

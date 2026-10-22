@@ -1,7 +1,15 @@
 ---
+import { getEntry, render } from 'astro:content';
 import PageLayout from '../../layouts/PageLayout.astro';
+
+// 正文在 src/content/pages/about.md（pages 集合），改文案只需编辑那份 Markdown。
+// 找不到条目就直接让构建失败：静默渲染空页面比报错更难被发现。
+const entry = await getEntry('pages', 'about');
+if (!entry) throw new Error('缺少 src/content/pages/about.md');
+const { Content } = await render(entry);
+const { title, description, showComments } = entry.data;
 ---
 
-<PageLayout title="关于我" description="关于芹菜P">
-  <p>还没写，别急</p>
+<PageLayout title={title} description={description} showComments={showComments}>
+  <Content />
 </PageLayout>
