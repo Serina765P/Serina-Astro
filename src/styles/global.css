@@ -589,14 +589,6 @@
   .prose img {
     height: auto;
   }
-  @media (max-width: 40rem) {
-    .prose table {
-      display: block;
-      max-width: 100%;
-      overflow-x: auto;
-      white-space: nowrap;
-    }
-  }
   /* 正文引用：低饱和蓝灰（background/radius/padding 是 typography 不管的部分；
      font-style 与装饰引号的去除在 utilities 层靠特异性生效） */
   .prose blockquote {
@@ -612,9 +604,6 @@
     border: 1px solid var(--line);
     border-radius: 0.375rem;
     padding: 0.125rem 0.375rem;
-  }
-  .prose thead th {
-    background: var(--surface-2);
   }
 
   /* 文章正文内的折叠面板（imas-hires / imas-cd 大量使用） */
@@ -649,18 +638,8 @@
   .prose details > :not(summary):not(table):last-child {
     @apply pb-4;
   }
-  /* 表格自身不吃容器 px（单元格首尾已带 pl-4/pr-4），上下由表格补齐 */
-  .prose details > table {
-    @apply m-0 w-full pt-3 pb-4 text-[0.9em];
-  }
-  .prose details table th:first-child,
-  .prose details table td:first-child {
-    @apply pl-4;
-  }
-  .prose details table th:last-child,
-  .prose details table td:last-child {
-    @apply pr-4;
-  }
+  /* 表格的外框/留白/行线统一见 @layer utilities 的表格块（必须在 utilities 层，
+     否则被 typography 同层规则压死）；details 内表格在其中降级为满铺行列表。 */
 
   /* 正文内容图可点击放大：与专辑图一致的 zoom-in 光标提示（链接内图片除外） */
   .prose img:not(a img),
@@ -1045,6 +1024,61 @@
     --tw-prose-pre-bg: var(--code-bg);
     --tw-prose-th-borders: var(--line);
     --tw-prose-td-borders: var(--line);
+  }
+
+  /* ── 表格统一（S 表格视觉对齐）：与 details / 卡片 / 代码块同一套容器语言
+     （1rem 圆角 + 1px --line 描边 + token 色），取代 typography 默认的无框表格。
+     全部落在 utilities 层：typography 的表格规则同层（:where 包裹、特异性 (0,1,0)），
+     components 层的覆盖是层序死规则（S18 同款教训；此前 details 表格的 m-0 /
+     text-[0.9em] / 首尾列 pl-4 实测全未生效）。行分隔线改由单元格承载——
+     border-collapse: separate 下 tr 边框渲染不可靠；separate + border-spacing 0
+     + overflow hidden 才能让表头色带贴合圆角（collapse 下 overflow 被忽略）。 */
+  .prose.prose table {
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    overflow: hidden;
+    font-size: 0.9em;
+  }
+  .prose.prose :is(thead, tfoot, tbody tr) {
+    border: 0;
+  }
+  .prose.prose :is(th, td) {
+    border-bottom: 1px solid var(--tw-prose-td-borders);
+    padding-block: 0.55rem;
+    padding-inline: 1rem;
+    vertical-align: middle;
+  }
+  .prose.prose thead th {
+    background: var(--surface-2);
+    border-bottom-color: var(--tw-prose-th-borders);
+  }
+  .prose.prose tbody tr:last-child :is(th, td),
+  .prose.prose tfoot :is(th, td) {
+    border-bottom: 0;
+  }
+  .prose.prose tfoot :is(th, td) {
+    border-top: 1px solid var(--tw-prose-th-borders);
+  }
+  /* details 面板内的表格：外框/圆角由面板承担，表格降级为满铺行列表
+     （不再套一层卡片），上下留白沿用面板节奏（pt-3 / pb-4） */
+  .prose.prose details > table {
+    border: 0;
+    border-radius: 0;
+    margin: 0;
+    padding-block-start: 0.75rem;
+    padding-block-end: 1rem;
+  }
+  /* 窄屏：整表块级横滑。display:block 与 overflow 配套，必须同层后置，
+     否则压不过上面的 overflow: hidden；nowrap 保证数据列不折行 */
+  @media (max-width: 40rem) {
+    .prose.prose table {
+      display: block;
+      max-width: 100%;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
   }
   img.custom-emoji {
     display: inline-block;
