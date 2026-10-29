@@ -11,6 +11,7 @@
     "hero:font": "node scripts/build-hero-font.mjs",
     "emoji:import": "node scripts/import-emoji.mjs",
     "sticker:import": "node scripts/import-stickers.mjs",
+    "admin": "node scripts/admin/server.mjs",
     "assets:editor": "node scripts/asset-editor.mjs",
     "preview": "astro preview",
     "check": "astro check && node scripts/contrast-audit.mjs",
@@ -34,12 +35,14 @@
     "@biomejs/biome": "^2.5.13",
     "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-vue": "^6.0.10",
     "pagefind": "^1.5.2",
     "playwright-core": "^1.63.0",
     "sharp": "0.35.4",
     "subset-font": "^2.9.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.0",
+    "vite": "^8.2.2",
     "vitest": "^5.0.5",
     "vue": "^3.5.44"
   }
