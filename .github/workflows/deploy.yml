@@ -1,0 +1,71 @@
+name: Deploy
+
+on:
+  push:
+    tags:
+      - 'deploy-*'
+    branches:
+      - main
+    paths:
+      - 'src/data/shuoshuo/**'
+  workflow_dispatch:
+
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Cloudflare Pages automatic deployments are disabled; this workflow is the
+      # only path to production. GitHub does not evaluate path filters for tag
+      # pushes, so every trigger must prove it deploys main head.
+      - name: Require main head
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+            echo "::error::部署只允许 main 头部；当前提交不是 origin/main 的最新提交。"
+            exit 1
+          fi
+
+      # Tag and manual runs do not go through ci.yml, and a shuoshuo push runs both
+      # workflows; re-running the gate here keeps every deployment self-verifying.
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run check
+      - run: npm run build
+
+      - name: Upload dist to Cloudflare Pages
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_PAGES_PROJECT: ${{ vars.CLOUDFLARE_PAGES_PROJECT }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_PAGES_PROJECT:-}" ]; then
+            echo "::error::缺少 repo variable CLOUDFLARE_PAGES_PROJECT（Settings → Secrets and variables → Actions → Variables）。"
+            exit 1
+          fi
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] || [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+            echo "::error::缺少 CLOUDFLARE_API_TOKEN secret 或 CLOUDFLARE_ACCOUNT_ID variable。"
+            exit 1
+          fi
+          npx --yes wrangler@4 pages deploy dist \
+            --project-name="$CLOUDFLARE_PAGES_PROJECT" \
+            --branch=main \
+            --commit-hash="$(git rev-parse HEAD)" \
+            --commit-message="$(git log -1 --format=%s)"

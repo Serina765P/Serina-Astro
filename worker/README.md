@@ -1,6 +1,6 @@
 # 说说邮件管道（shuoshuo-mailer）
 
-给一条高熵私密收件地址发邮件 → Cloudflare Email Worker 校验 SMTP 信封收件人和发件人白名单 → 解析正文 → commit 到主仓库的 `src/data/shuoshuo/<沪年>.json` → Cloudflare Pages 自动构建并更新说说页。发信时不需要手动输入口令。
+给一条高熵私密收件地址发邮件 → Cloudflare Email Worker 校验 SMTP 信封收件人和发件人白名单 → 解析正文 → commit 到主仓库的 `src/data/shuoshuo/<沪年>.json` → GitHub Actions 的 Deploy workflow 构建并上传 Cloudflare Pages，更新说说页。发信时不需要手动输入口令。
 
 ```
 你发邮件（主题=标题可选，正文=说说内容）
@@ -12,7 +12,7 @@ Cloudflare Email Routing（serinap.top）
 Worker：先对比 SMTP envelope recipient 与 PUBLISH_TO，再检查 envelope From + MIME From 白名单
   │  postal-mime 解析正文、去签名；GitHub Contents API 更新年度分片
   ▼
-push → Cloudflare Pages 构建 → https://blog.serinap.top/shuoshuo/
+push（main 的 `src/data/shuoshuo/**`）→ GitHub Actions Deploy → Cloudflare Pages → https://blog.serinap.top/shuoshuo/
 ```
 
 ## 私密收件地址迁移
