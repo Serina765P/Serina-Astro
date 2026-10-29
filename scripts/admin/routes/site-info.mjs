@@ -1,17 +1,13 @@
-import { HttpError, readJsonBody, sendJson } from '../lib/http.mjs';
+import {
+  createWriteQueue,
+  HttpError,
+  readJsonBody,
+  requireJsonContentType,
+  sendJson,
+} from '../lib/http.mjs';
 import { readSiteInfo, validateSiteInfoPatch, writeSiteInfo } from '../lib/site-info.mjs';
 
-/** 同一进程内的读-改-写串行化：两个标签页同时保存时不会互相覆盖。 */
-let writeQueue = Promise.resolve();
-
-function enqueueWrite(task) {
-  const run = writeQueue.then(task, task);
-  writeQueue = run.then(
-    () => undefined,
-    () => undefined,
-  );
-  return run;
-}
+const enqueueWrite = createWriteQueue();
 
 async function loadCurrent(root) {
   try {
@@ -29,10 +25,7 @@ export async function handleSiteInfo(request, response, { root }) {
   }
 
   if (request.method === 'PUT') {
-    const contentType = request.headers['content-type'] ?? '';
-    if (!contentType.toLowerCase().startsWith('application/json')) {
-      throw new HttpError(415, '写请求必须使用 application/json');
-    }
+    requireJsonContentType(request);
     const patch = validateSiteInfoPatch(await readJsonBody(request));
     const next = await enqueueWrite(async () => {
       const merged = { ...(await loadCurrent(root)), ...patch };

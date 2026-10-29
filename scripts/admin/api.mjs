@@ -1,7 +1,16 @@
 import { HttpError, sendJson } from './lib/http.mjs';
+import { handleShuoshuo } from './routes/shuoshuo.mjs';
 import { handleSiteInfo } from './routes/site-info.mjs';
 
-const ROUTES = new Map([['/api/site-info', handleSiteInfo]]);
+const ROUTES = [
+  { pattern: /^\/api\/site-info$/u, handler: handleSiteInfo },
+  { pattern: /^\/api\/shuoshuo$/u, handler: handleShuoshuo },
+  {
+    pattern: /^\/api\/shuoshuo\/([^/]+)$/u,
+    handler: handleShuoshuo,
+    params: ([, encoded]) => ({ id: decodeURIComponent(encoded) }),
+  },
+];
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1', '[::1]']);
 
 /** Host / Origin 可能是裸主机名，也可能是完整 URL；只认回环地址，挡住 DNS rebinding。 */
@@ -33,12 +42,22 @@ export function createApiHandler({ root }) {
         return;
       }
       const { pathname } = new URL(request.url ?? '/', 'http://127.0.0.1');
-      const route = ROUTES.get(pathname.replace(/\/+$/u, '') || '/');
-      if (!route) {
-        sendJson(response, 404, { error: '接口不存在' });
+      const routePath = pathname.replace(/\/+$/u, '') || '/';
+      for (const route of ROUTES) {
+        const match = route.pattern.exec(routePath);
+        if (!match) continue;
+        let params = {};
+        if (route.params) {
+          try {
+            params = route.params(match);
+          } catch {
+            throw new HttpError(400, '路径参数无效');
+          }
+        }
+        await route.handler(request, response, { root, ...params });
         return;
       }
-      await route(request, response, { root });
+      sendJson(response, 404, { error: '接口不存在' });
     } catch (error) {
       if (response.headersSent) {
         response.destroy();

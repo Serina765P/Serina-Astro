@@ -17,9 +17,17 @@ npm run preview   # 预览构建产物
 `npm run admin` 在 `127.0.0.1:4320` 拉起 Vite + Vue 3 + Nuxt UI v4 单页界面（`admin/`）与
 Node API 服务（`scripts/admin/`），仅本机可访问。界面采用 Nuxt UI 仪表盘：可折叠侧栏、
 Vue Router 路由（`/site`、`/posts`、`/shuoshuo`、`/taxonomy`、`/assets`）、自定义品牌蓝
-主色与跟随系统的明暗切换。首批交付「站点与友链」面板：读写 `src/data/site-info.json`
-的简介、社交外链与友链，保存时先写同目录临时文件再原子 rename，JSON 固定 2 空格缩进，
-不会改动 `heroTitle` / `heroMark`。服务不做任何 Git 提交或推送。
+主色与跟随系统的明暗切换。
+
+已交付「站点与友链」与「说说」面板：
+
+- 「站点与友链」读写 `src/data/site-info.json` 的简介、社交外链与友链，不会改动
+  `heroTitle` / `heroMark`。
+- 「说说」聚合 `src/data/shuoshuo/<沪年>.json` 并按时间倒序展示；发布时以 `local_<时间戳>`
+  为 ID、`type: MAIL`、东八区当前时间置顶写入当前上海年份分片；行内编辑支持修改内容、
+  标题与发布时间，跨年时自动迁移分片并同步两侧 `count`；删除后重算计数。
+
+所有保存都先写同目录临时文件再原子 rename，JSON 固定 2 空格缩进。服务不做任何 Git 提交或推送。
 
 ## 部署
 

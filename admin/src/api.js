@@ -23,3 +23,27 @@ export function saveSiteInfo(patch) {
     body: JSON.stringify(patch),
   });
 }
+
+export function fetchShuoshuo() {
+  return request('/api/shuoshuo');
+}
+
+export function createShuoshuo(payload) {
+  return request('/api/shuoshuo', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateShuoshuo(id, patch) {
+  return request(`/api/shuoshuo/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(patch),
+  });
+}
+
+export function deleteShuoshuo(id) {
+  return request(`/api/shuoshuo/${encodeURIComponent(id)}`, { method: 'DELETE' });
+}

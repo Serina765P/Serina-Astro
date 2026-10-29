@@ -20,6 +20,27 @@ export function sendJson(response, status, payload, headers = {}) {
 
 const MAX_BODY_BYTES = 1024 * 1024;
 
+/** 写接口统一要求 application/json，挡掉表单/纯文本跨站提交。 */
+export function requireJsonContentType(request) {
+  const contentType = request.headers['content-type'] ?? '';
+  if (!contentType.toLowerCase().startsWith('application/json')) {
+    throw new HttpError(415, '写请求必须使用 application/json');
+  }
+}
+
+/** 同一进程内的读-改-写串行化：两个标签页同时保存时不会互相覆盖。 */
+export function createWriteQueue() {
+  let queue = Promise.resolve();
+  return function enqueue(task) {
+    const run = queue.then(task, task);
+    queue = run.then(
+      () => undefined,
+      () => undefined,
+    );
+    return run;
+  };
+}
+
 /** 读取并解析 JSON 请求体；超限或语法错误都按 4xx 返回，不把异常留给调用方。 */
 export async function readJsonBody(request) {
   const chunks = [];
