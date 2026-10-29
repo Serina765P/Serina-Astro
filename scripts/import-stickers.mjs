@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { stickerCode } from './sticker-code.mjs';
+import { writeRegistry } from './write-registry.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const registryPath = path.join(root, 'src', 'data', 'stickers.json');
@@ -228,7 +229,7 @@ async function main() {
   }
 
   const previous = current.length === records.length ? current : [];
-  await writeFile(registryPath, `${JSON.stringify(records, null, 2)}\n`);
+  await writeRegistry(registryPath, records);
 
   for (const [index, record] of records.entries()) {
     const before = previous[index];

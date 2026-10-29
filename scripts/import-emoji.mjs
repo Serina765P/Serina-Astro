@@ -2,6 +2,7 @@ import { mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+import { writeRegistry } from './write-registry.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const registryPath = path.join(root, 'src', 'data', 'emoji.json');
@@ -281,7 +282,7 @@ async function main() {
   }
 
   for (const image of prepared) await writeFile(image.output, image.outputBuffer);
-  await writeFile(registryPath, `${JSON.stringify(next, null, 2)}\n`, 'utf8');
+  await writeRegistry(registryPath, next);
 
   const activeSources = new Set(next.map((emoji) => emoji.src));
   for (const old of oldEntries) {

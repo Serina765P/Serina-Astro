@@ -11,7 +11,7 @@
     "hero:font": "node scripts/build-hero-font.mjs",
     "emoji:import": "node scripts/import-emoji.mjs",
     "sticker:import": "node scripts/import-stickers.mjs",
-    "sticker:editor": "node scripts/sticker-editor.mjs",
+    "assets:editor": "node scripts/asset-editor.mjs",
     "preview": "astro preview",
     "check": "astro check && node scripts/contrast-audit.mjs",
     "lint": "biome ci .",
@@ -38,6 +38,7 @@
     "sharp": "0.35.4",
     "subset-font": "^2.9.0",
     "tailwindcss": "^4.3.3",
-    "typescript": "^5.9.0"
+    "typescript": "^5.9.0",
+    "vue": "^3.5.44"
   }
 }

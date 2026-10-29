@@ -26,6 +26,8 @@ npm run emoji:import -- --input "C:\Users\Serina\Downloads\new-stamps" --set mys
 
 短代码由套装前缀和文件名组成，例如 `开心.png` 配 `--set 765pro` 会得到 `:765pro_开心:`。中文文件名会保留；同一套装的显示名必须一致，同一套装内不能重复使用相同短代码。导入已有短代码会失败，明确要更新时添加 `--replace`。`--dry-run` 可以先检查匹配、尺寸和输出大小，不写文件。
 
+改名称、短代码、关键词、套装显示名也可以直接用 `npm run assets:editor` 控制台编辑（见 `docs/custom-sticker.md`），不必重新导入。
+
 现有套装前缀和显示名：`765pro` / `765PRO`、`afterglow` / `Afterglow`、`sweet` / `甜蜜时光`、`scclassic` / `闪耀色彩古韵新辉`、`sc` / `闪耀色彩`。
 
 新图片会转换为 WebP：静态图用 quality 65、effort 6；透明层质量保持 100。GIF 会按动画方式解码，并保留全部帧、帧间隔和循环设置。已有 WebP 会直接登记，不再重复有损压缩。更新时请从未压缩的原图重新导入并加 `--replace`。
