@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import ui from '@nuxt/ui/vite';
 import vue from '@vitejs/plugin-vue';
 import { createServer as createViteServer } from 'vite';
 import { createApiHandler } from './api.mjs';
@@ -52,7 +53,15 @@ async function main() {
     root: ADMIN_ROOT,
     appType: 'custom',
     server: { middlewareMode: true },
-    plugins: [vue()],
+    plugins: [
+      vue(),
+      ui({
+        dts: false,
+        ui: {
+          colors: { primary: 'brand', neutral: 'slate' },
+        },
+      }),
+    ],
   });
   const handleApi = createApiHandler({ root: ROOT });
 

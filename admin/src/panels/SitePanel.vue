@@ -1,10 +1,9 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { onBeforeRouteLeave } from 'vue-router';
 import { fetchSiteInfo, saveSiteInfo } from '../api.js';
 
-const props = defineProps({
-  active: { type: Boolean, default: false },
-});
+const toast = useToast();
 
 const formElement = ref(null);
 const socialList = ref(null);
@@ -13,8 +12,6 @@ const friendList = ref(null);
 const status = ref('loading');
 const statusMessage = ref('');
 const saving = ref(false);
-const notice = ref('');
-const noticeKind = ref('success');
 const snapshot = ref('');
 
 const LIMITS = { description: 2000, name: 120, href: 2048 };
@@ -26,8 +23,6 @@ const form = reactive({
   friendLinks: [],
 });
 
-let noticeTimer = 0;
-
 function serialize() {
   return JSON.stringify({
     description: form.description,
@@ -37,13 +32,18 @@ function serialize() {
 }
 
 const dirty = computed(() => status.value === 'ready' && serialize() !== snapshot.value);
-const statusTone = computed(() => {
-  if (notice.value) return noticeKind.value;
-  return dirty.value ? 'dirty' : 'synced';
-});
-const statusText = computed(() => {
-  if (notice.value) return notice.value;
-  return dirty.value ? '有未保存的修改' : '已与磁盘同步';
+
+const footerState = computed(() => {
+  if (status.value === 'error') {
+    return { color: 'error', icon: 'i-lucide-alert-circle', text: '读取失败' };
+  }
+  if (saving.value) {
+    return { color: 'neutral', icon: 'i-lucide-loader-circle', text: '保存中…' };
+  }
+  if (dirty.value) {
+    return { color: 'warning', icon: 'i-lucide-pencil-line', text: '有未保存的修改' };
+  }
+  return { color: 'success', icon: 'i-lucide-check', text: '已与磁盘同步' };
 });
 
 function fillForm(data) {
@@ -69,24 +69,30 @@ function apply(data) {
   status.value = 'ready';
 }
 
-function flash(message, kind = 'success') {
-  notice.value = message;
-  noticeKind.value = kind;
-  window.clearTimeout(noticeTimer);
-  noticeTimer = window.setTimeout(() => {
-    notice.value = '';
-  }, 5000);
-}
-
 async function load() {
   status.value = 'loading';
   statusMessage.value = '';
-  notice.value = '';
   try {
     apply(await fetchSiteInfo());
   } catch (error) {
     statusMessage.value = error instanceof Error ? error.message : '读取失败';
     status.value = 'error';
+  }
+}
+
+async function refresh() {
+  if (status.value !== 'ready' || dirty.value || saving.value) return;
+  try {
+    const data = await fetchSiteInfo();
+    if (dirty.value || saving.value) return;
+    apply(data);
+  } catch (error) {
+    toast.add({
+      title: '刷新失败',
+      description: error instanceof Error ? error.message : '读取失败',
+      color: 'error',
+      icon: 'i-lucide-alert-circle',
+    });
   }
 }
 
@@ -101,29 +107,27 @@ function buildPatch() {
   return patch;
 }
 
-async function refresh() {
-  if (!props.active || status.value !== 'ready' || dirty.value || saving.value) return;
-  try {
-    const data = await fetchSiteInfo();
-    if (!props.active || dirty.value || saving.value) return;
-    apply(data);
-  } catch (error) {
-    flash(error instanceof Error ? `刷新失败：${error.message}` : '刷新失败', 'error');
-  }
-}
-
 async function save() {
   if (saving.value || status.value !== 'ready' || !dirty.value) return;
   if (formElement.value && !formElement.value.reportValidity()) return;
   const patch = buildPatch();
   if (Object.keys(patch).length === 0) return;
   saving.value = true;
-  notice.value = '';
   try {
     apply(await saveSiteInfo(patch));
-    flash('已保存到 src/data/site-info.json');
+    toast.add({
+      title: '已保存',
+      description: 'src/data/site-info.json',
+      color: 'success',
+      icon: 'i-lucide-check-circle',
+    });
   } catch (error) {
-    flash(error instanceof Error ? error.message : '保存失败', 'error');
+    toast.add({
+      title: '保存失败',
+      description: error instanceof Error ? error.message : '保存失败',
+      color: 'error',
+      icon: 'i-lucide-alert-circle',
+    });
   } finally {
     saving.value = false;
   }
@@ -131,7 +135,6 @@ async function save() {
 
 function reset() {
   fillForm(JSON.parse(snapshot.value));
-  notice.value = '';
 }
 
 async function addSocial() {
@@ -157,7 +160,6 @@ function removeFriendLink(index) {
 }
 
 function onKeydown(event) {
-  if (!props.active) return;
   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
     event.preventDefault();
     void save();
@@ -165,7 +167,7 @@ function onKeydown(event) {
 }
 
 function onWindowFocus() {
-  if (props.active) void refresh();
+  void refresh();
 }
 
 function onBeforeUnload(event) {
@@ -174,12 +176,9 @@ function onBeforeUnload(event) {
   event.returnValue = '';
 }
 
-watch(form, () => {
-  if (notice.value && dirty.value) notice.value = '';
-}, { deep: true });
-
-watch(() => props.active, (active) => {
-  if (active) void refresh();
+onBeforeRouteLeave(() => {
+  if (!dirty.value) return true;
+  return window.confirm('有未保存的修改，确定离开当前面板吗？');
 });
 
 onMounted(() => {
@@ -190,7 +189,6 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  window.clearTimeout(noticeTimer);
   window.removeEventListener('keydown', onKeydown);
   window.removeEventListener('focus', onWindowFocus);
   window.removeEventListener('beforeunload', onBeforeUnload);
@@ -198,194 +196,271 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section id="panel-site" class="panel site-panel" role="tabpanel" aria-labelledby="tab-site">
-    <div v-if="status === 'loading'" class="state-card" role="status">
-      <span class="spinner" aria-hidden="true"></span>
-      <p>正在读取 <code>src/data/site-info.json</code>…</p>
-    </div>
+  <UDashboardPanel id="site">
+    <template #header>
+      <UDashboardNavbar title="站点与友链">
+        <template #leading>
+          <UDashboardSidebarCollapse />
+        </template>
+        <template #right>
+          <UBadge color="neutral" variant="subtle" icon="i-lucide-hard-drive">
+            本地写入
+          </UBadge>
+        </template>
+      </UDashboardNavbar>
+    </template>
 
-    <div v-else-if="status === 'error'" class="state-card state-card--error" role="alert">
-      <h2>读取失败</h2>
-      <p>{{ statusMessage }}</p>
-      <button class="button button--ghost" type="button" @click="load">重新读取</button>
-    </div>
-
-    <form v-else ref="formElement" class="site-form" novalidate @submit.prevent="save">
-      <section class="card">
-        <header class="card-head">
-          <div>
-            <h2>个人简介</h2>
-            <p>首页侧栏与关于页共用的自我介绍。</p>
-          </div>
-          <span class="counter">{{ form.description.length }} / {{ LIMITS.description }}</span>
-        </header>
-        <label class="field">
-          <span class="field-label">简介</span>
-          <textarea
-            v-model="form.description"
-            rows="4"
-            :maxlength="LIMITS.description"
-            required
-            placeholder="用一两句话介绍自己…"
-          ></textarea>
-        </label>
-      </section>
-
-      <section class="card">
-        <header class="card-head">
-          <div>
-            <h2>社交外链</h2>
-            <p>
-              侧栏图标入口。图标使用 Iconify 名称，例如
-              <code>simple-icons:github</code>。
-            </p>
-          </div>
-          <span class="count-badge">{{ form.social.length }} 条</span>
-        </header>
-
-        <p v-if="form.social.length === 0" class="empty">还没有社交外链，点击下方按钮添加。</p>
-        <div v-else ref="socialList" class="link-list">
-          <div
-            v-for="(item, index) in form.social"
-            :key="`social-${index}`"
-            class="link-row link-row--social"
-          >
-            <span class="row-index" aria-hidden="true">{{ String(index + 1).padStart(2, '0') }}</span>
-            <label class="field">
-              <span class="field-label">名称</span>
-              <input v-model="item.name" :maxlength="LIMITS.name" required placeholder="GitHub" />
-            </label>
-            <label class="field">
-              <span class="field-label">图标</span>
-              <input
-                v-model="item.icon"
-                :maxlength="LIMITS.name"
-                required
-                spellcheck="false"
-                autocomplete="off"
-                :pattern="ICON_PATTERN"
-                placeholder="simple-icons:github"
-              />
-            </label>
-            <label class="field field--href">
-              <span class="field-label">链接</span>
-              <input
-                v-model="item.href"
-                :maxlength="LIMITS.href"
-                required
-                spellcheck="false"
-                autocomplete="off"
-                pattern="(https?://|mailto:).+"
-                placeholder="https://example.com"
-              />
-            </label>
-            <button
-              class="remove"
-              type="button"
-              :aria-label="`删除社交外链 ${item.name || index + 1}`"
-              @click="removeSocial(index)"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                aria-hidden="true"
-              >
-                <path d="M6 6l12 12M18 6L6 18" />
-              </svg>
-            </button>
-          </div>
+    <template #body>
+      <UContainer class="max-w-5xl py-6">
+        <div v-if="status === 'loading'" class="space-y-6" role="status">
+          <USkeleton class="h-44 w-full rounded-xl" />
+          <USkeleton class="h-64 w-full rounded-xl" />
+          <USkeleton class="h-44 w-full rounded-xl" />
         </div>
-        <button class="button button--dashed" type="button" @click="addSocial">
-          ＋ 添加社交外链
-        </button>
-      </section>
 
-      <section class="card">
-        <header class="card-head">
-          <div>
-            <h2>友情链接</h2>
-            <p>展示在 <code>/links/</code> 页面。链接必须使用 http(s) 地址。</p>
-          </div>
-          <span class="count-badge">{{ form.friendLinks.length }} 条</span>
-        </header>
-
-        <p v-if="form.friendLinks.length === 0" class="empty">
-          还没有友情链接，点击下方按钮添加。
-        </p>
-        <div v-else ref="friendList" class="link-list">
-          <div
-            v-for="(item, index) in form.friendLinks"
-            :key="`friend-${index}`"
-            class="link-row link-row--friend"
-          >
-            <span class="row-index" aria-hidden="true">{{ String(index + 1).padStart(2, '0') }}</span>
-            <label class="field">
-              <span class="field-label">名称</span>
-              <input v-model="item.name" :maxlength="LIMITS.name" required placeholder="站点名称" />
-            </label>
-            <label class="field">
-              <span class="field-label">链接</span>
-              <input
-                v-model="item.href"
-                :maxlength="LIMITS.href"
-                required
-                spellcheck="false"
-                autocomplete="off"
-                pattern="https?://.+"
-                placeholder="https://example.com/"
-              />
-            </label>
-            <button
-              class="remove"
-              type="button"
-              :aria-label="`删除友链 ${item.name || index + 1}`"
-              @click="removeFriendLink(index)"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                aria-hidden="true"
-              >
-                <path d="M6 6l12 12M18 6L6 18" />
-              </svg>
-            </button>
-          </div>
+        <div v-else-if="status === 'error'" class="space-y-4">
+          <UAlert
+            color="error"
+            variant="subtle"
+            icon="i-lucide-alert-circle"
+            title="读取失败"
+            :description="statusMessage"
+          />
+          <UButton
+            color="neutral"
+            variant="outline"
+            icon="i-lucide-refresh-cw"
+            label="重新读取"
+            @click="load"
+          />
         </div>
-        <button class="button button--dashed" type="button" @click="addFriendLink">
-          ＋ 添加友情链接
-        </button>
-      </section>
 
-      <footer class="savebar">
-        <p
-          class="savebar-status"
-          :class="`savebar-status--${statusTone}`"
-          role="status"
-          :aria-live="noticeKind === 'error' && notice ? 'assertive' : 'polite'"
+        <form
+          v-else
+          id="site-info-form"
+          ref="formElement"
+          class="space-y-6"
+          novalidate
+          @submit.prevent="save"
         >
-          {{ statusText }}
-        </p>
-        <div class="savebar-actions">
-          <span class="savebar-hint" aria-hidden="true">⌘ / Ctrl + S</span>
-          <button class="button button--ghost" type="button" :disabled="!dirty || saving" @click="reset">
-            撤销修改
-          </button>
-          <button class="button button--primary" type="submit" :disabled="!dirty || saving">
-            <span v-if="saving" class="spinner spinner--small" aria-hidden="true"></span>
-            {{ saving ? '保存中…' : '保存更改' }}
-          </button>
+          <UCard>
+            <template #header>
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 class="text-sm font-semibold text-highlighted">个人简介</h2>
+                  <p class="mt-0.5 text-xs text-muted">首页侧栏与关于页共用的自我介绍。</p>
+                </div>
+                <span class="text-xs text-muted tabular-nums">
+                  {{ form.description.length }} / {{ LIMITS.description }}
+                </span>
+              </div>
+            </template>
+
+            <UFormField name="description" label="简介" required>
+              <UTextarea
+                v-model="form.description"
+                :rows="4"
+                autoresize
+                :maxrows="8"
+                :maxlength="LIMITS.description"
+                required
+                class="w-full"
+                placeholder="用一两句话介绍自己…"
+              />
+            </UFormField>
+          </UCard>
+
+          <UCard>
+            <template #header>
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 class="text-sm font-semibold text-highlighted">社交外链</h2>
+                  <p class="mt-0.5 text-xs text-muted">
+                    侧栏图标入口。图标使用 Iconify 名称，例如
+                    <code class="rounded bg-elevated px-1 py-0.5 text-[11px]">simple-icons:github</code>。
+                  </p>
+                </div>
+                <UBadge color="neutral" variant="subtle">{{ form.social.length }} 条</UBadge>
+              </div>
+            </template>
+
+            <p
+              v-if="form.social.length === 0"
+              class="rounded-lg border border-dashed border-default py-8 text-center text-sm text-muted"
+            >
+              还没有社交外链，点击下方按钮添加。
+            </p>
+            <div v-else ref="socialList" class="space-y-3">
+              <div
+                v-for="(item, index) in form.social"
+                :key="`social-${index}`"
+                class="link-row link-row--social rounded-lg border border-default bg-elevated/40 p-3"
+              >
+                <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.4fr)_auto] md:items-end">
+                  <UFormField label="名称" required>
+                    <UInput
+                      v-model="item.name"
+                      :maxlength="LIMITS.name"
+                      required
+                      placeholder="GitHub"
+                      class="w-full"
+                    />
+                  </UFormField>
+                  <UFormField label="图标" required>
+                    <UInput
+                      v-model="item.icon"
+                      :maxlength="LIMITS.name"
+                      required
+                      spellcheck="false"
+                      autocomplete="off"
+                      :pattern="ICON_PATTERN"
+                      placeholder="simple-icons:github"
+                      class="w-full"
+                    />
+                  </UFormField>
+                  <UFormField label="链接" required>
+                    <UInput
+                      v-model="item.href"
+                      :maxlength="LIMITS.href"
+                      required
+                      spellcheck="false"
+                      autocomplete="off"
+                      pattern="(https?://|mailto:).+"
+                      placeholder="https://example.com"
+                      class="w-full"
+                    />
+                  </UFormField>
+                  <UButton
+                    class="justify-self-end"
+                    color="error"
+                    variant="ghost"
+                    icon="i-lucide-trash-2"
+                    square
+                    :aria-label="`删除社交外链 ${item.name || index + 1}`"
+                    @click="removeSocial(index)"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <UButton
+              class="mt-3"
+              color="neutral"
+              variant="outline"
+              icon="i-lucide-plus"
+              label="添加社交外链"
+              @click="addSocial"
+            />
+          </UCard>
+
+          <UCard>
+            <template #header>
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 class="text-sm font-semibold text-highlighted">友情链接</h2>
+                  <p class="mt-0.5 text-xs text-muted">
+                    展示在
+                    <code class="rounded bg-elevated px-1 py-0.5 text-[11px]">/links/</code>
+                    页面。链接必须使用 http(s) 地址。
+                  </p>
+                </div>
+                <UBadge color="neutral" variant="subtle">{{ form.friendLinks.length }} 条</UBadge>
+              </div>
+            </template>
+
+            <p
+              v-if="form.friendLinks.length === 0"
+              class="rounded-lg border border-dashed border-default py-8 text-center text-sm text-muted"
+            >
+              还没有友情链接，点击下方按钮添加。
+            </p>
+            <div v-else ref="friendList" class="space-y-3">
+              <div
+                v-for="(item, index) in form.friendLinks"
+                :key="`friend-${index}`"
+                class="link-row link-row--friend rounded-lg border border-default bg-elevated/40 p-3"
+              >
+                <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] md:items-end">
+                  <UFormField label="名称" required>
+                    <UInput
+                      v-model="item.name"
+                      :maxlength="LIMITS.name"
+                      required
+                      placeholder="站点名称"
+                      class="w-full"
+                    />
+                  </UFormField>
+                  <UFormField label="链接" required>
+                    <UInput
+                      v-model="item.href"
+                      :maxlength="LIMITS.href"
+                      required
+                      spellcheck="false"
+                      autocomplete="off"
+                      pattern="https?://.+"
+                      placeholder="https://example.com/"
+                      class="w-full"
+                    />
+                  </UFormField>
+                  <UButton
+                    class="justify-self-end"
+                    color="error"
+                    variant="ghost"
+                    icon="i-lucide-trash-2"
+                    square
+                    :aria-label="`删除友链 ${item.name || index + 1}`"
+                    @click="removeFriendLink(index)"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <UButton
+              class="mt-3"
+              color="neutral"
+              variant="outline"
+              icon="i-lucide-plus"
+              label="添加友情链接"
+              @click="addFriendLink"
+            />
+          </UCard>
+        </form>
+      </UContainer>
+    </template>
+
+    <template #footer>
+      <div
+        v-if="status === 'ready'"
+        class="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+      >
+        <div class="flex flex-wrap items-center gap-2">
+          <UBadge :color="footerState.color" :icon="footerState.icon" variant="subtle">
+            {{ footerState.text }}
+          </UBadge>
+          <span class="text-xs text-muted">
+            写入 src/data/site-info.json · 原子替换 · 2 空格缩进
+          </span>
         </div>
-      </footer>
-      <p class="footnote">
-        写入 <code>src/data/site-info.json</code> · 原子替换 · 2 空格缩进 · 不触碰
-        <code>heroTitle</code> / <code>heroMark</code>
-      </p>
-    </form>
-  </section>
+        <div class="flex items-center gap-2">
+          <UButton
+            color="neutral"
+            variant="outline"
+            icon="i-lucide-undo-2"
+            label="撤销修改"
+            :disabled="!dirty || saving"
+            @click="reset"
+          />
+          <UButton
+            type="submit"
+            form="site-info-form"
+            color="primary"
+            icon="i-lucide-save"
+            label="保存更改"
+            :loading="saving"
+            :disabled="!dirty || saving"
+          />
+        </div>
+      </div>
+    </template>
+  </UDashboardPanel>
 </template>

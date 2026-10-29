@@ -14,10 +14,12 @@ npm run preview   # 预览构建产物
 
 ### 管理后台
 
-`npm run admin` 在 `127.0.0.1:4320` 拉起 Vite + Vue 3 单页界面（`admin/`）与 Node API 服务
-（`scripts/admin/`），仅本机可访问。首批交付「站点与友链」面板：读写
-`src/data/site-info.json` 的简介、社交外链与友链，保存时先写同目录临时文件再原子 rename，
-JSON 固定 2 空格缩进，不会改动 `heroTitle` / `heroMark`。服务不做任何 Git 提交或推送。
+`npm run admin` 在 `127.0.0.1:4320` 拉起 Vite + Vue 3 + Nuxt UI v4 单页界面（`admin/`）与
+Node API 服务（`scripts/admin/`），仅本机可访问。界面采用 Nuxt UI 仪表盘：可折叠侧栏、
+Vue Router 路由（`/site`、`/posts`、`/shuoshuo`、`/taxonomy`、`/assets`）、自定义品牌蓝
+主色与跟随系统的明暗切换。首批交付「站点与友链」面板：读写 `src/data/site-info.json`
+的简介、社交外链与友链，保存时先写同目录临时文件再原子 rename，JSON 固定 2 空格缩进，
+不会改动 `heroTitle` / `heroMark`。服务不做任何 Git 提交或推送。
 
 ## 部署
 
