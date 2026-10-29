@@ -15,6 +15,7 @@
     "preview": "astro preview",
     "check": "astro check && node scripts/contrast-audit.mjs",
     "lint": "biome ci .",
+    "test": "vitest run",
     "contrast": "node scripts/contrast-audit.mjs",
     "shots": "node scripts/shots.mjs"
   },
@@ -39,6 +40,7 @@
     "subset-font": "^2.9.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.0",
+    "vitest": "^5.0.5",
     "vue": "^3.5.44"
   }
 }
