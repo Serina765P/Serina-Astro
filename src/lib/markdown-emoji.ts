@@ -13,29 +13,32 @@ const emojiShortcodes: HastPluginDefinition = {
     }
 
     const segments = splitEmojiText(node.value ?? '');
-    if (!segments.some((segment) => segment.type === 'emoji')) return;
+    if (!segments.some((segment) => segment.type === 'shortcode')) return;
 
-    const replacement = segments.map((segment) =>
-      segment.type === 'text'
-        ? { type: 'text', value: segment.value }
-        : {
-            type: 'element',
-            tagName: 'img',
-            properties: {
-              className: ['custom-emoji'],
-              src: segment.emoji.src,
-              alt: `:${segment.emoji.code}:`,
-              title: segment.emoji.label,
-              width: segment.emoji.width,
-              height: segment.emoji.height,
-              loading: 'lazy',
-              decoding: 'async',
-              draggable: false,
-              dataCustomEmoji: segment.emoji.code,
-            },
-            children: [],
-          },
-    ) as HastNode[];
+    const replacement = segments.map((segment) => {
+      if (segment.type === 'text') return { type: 'text', value: segment.value };
+      const { shortcode } = segment;
+      const sticker = shortcode.kind === 'sticker';
+      return {
+        type: 'element',
+        tagName: 'img',
+        properties: {
+          className: [sticker ? 'custom-sticker' : 'custom-emoji'],
+          src: shortcode.src,
+          alt: `:${shortcode.code}:`,
+          title: shortcode.label,
+          width: shortcode.width,
+          height: shortcode.height,
+          loading: 'lazy',
+          decoding: 'async',
+          draggable: false,
+          ...(sticker
+            ? { dataCustomSticker: shortcode.code }
+            : { dataCustomEmoji: shortcode.code }),
+        },
+        children: [],
+      };
+    }) as HastNode[];
     context.replaceNode(node, replacement);
   },
 };

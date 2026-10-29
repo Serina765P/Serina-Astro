@@ -47,3 +47,5 @@ npm run emoji:import -- --all --input "C:\Users\Serina\Downloads\stamp"
 ```md
 今天状态不错 :765pro_微笑: 做完事情来喝茶 :afterglow_饮茶:
 ```
+
+贴纸（`ml_` 前缀的大尺寸动画 WebP）与表情共用同一套语法，但注册表和资源独立，见 `docs/custom-sticker.md`。
