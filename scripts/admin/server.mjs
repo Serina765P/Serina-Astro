@@ -51,6 +51,7 @@ async function serveIndex(vite, request, response) {
 async function main() {
   const vite = await createViteServer({
     root: ADMIN_ROOT,
+    publicDir: path.join(ROOT, 'public'),
     appType: 'custom',
     server: { middlewareMode: true },
     plugins: [

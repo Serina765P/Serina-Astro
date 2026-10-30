@@ -81,7 +81,7 @@ export function splitEmojiText(value: string): EmojiTextSegment[] {
   return segments;
 }
 
-function shortcodeImageHtml(shortcode: Shortcode): string {
+export function shortcodeImageHtml(shortcode: Shortcode): string {
   const sticker = shortcode.kind === 'sticker';
   const className = sticker ? 'custom-sticker' : 'custom-emoji';
   const dataAttribute = sticker ? 'data-custom-sticker' : 'data-custom-emoji';

@@ -1,11 +1,47 @@
 <script setup>
-import { MdEditor, NormalToolbar } from 'md-editor-v3';
+import { config, MdEditor, NormalToolbar } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 import { computed, nextTick, ref } from 'vue';
+import { shortcodeImageHtml, splitEmojiText } from '../../../src/lib/emoji.ts';
 import { uploadPostImage } from '../api.js';
 import { errorMessage } from '../errors.js';
 import ShortcodePicker from './ShortcodePicker.vue';
 import { useDarkMode } from '../use-dark-mode.js';
+config({
+  markdownItConfig(md) {
+    md.set({ html: true });
+    md.core.ruler.after('inline', 'serina-custom-emoji', (state) => {
+      for (const blockToken of state.tokens) {
+        if (blockToken.type !== 'inline' || !blockToken.children) continue;
+        const nextChildren = [];
+        for (const token of blockToken.children) {
+          if (token.type !== 'text') {
+            nextChildren.push(token);
+            continue;
+          }
+          const segments = splitEmojiText(token.content);
+          if (!segments.some((segment) => segment.type === 'shortcode')) {
+            nextChildren.push(token);
+            continue;
+          }
+          for (const segment of segments) {
+            if (segment.type === 'text') {
+              const textToken = new state.Token('text', '', 0);
+              textToken.content = segment.value;
+              nextChildren.push(textToken);
+            } else {
+              const htmlToken = new state.Token('html_inline', '', 0);
+              htmlToken.content = shortcodeImageHtml(segment.shortcode);
+              nextChildren.push(htmlToken);
+            }
+          }
+        }
+        blockToken.children = nextChildren;
+      }
+    });
+  },
+});
+
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
@@ -198,5 +234,32 @@ function insertShortcode(code) {
 .post-markdown-editor :deep(.md-editor) {
   border-color: var(--ui-border);
   border-radius: var(--ui-radius);
+}
+
+.post-markdown-editor :deep(img.custom-emoji) {
+  display: inline-block;
+  width: auto;
+  height: 3em;
+  margin: 0 0.08em;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  object-fit: contain;
+  vertical-align: middle;
+  cursor: default;
+}
+
+.post-markdown-editor :deep(img.custom-sticker) {
+  display: inline-block;
+  width: auto;
+  height: 6em;
+  max-width: 100%;
+  margin: 0 0.1em;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  object-fit: contain;
+  vertical-align: middle;
+  cursor: default;
 }
 </style>
