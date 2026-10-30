@@ -3,6 +3,7 @@ import { PLACEHOLDER_TABS } from './navigation.js';
 import PlaceholderPanel from './panels/PlaceholderPanel.vue';
 import ShuoshuoPanel from './panels/ShuoshuoPanel.vue';
 import SitePanel from './panels/SitePanel.vue';
+import TaxonomyPanel from './panels/TaxonomyPanel.vue';
 
 const placeholderRoutes = PLACEHOLDER_TABS.map((tab) => ({
   path: tab.path,
@@ -23,6 +24,12 @@ export const router = createRouter({
       meta: { tabId: 'shuoshuo' },
     },
     { path: '/site', name: 'site', component: SitePanel, meta: { tabId: 'site' } },
+    {
+      path: '/taxonomy',
+      name: 'taxonomy',
+      component: TaxonomyPanel,
+      meta: { tabId: 'taxonomy' },
+    },
     { path: '/:pathMatch(.*)*', redirect: '/site' },
   ],
 });

@@ -47,3 +47,15 @@ export function updateShuoshuo(id, patch) {
 export function deleteShuoshuo(id) {
   return request(`/api/shuoshuo/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
+
+export function fetchTaxonomy() {
+  return request('/api/taxonomy');
+}
+
+export function saveTaxonomy(taxonomy) {
+  return request('/api/taxonomy', {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(taxonomy),
+  });
+}

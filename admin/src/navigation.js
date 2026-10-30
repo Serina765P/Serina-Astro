@@ -19,9 +19,6 @@ export const TABS = [
     path: '/taxonomy',
     label: 'URI 对照',
     icon: 'i-lucide-tags',
-    placeholder: true,
-    summary: '分类与标签的中英文 URI 映射、未映射词条审计将在后续工单接入。',
-    points: ['taxonomy.json 增删改', '全站未映射词条扫描', '莫兰迪 wash 色选择'],
   },
   {
     id: 'assets',

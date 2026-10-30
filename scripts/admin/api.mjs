@@ -1,10 +1,12 @@
 import { HttpError, sendJson } from './lib/http.mjs';
 import { handleShuoshuo } from './routes/shuoshuo.mjs';
 import { handleSiteInfo } from './routes/site-info.mjs';
+import { handleTaxonomy } from './routes/taxonomy.mjs';
 
 const ROUTES = [
   { pattern: /^\/api\/site-info$/u, handler: handleSiteInfo },
   { pattern: /^\/api\/shuoshuo$/u, handler: handleShuoshuo },
+  { pattern: /^\/api\/taxonomy$/u, handler: handleTaxonomy },
   {
     pattern: /^\/api\/shuoshuo\/([^/]+)$/u,
     handler: handleShuoshuo,
