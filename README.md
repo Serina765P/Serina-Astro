@@ -19,7 +19,7 @@ Node API 服务（`scripts/admin/`），仅本机可访问。界面采用 Nuxt U
 Vue Router 路由（`/site`、`/posts`、`/shuoshuo`、`/taxonomy`、`/assets`）、自定义品牌蓝
 主色与跟随系统的明暗切换。
 
-已交付「站点与友链」「说说」「URI 对照」与「文章」面板：
+已交付「站点与友链」「说说」「URI 对照」「文章」与「素材管理」全部 5 大面板：
 
 - 「站点与友链」读写 `src/data/site-info.json` 的简介、社交外链与友链，不会改动
   `heroTitle` / `heroMark`。
@@ -33,6 +33,10 @@ Vue Router 路由（`/site`、`/posts`、`/shuoshuo`、`/taxonomy`、`/assets`�
   `md-editor-v3` 左右分栏、同步滚动、字数统计并跟随明暗主题；粘贴或拖入图片会直传
   `src/content/posts/<slug>/` 并插入 `![说明](<slug>/文件名)`；工具栏可打开表情/贴纸图鉴
   插入 `:shortcode:`；输入新分类/标签时就地登记 slug 与配色并写入 `taxonomy.json`。
+- 「素材管理」浏览与检索表情（emoji）及贴纸（sticker）两套独立图鉴；支持修改短代码并执行
+  两阶段安全重命名与注册表写回；支持维护关键词与套装显示名、批量修改套装短代码前缀；
+  改名前自动扫描正文与说说对旧短代码的引用并实时预警。旧脚本 `scripts/asset-editor.mjs`
+  已退役，管理入口完全收敛至后台。
 
 所有保存都先写同目录临时文件再原子 rename，JSON 固定 2 空格缩进。服务不做任何 Git 提交或推送。
 

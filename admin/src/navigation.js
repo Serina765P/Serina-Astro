@@ -22,9 +22,6 @@ export const TABS = [
     path: '/assets',
     label: '素材管理',
     icon: 'i-lucide-images',
-    placeholder: true,
-    summary: '表情与贴纸注册表、短代码重命名与正文引用扫描将在后续工单接入。',
-    points: ['套装前缀与关键词维护', '两阶段安全重命名', '全站引用扫描'],
   },
   {
     id: 'site',

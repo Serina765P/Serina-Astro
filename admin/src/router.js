@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { PLACEHOLDER_TABS } from './navigation.js';
+import AssetPanel from './panels/AssetPanel.vue';
 import PlaceholderPanel from './panels/PlaceholderPanel.vue';
 import PostPanel from './panels/PostPanel.vue';
 import ShuoshuoPanel from './panels/ShuoshuoPanel.vue';
@@ -29,6 +30,12 @@ export const router = createRouter({
       name: 'shuoshuo',
       component: ShuoshuoPanel,
       meta: { tabId: 'shuoshuo' },
+    },
+    {
+      path: '/assets',
+      name: 'assets',
+      component: AssetPanel,
+      meta: { tabId: 'assets' },
     },
     { path: '/site', name: 'site', component: SitePanel, meta: { tabId: 'site' } },
     {

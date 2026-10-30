@@ -1,5 +1,5 @@
 import { HttpError, sendJson } from './lib/http.mjs';
-import { handleAssets } from './routes/assets.mjs';
+import { handleAssetPrefix, handleAssets } from './routes/assets.mjs';
 import { handlePosts } from './routes/posts.mjs';
 import { handleShuoshuo } from './routes/shuoshuo.mjs';
 import { handleSiteInfo } from './routes/site-info.mjs';
@@ -9,6 +9,7 @@ const ROUTES = [
   { pattern: /^\/api\/site-info$/u, handler: handleSiteInfo },
   { pattern: /^\/api\/shuoshuo$/u, handler: handleShuoshuo },
   { pattern: /^\/api\/taxonomy$/u, handler: handleTaxonomy },
+  { pattern: /^\/api\/assets\/prefix$/u, handler: handleAssetPrefix },
   { pattern: /^\/api\/assets$/u, handler: handleAssets },
   {
     pattern: /^\/api\/assets\/([^/]+)\/([^/]+)$/u,

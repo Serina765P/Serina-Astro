@@ -12,7 +12,7 @@
     "emoji:import": "node scripts/import-emoji.mjs",
     "sticker:import": "node scripts/import-stickers.mjs",
     "admin": "node scripts/admin/server.mjs",
-    "assets:editor": "node scripts/asset-editor.mjs",
+    "assets:editor": "node scripts/admin/server.mjs",
     "preview": "astro preview",
     "check": "astro check && node scripts/contrast-audit.mjs",
     "lint": "biome ci .",

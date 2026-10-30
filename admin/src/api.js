@@ -97,6 +97,22 @@ export function fetchAssets() {
   return request('/api/assets');
 }
 
+export function saveAssets(payload) {
+  return request('/api/assets', {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function renameAssetPrefix(payload) {
+  return request('/api/assets/prefix', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
 export function deletePost(slug, { removeAssets = false } = {}) {
   const query = removeAssets ? '?removeAssets=1' : '';
   return request(`/api/posts/${encodeURIComponent(slug)}${query}`, { method: 'DELETE' });
