@@ -1,7 +1,11 @@
 import { readdir, readFile, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { Document, parseDocument } from 'yaml';
-import { POST_FRONTMATTER_FIELDS, POST_SKINS } from '../../../src/lib/post-frontmatter.ts';
+import {
+  POST_FRONTMATTER_FIELDS,
+  POST_LICENSES,
+  POST_SKINS,
+} from '../../../src/lib/post-frontmatter.ts';
 import { SLUG_PATTERN } from '../../../src/lib/taxonomy.ts';
 import { writeFileAtomic, writeFileAtomicExclusive } from './atomic-write.mjs';
 import {
@@ -179,6 +183,17 @@ export function normalizeFrontmatterPatch(
         throw new HttpError(400, `skin 只能是 ${POST_SKINS.join(' / ')} 或留空`);
       }
       patch.skin = value;
+      continue;
+    }
+    if (field === 'license') {
+      if (value === null || (typeof value === 'string' && !value.trim())) {
+        patch.license = null;
+        continue;
+      }
+      if (typeof value !== 'string' || !POST_LICENSES.includes(value)) {
+        throw new HttpError(400, `license 只能是 ${POST_LICENSES.join(' / ')} 或留空`);
+      }
+      patch.license = value;
     }
   }
 
@@ -303,6 +318,7 @@ function summarize(post, hasAssets) {
     pinned: data.pinned === true,
     toc: data.toc !== false,
     skin: typeof data.skin === 'string' ? data.skin : null,
+    license: typeof data.license === 'string' ? data.license : null,
     hasAssets,
   };
 }
@@ -348,6 +364,7 @@ export async function listPosts(root) {
         pinned: false,
         toc: true,
         skin: null,
+        license: null,
         hasAssets: await hasAssetDir(root, slug),
         error: error.message,
       });

@@ -98,3 +98,10 @@ gh variable set CLOUDFLARE_PAGES_PROJECT --body "<pages project name>"
 ## 字体
 
 正文 IBM Plex Sans SC，首页标题朝华标题明朝体，均经 ZeoSeven Fonts CDN 加载，许可见各条目页。
+
+## 授权与版权
+
+- **仓库代码**：基于 [MIT 许可协议](LICENSE) 开源，`Copyright (c) 2025 芹菜P`。
+- **原创文章**：Frontmatter 显式标注 `license: original` 的文章，基于 [知识共享署名-非商业性使用-相同方式共享 4.0 国际许可协议 (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans) 授权。
+- **未标注文章**：未标注 `license: original` 的文章保留所有权利，不适用上述 CC 授权。
+- **第三方素材**：站点中包含的第三方素材、角色及游戏素材、表情包与贴纸、专辑封面、引用文本、翻译、CDN 字体及开源依赖包等，版权与许可均归原权利人所有，不因上述声明而被重新授权。

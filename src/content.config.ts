@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
-import { POST_SKINS } from './lib/post-frontmatter';
+import { POST_LICENSES, POST_SKINS } from './lib/post-frontmatter';
 
 const posts = defineCollection({
   loader: glob({ pattern: '*.{md,mdx}', base: './src/content/posts' }),
@@ -21,6 +21,8 @@ const posts = defineCollection({
     toc: z.boolean().default(true),
     /** 文章皮肤：对应 layouts/PostLayout 中按需挂载的皮肤组件 */
     skin: z.enum(POST_SKINS).optional(),
+    /** 原创授权：显式 original 时展示 CC BY-NC-SA 4.0 页脚 */
+    license: z.enum(POST_LICENSES).optional(),
   }),
 });
 

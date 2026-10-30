@@ -400,6 +400,34 @@ Delta 正文
     expect(disk).not.toContain('cover:');
   });
 
+  it('更新文章支持 license: original，并在设为 null 时安全删除该键', async () => {
+    const { root, postsDir } = await createWorkspace();
+    const api = await startApi(root, cleanups);
+
+    const res1 = await api.put('/api/posts/alpha', {
+      frontmatter: { license: 'original' },
+    });
+    expect(res1.status).toBe(200);
+    const body1 = await res1.json();
+    expect(body1.frontmatter.license).toBe('original');
+    let disk = await readPost(postsDir, 'alpha');
+    expect(disk).toContain('license: original');
+
+    const listRes = await api.request('/api/posts');
+    const listBody = await listRes.json();
+    const alphaSummary = listBody.posts.find((p) => p.slug === 'alpha');
+    expect(alphaSummary?.license).toBe('original');
+
+    const res2 = await api.put('/api/posts/alpha', {
+      frontmatter: { license: null },
+    });
+    expect(res2.status).toBe(200);
+    const body2 = await res2.json();
+    expect(Object.hasOwn(body2.frontmatter, 'license')).toBe(false);
+    disk = await readPost(postsDir, 'alpha');
+    expect(disk).not.toContain('license:');
+  });
+
   it.each([
     ['标题为空', { title: '  ' }],
     ['标题被删除', { title: null }],
@@ -413,6 +441,8 @@ Delta 正文
     ['置顶不是布尔值', { pinned: 'yes' }],
     ['目录不是布尔值', { toc: 1 }],
     ['未知 skin', { skin: 'unknown' }],
+    ['未知 license', { license: 'unknown' }],
+    ['license 为非字符串', { license: 123 }],
     ['封面是绝对路径', { cover: '/etc/passwd' }],
     ['封面越出文章目录', { cover: '../cover.avif' }],
     ['注入未知字段', { injected: 'x' }],

@@ -1,0 +1,58 @@
+---
+import { Icon } from 'astro-icon/components';
+import { SITE } from '../site.config';
+
+interface Props {
+  title: string;
+  id: string;
+}
+
+const { title, id } = Astro.props;
+const canonicalUrl = `${SITE.url}/posts/${id}/`;
+const ccUrl = 'https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans';
+---
+
+<section
+  class="mt-10 rounded-xl border border-line bg-surface-2 p-4 text-xs text-sub sm:p-5"
+  aria-label="文章版权声明"
+>
+  <div class="flex items-center gap-2 font-medium text-ink">
+    <Icon name="simple-icons:creativecommons" class="size-4 shrink-0 text-wash-pink-deep" aria-hidden="true" />
+    <span>原创文章版权声明</span>
+  </div>
+  <div class="mt-3 space-y-1.5 leading-relaxed">
+    <p>
+      <strong class="font-medium text-ink">文章标题：</strong>
+      <span>{title}</span>
+    </p>
+    <p>
+      <strong class="font-medium text-ink">文章作者：</strong>
+      <span>{SITE.author}</span>
+    </p>
+    <p>
+      <strong class="font-medium text-ink">原文链接：</strong>
+      <a
+        href={canonicalUrl}
+        class="break-all text-wash-pink-deep transition-colors hover:text-wash-rose-deep hover:underline"
+      >
+        {canonicalUrl}
+      </a>
+    </p>
+    <p>
+      <strong class="font-medium text-ink">许可协议：</strong>
+      <span>本文为原创文章，遵循</span>
+      <a
+        href={ccUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-wash-pink-deep transition-colors hover:text-wash-rose-deep hover:underline"
+      >
+        知识共享署名-非商业性使用-相同方式共享 4.0 国际许可协议 (CC BY-NC-SA 4.0)
+      </a>
+      <span>。商业转载请联系作者获得授权，非商业转载请注明出处及原文链接，并按相同方式共享。</span>
+    </p>
+    <p class="pt-1 leading-normal text-sub">
+      免责声明：文内包含的第三方素材、角色及游戏素材、表情包与贴纸、专辑封面、引用文本、翻译、CDN 字体及开源依赖包等，版权与许可均归原权利人所有，不因本文声明而被重新授权。
+    </p>
+  </div>
+</section>

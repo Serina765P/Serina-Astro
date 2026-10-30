@@ -33,7 +33,7 @@ export default defineConfig({
         // 那些（S25 实测 21 个在用图标、未用图标不进 dist），漏加图标不再静默缺失。
         // simple-icons 保持显式列表：品牌图标数量庞大，误用/拼错更值得被构建拦住。
         'material-symbols': ['*'],
-        'simple-icons': ['github', 'x', 'tencentqq', 'bilibili'],
+        'simple-icons': ['github', 'x', 'tencentqq', 'bilibili', 'creativecommons'],
       },
     }),
   ],

@@ -6,12 +6,14 @@ import Toc from '../components/Toc.astro';
 import Giscus from '../components/Giscus.astro';
 import BackToTop from '../components/BackToTop.astro';
 import ImasAlbum from '../components/skins/ImasAlbum.astro';
+import ArticleLicense from '../components/ArticleLicense.astro';
 import CodeBlock from '../components/CodeBlock.astro';
 import Card from '../components/primitives/Card.astro';
 import TagChip from '../components/primitives/TagChip.astro';
 import Container from '../components/primitives/Container.astro';
 import { categoryFillClass, categorySlug, tagSlug, SITE } from '../site.config';
 import { formatDate, formatCount, readingTime, wordcount } from '../lib/utils';
+import type { PostLicense } from '../lib/post-frontmatter';
 
 interface PostRef {
   id: string;
@@ -31,6 +33,7 @@ interface Props {
       description?: string;
       keywords?: string[];
       skin?: 'imas-album';
+      license?: PostLicense;
       toc?: boolean;
     };
   };
@@ -120,6 +123,8 @@ const showToc = data.toc !== false && !data.categories.includes('小游戏');
         <Prose>
           <Content />
         </Prose>
+
+        {data.license === 'original' && <ArticleLicense title={data.title} id={post.id} />}
       </div>
 
       <nav class="mt-6 grid gap-3 sm:grid-cols-2" aria-label="上一篇下一篇">

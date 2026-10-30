@@ -25,7 +25,6 @@ toc: true
   本文由 Gemini 3.8 Flash 编写，数据由Deepseek V4.1 Flash 统计，具有一定的不确定性，故仅供娱乐，请注意甄别。</br>尽管我觉得 Gemini 的文笔不错（如果你没看到 Deepseek 写的雷霆文案是不会理解的 :765pro_懊悔:）
 </div>
 
-
 <div class="callout callout-warning">
   <strong>关于本篇考据与数据来源</strong><br>
   <strong>语料范围</strong>：收录自 MLTD 52 位偶像专属剧情归档（共 15,261 条剧情、103,669 行对白台词，日文原文未翻译）。<br>

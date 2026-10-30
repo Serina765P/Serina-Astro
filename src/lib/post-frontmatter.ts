@@ -13,6 +13,9 @@ export const POST_FRONTMATTER_FIELDS = [
   'pinned',
   'toc',
   'skin',
+  'license',
 ] as const;
 
 export const POST_SKINS = ['imas-album'] as const;
+export const POST_LICENSES = ['original'] as const;
+export type PostLicense = (typeof POST_LICENSES)[number];

@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router';
 import {
   POST_FRONTMATTER_FIELDS,
+  POST_LICENSES,
   POST_SKINS,
 } from '../../../src/lib/post-frontmatter.ts';
 import {
@@ -30,11 +31,17 @@ const SLUG_PATTERN = SLUG_PATTERN_SOURCE;
 const SLUG_HINT = '只能使用小写 ASCII 字母、数字与连字符，例如 my-new-post';
 const ALL_FILTER = '__all';
 const NO_SKIN = '__none';
+const NO_LICENSE = '__none';
 const KNOWN_FIELDS = [...POST_FRONTMATTER_FIELDS];
 const SKIN_LABELS = { 'imas-album': 'imas-album · 专辑封面网格' };
 const SKIN_OPTIONS = [
   { label: '无皮肤', value: NO_SKIN },
   ...POST_SKINS.map((value) => ({ value, label: SKIN_LABELS[value] ?? value })),
+];
+const LICENSE_LABELS = { original: 'original · CC BY-NC-SA 4.0' };
+const LICENSE_OPTIONS = [
+  { label: '未标注（不声明 CC）', value: NO_LICENSE },
+  ...POST_LICENSES.map((value) => ({ value, label: LICENSE_LABELS[value] ?? value })),
 ];
 const SORT_OPTIONS = [
   { label: '发布日期 · 新 → 旧', value: 'date-desc' },
@@ -117,6 +124,7 @@ function emptyForm() {
     pinned: false,
     toc: true,
     skin: NO_SKIN,
+    license: NO_LICENSE,
   };
 }
 
@@ -145,6 +153,10 @@ function normalizeForm(frontmatter = {}) {
       typeof frontmatter.skin === 'string' && frontmatter.skin.trim()
         ? frontmatter.skin.trim()
         : NO_SKIN,
+    license:
+      typeof frontmatter.license === 'string' && frontmatter.license.trim()
+        ? frontmatter.license.trim()
+        : NO_LICENSE,
   };
 }
 
@@ -451,6 +463,9 @@ function buildPatch() {
   }
   if (current.skin !== baselineForm.value.skin) {
     patch.skin = current.skin === NO_SKIN ? null : current.skin;
+  }
+  if (current.license !== baselineForm.value.license) {
+    patch.license = current.license === NO_LICENSE ? null : current.license;
   }
   return patch;
 }
@@ -981,6 +996,18 @@ onBeforeUnmount(() => {
                 />
               </UFormField>
 
+              <UFormField
+                label="版权声明"
+                help="选择 original 时，页脚将显示 CC BY-NC-SA 4.0 声明与官方链接。"
+              >
+                <USelect
+                  v-model="form.license"
+                  :items="LICENSE_OPTIONS"
+                  class="w-full"
+                  aria-label="文章版权声明"
+                />
+              </UFormField>
+
               <UFormField label="封面" help="文章目录内的相对文件名，例如 cover.avif。">
                 <UInput
                   v-model="form.cover"
@@ -1166,6 +1193,14 @@ onBeforeUnmount(() => {
                       </UBadge>
                       <UBadge v-if="post.skin" color="primary" variant="subtle" size="sm">
                         {{ post.skin }}
+                      </UBadge>
+                      <UBadge
+                        v-if="post.license === 'original'"
+                        color="success"
+                        variant="subtle"
+                        size="sm"
+                      >
+                        CC BY-NC-SA 4.0
                       </UBadge>
                       <UBadge
                         v-if="!post.toc"
