@@ -114,11 +114,11 @@ const { nodes, collapsible, idPrefix, listId } = Astro.props;
     transition: color 160ms ease, background-color 160ms ease;
   }
 
-  /* 视觉仍是 24px，实际可点区域 ≈37px（24 + 0.4rem×2） */
+  /* 视觉仍是 24px，纵向热区 ≈37px；横向不扩出右侧滚动容器 */
   .toc-toggle::after {
     content: '';
     position: absolute;
-    inset: -0.4rem;
+    inset: -0.4rem 0;
   }
 
   .toc-toggle:hover {

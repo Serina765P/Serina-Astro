@@ -11,7 +11,10 @@
     const update = () => button.classList.toggle('is-visible', window.scrollY > window.innerHeight * 0.75);
     window.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update);
-    button.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    button.addEventListener('click', () => {
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.scrollTo({ top: 0, behavior: reducedMotion ? 'instant' : 'smooth' });
+    });
     document.addEventListener('astro:page-load', update);
     update();
   }
