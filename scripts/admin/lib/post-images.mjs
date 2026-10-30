@@ -2,6 +2,7 @@ import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { writeFileAtomicExclusive } from './atomic-write.mjs';
 import { HttpError } from './http.mjs';
+import { readImageFile } from './image-files.mjs';
 import { assertPostExists, POSTS_DIR } from './posts.mjs';
 
 const MIME_EXTENSIONS = new Map([
@@ -80,4 +81,14 @@ export async function uploadPostImage(root, slugInput, { filename, contentType, 
     markdown: `![](${relativePath})`,
     size: data.length,
   };
+}
+
+/**
+ * 回读 `src/content/posts/<slug>/` 下的图片给编辑器预览。
+ * 文件名只允许单段（无分隔符），扩展名必须落在上传白名单里。
+ */
+export async function readPostImage(root, slugInput, fileName) {
+  const slug = await assertPostExists(root, slugInput);
+  const image = await readImageFile(path.join(root, POSTS_DIR, slug), fileName, '图片');
+  return { name: fileName, ...image };
 }

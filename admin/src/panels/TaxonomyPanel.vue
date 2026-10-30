@@ -7,21 +7,13 @@ import {
   WASH_VALUES,
 } from '../../../src/lib/taxonomy.ts';
 import { fetchTaxonomy, saveTaxonomy } from '../api.js';
+import { DEFAULT_WASH, nextWashColor, WASH_OPTIONS } from '../wash.js';
 
 const toast = useToast();
 
 const SLUG_PATTERN = SLUG_PATTERN_SOURCE;
 const SLUG_HINT = '只能使用小写字母、数字与连字符，例如 comic-book';
-const DEFAULT_COLOR = WASH_VALUES[0];
-const WASH_LABELS = {
-  'var(--wash-pink)': '粉 · wash-pink',
-  'var(--wash-mist)': '雾 · wash-mist',
-  'var(--wash-sage)': '鼠尾草 · wash-sage',
-  'var(--wash-sand)': '沙 · wash-sand',
-  'var(--wash-clay)': '陶土 · wash-clay',
-  'var(--wash-rose)': '玫瑰 · wash-rose',
-};
-const WASH_OPTIONS = WASH_VALUES.map((value) => ({ value, label: WASH_LABELS[value] ?? value }));
+const DEFAULT_COLOR = DEFAULT_WASH;
 
 const status = ref('loading');
 const statusMessage = ref('');
@@ -144,8 +136,7 @@ function refresh() {
 }
 
 function nextColor() {
-  const taken = new Set(Object.values(draft.categoryColors));
-  return WASH_OPTIONS.find((option) => !taken.has(option.value))?.value ?? DEFAULT_COLOR;
+  return nextWashColor(Object.values(draft.categoryColors));
 }
 
 function buildPayload() {

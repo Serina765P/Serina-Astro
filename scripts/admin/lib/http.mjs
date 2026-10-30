@@ -18,6 +18,16 @@ export function sendJson(response, status, payload, headers = {}) {
   response.end(body);
 }
 
+/** 本地图片回读：只用于后台预览，禁用缓存以免重传同名图片后看到旧图。 */
+export function sendFile(response, status, contentType, data) {
+  response.writeHead(status, {
+    'content-type': contentType,
+    'content-length': data.length,
+    'cache-control': 'no-store',
+  });
+  response.end(data);
+}
+
 const MAX_BODY_BYTES = 1024 * 1024;
 
 /** 写接口统一要求 application/json，挡掉表单/纯文本跨站提交。 */

@@ -19,7 +19,7 @@ Node API 服务（`scripts/admin/`），仅本机可访问。界面采用 Nuxt U
 Vue Router 路由（`/site`、`/posts`、`/shuoshuo`、`/taxonomy`、`/assets`）、自定义品牌蓝
 主色与跟随系统的明暗切换。
 
-已交付「站点与友链」「说说」与「URI 对照」面板：
+已交付「站点与友链」「说说」「URI 对照」与「文章」面板：
 
 - 「站点与友链」读写 `src/data/site-info.json` 的简介、社交外链与友链，不会改动
   `heroTitle` / `heroMark`。
@@ -29,6 +29,10 @@ Vue Router 路由（`/site`、`/posts`、`/shuoshuo`、`/taxonomy`、`/assets`�
 - 「URI 对照」读写 `src/data/taxonomy.json` 的分类/标签中文 → 英文 slug 映射与分类莫兰迪
   配色；读取时递归扫描 `src/content/posts/**/*.{md,mdx}` 的 frontmatter，把未映射词条在
   顶部横幅列出，可直接填 slug 补录；新增、修改、删除均原子写回。
+- 「文章」浏览、搜索、筛选与新建文章，Frontmatter 表单与正文共用同一次原子保存。正文使用
+  `md-editor-v3` 左右分栏、同步滚动、字数统计并跟随明暗主题；粘贴或拖入图片会直传
+  `src/content/posts/<slug>/` 并插入 `![说明](<slug>/文件名)`；工具栏可打开表情/贴纸图鉴
+  插入 `:shortcode:`；输入新分类/标签时就地登记 slug 与配色并写入 `taxonomy.json`。
 
 所有保存都先写同目录临时文件再原子 rename，JSON 固定 2 空格缩进。服务不做任何 Git 提交或推送。
 

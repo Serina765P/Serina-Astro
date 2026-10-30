@@ -34,14 +34,26 @@ export function splitPostSource(raw) {
 }
 
 /** YAML 序列化统一用 LF；写回 CRLF 文件时再整体转换，避免混入裸 \n。 */
-export function joinPostSource(part, yamlText) {
+export function joinPostSource(part, yamlText, body) {
   const eol = eolOf(part.lineEnding);
-  const frontmatter = yamlText.replace(/\n+$/u, '');
+  // 未补丁的 raw frontmatter 可能仍是 CRLF；先归一，否则 replace('\n', eol) 会产出 \r\r\n。
+  const frontmatter = yamlText.replace(/\r\n?/gu, '\n').replace(/\n+$/u, '');
   const lines = frontmatter
     ? `${part.opener}${eol}${frontmatter.replace(/\n/gu, eol)}${eol}`
     : `${part.opener}${eol}`;
   const closing = `${part.closer}${part.hasClosingEol ? eol : ''}`;
-  return `${part.bom}${lines}${closing}${part.body}`;
+  return `${part.bom}${lines}${closing}${body}`;
+}
+
+/** 编辑器只认 LF；读盘时先把源文件里的 CRLF / CR 归一，避免 CodeMirror 混入裸回车。 */
+export function normalizeBodyForEditor(body) {
+  return body.replace(/\r\n?/gu, '\n');
+}
+
+/** 写回时跟随源文件换行风格，正文整体转换，不保留用户编辑器里的混合换行。 */
+export function bodyForFile(content, lineEnding) {
+  const eol = eolOf(lineEnding);
+  return content.replace(/\r\n?/gu, '\n').replace(/\n/gu, eol);
 }
 
 export function createPostSource(yamlText) {

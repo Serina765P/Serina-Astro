@@ -1,11 +1,15 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { onBeforeRouteLeave } from 'vue-router';
 import {
   POST_FRONTMATTER_FIELDS,
   POST_SKINS,
 } from '../../../src/lib/post-frontmatter.ts';
-import { SLUG_PATTERN as SLUG_RE, SLUG_PATTERN_SOURCE } from '../../../src/lib/taxonomy.ts';
+import {
+  buildTaxonomyEntryPatch,
+  SLUG_PATTERN as SLUG_RE,
+  SLUG_PATTERN_SOURCE,
+} from '../../../src/lib/taxonomy.ts';
 import { formatDate } from '../../../src/lib/utils.ts';
 import {
   createPost,
@@ -13,8 +17,12 @@ import {
   fetchPost,
   fetchPosts,
   fetchTaxonomy,
+  saveTaxonomy,
   updatePost,
 } from '../api.js';
+import MarkdownEditor from '../components/MarkdownEditor.vue';
+import { errorMessage } from '../errors.js';
+import { DEFAULT_WASH, nextWashColor, WASH_OPTIONS } from '../wash.js';
 
 const toast = useToast();
 
@@ -44,7 +52,12 @@ const shanghaiDate = new Intl.DateTimeFormat('en-CA', {
 const status = ref('loading');
 const statusMessage = ref('');
 const posts = ref([]);
-const taxonomy = ref({ categorySlugs: {}, tagSlugs: {}, used: { categories: [], tags: [] } });
+const taxonomy = ref({
+  categorySlugs: {},
+  tagSlugs: {},
+  categoryColors: {},
+  used: { categories: [], tags: [] },
+});
 const filters = reactive({ query: '', category: ALL_FILTER, tag: ALL_FILTER, sort: 'date-desc' });
 
 const editorOpen = ref(false);
@@ -54,6 +67,14 @@ const saving = ref(false);
 const unknownKeys = ref([]);
 const baselineForm = ref(null);
 const form = reactive(emptyForm());
+
+const content = ref('');
+const baselineContent = ref('');
+const bodyStatus = ref('idle');
+const bodySavedAt = ref('');
+const frontmatterOpen = ref(false);
+let bodyTimer = null;
+let bodySavePromise = null;
 
 const createOpen = ref(false);
 const creating = ref(false);
@@ -65,6 +86,19 @@ const deleteOpen = ref(false);
 const removeAssets = ref(false);
 const deleting = ref(false);
 const deleteError = ref('');
+
+const registerOpen = ref(false);
+const registerTarget = ref(null);
+const registerSlug = ref('');
+const registerColor = ref(DEFAULT_WASH);
+const registerError = ref('');
+const registering = ref(false);
+
+const panelUi = computed(() =>
+  editorOpen.value
+    ? { body: 'p-0 sm:p-0 flex-1 min-h-0 overflow-hidden' }
+    : { body: 'p-4 sm:p-6' },
+);
 
 function todayShanghai() {
   return shanghaiDate.format(new Date());
@@ -135,6 +169,28 @@ const dirty = computed(
     baselineForm.value !== null &&
     JSON.stringify(normalizedForm.value) !== JSON.stringify(baselineForm.value),
 );
+
+const bodyDirty = computed(() => content.value !== baselineContent.value);
+const hasUnsaved = computed(() => dirty.value || bodyDirty.value);
+
+const bodyStatusMeta = computed(() => {
+  switch (bodyStatus.value) {
+    case 'saving':
+      return { color: 'neutral', icon: 'i-lucide-loader-circle', text: '正文保存中…' };
+    case 'pending':
+      return { color: 'warning', icon: 'i-lucide-timer', text: '正文等待自动保存' };
+    case 'error':
+      return { color: 'error', icon: 'i-lucide-alert-circle', text: '正文自动保存失败' };
+    case 'saved':
+      return {
+        color: 'success',
+        icon: 'i-lucide-check',
+        text: `正文已自动保存${bodySavedAt.value ? ` · ${bodySavedAt.value}` : ''}`,
+      };
+    default:
+      return { color: 'success', icon: 'i-lucide-check', text: '正文已与磁盘同步' };
+  }
+});
 
 function uniqueSorted(values) {
   return [...new Set(values.filter((value) => typeof value === 'string' && value.trim()))].sort(
@@ -228,16 +284,35 @@ const visiblePosts = computed(() => {
   });
 });
 
-const unmappedSelected = computed(() => {
-  const categories = form.categories.filter(
-    (name) => !Object.hasOwn(taxonomy.value.categorySlugs ?? {}, name),
-  );
-  const tags = form.tags.filter((name) => !Object.hasOwn(taxonomy.value.tagSlugs ?? {}, name));
-  return [...categories.map((name) => `分类「${name}」`), ...tags.map((name) => `标签「${name}」`)];
+const unmappedEntries = computed(() => {
+  const categories = form.categories
+    .filter((name) => !Object.hasOwn(taxonomy.value.categorySlugs ?? {}, name))
+    .map((name) => ({ kind: 'category', name }));
+  const tags = form.tags
+    .filter((name) => !Object.hasOwn(taxonomy.value.tagSlugs ?? {}, name))
+    .map((name) => ({ kind: 'tag', name }));
+  return [...categories, ...tags];
 });
 
-function errorMessage(error) {
-  return error instanceof Error ? error.message : '操作失败';
+const TAXONOMY_KINDS = {
+  category: { label: '分类', mapKey: 'categorySlugs', route: 'categories', withColor: true },
+  tag: { label: '标签', mapKey: 'tagSlugs', route: 'tags', withColor: false },
+};
+
+function kindMeta(kind) {
+  return TAXONOMY_KINDS[kind] ?? TAXONOMY_KINDS.tag;
+}
+
+function kindMap(kind) {
+  return taxonomy.value[kindMeta(kind).mapKey] ?? {};
+}
+
+function kindLabel(kind) {
+  return kindMeta(kind).label;
+}
+
+function nowTime() {
+  return new Date().toLocaleTimeString('zh-CN', { hour12: false });
 }
 
 function toastError(title, error) {
@@ -266,17 +341,22 @@ async function refreshList() {
   posts.value = Array.isArray(data.posts) ? data.posts : [];
 }
 
+function applyTaxonomyState(state) {
+  taxonomy.value = {
+    categorySlugs: state.taxonomy?.categorySlugs ?? {},
+    tagSlugs: state.taxonomy?.tagSlugs ?? {},
+    categoryColors: state.taxonomy?.categoryColors ?? {},
+    used: state.used ?? { categories: [], tags: [] },
+  };
+}
+
 async function load() {
   status.value = 'loading';
   statusMessage.value = '';
   try {
     const [list, tax] = await Promise.all([fetchPosts(), fetchTaxonomy()]);
     posts.value = Array.isArray(list.posts) ? list.posts : [];
-    taxonomy.value = {
-      categorySlugs: tax.taxonomy?.categorySlugs ?? {},
-      tagSlugs: tax.taxonomy?.tagSlugs ?? {},
-      used: tax.used ?? { categories: [], tags: [] },
-    };
+    applyTaxonomyState(tax);
     status.value = 'ready';
   } catch (error) {
     statusMessage.value = errorMessage(error);
@@ -292,17 +372,38 @@ function applyDetail(data) {
   unknownKeys.value = Object.keys(data.frontmatter ?? {}).filter(
     (key) => !KNOWN_FIELDS.includes(key),
   );
+  content.value = typeof data.content === 'string' ? data.content : '';
+  baselineContent.value = content.value;
+  bodyStatus.value = 'idle';
+  bodySavedAt.value = '';
+}
+
+function clearBodyTimer() {
+  if (bodyTimer) {
+    clearTimeout(bodyTimer);
+    bodyTimer = null;
+  }
 }
 
 async function openEditor(post) {
-  if (editorOpen.value && dirty.value && !window.confirm('有未保存的修改，切换文章会丢弃它们。继续？')) {
+  if (
+    editorOpen.value &&
+    hasUnsaved.value &&
+    !window.confirm('有未保存的修改，切换文章会丢弃它们。继续？')
+  ) {
     return;
   }
+  clearBodyTimer();
+  if (bodySavePromise) await bodySavePromise;
   editorOpen.value = true;
   editorLoading.value = true;
   detail.value = null;
   baselineForm.value = null;
   unknownKeys.value = [];
+  content.value = '';
+  baselineContent.value = '';
+  bodyStatus.value = 'idle';
+  bodySavedAt.value = '';
   try {
     applyDetail(await fetchPost(post.slug));
   } catch (error) {
@@ -313,9 +414,21 @@ async function openEditor(post) {
   }
 }
 
-function onEditorOpenChange(next) {
-  if (!next && dirty.value && !window.confirm('有未保存的修改，确定关闭编辑面板吗？')) return;
-  editorOpen.value = next;
+async function closeEditor() {
+  clearBodyTimer();
+  if (bodyDirty.value) {
+    const saved = await flushBody();
+    if (!saved && !window.confirm('正文自动保存失败，关闭会丢失正文修改。继续？')) return;
+  }
+  if (dirty.value && !window.confirm('有未保存的 frontmatter 修改，确定关闭编辑面板吗？')) return;
+  editorOpen.value = false;
+  detail.value = null;
+  baselineForm.value = null;
+  unknownKeys.value = [];
+  content.value = '';
+  baselineContent.value = '';
+  bodyStatus.value = 'idle';
+  bodySavedAt.value = '';
 }
 
 function resetForm() {
@@ -342,33 +455,94 @@ function buildPatch() {
   return patch;
 }
 
+function scheduleBodySave() {
+  clearBodyTimer();
+  if (!editorOpen.value || !detail.value || !bodyDirty.value) return;
+  bodyStatus.value = 'pending';
+  bodyTimer = setTimeout(() => {
+    bodyTimer = null;
+    void flushBody();
+  }, 1200);
+}
+
+/** 正文自动保存：只提交 content，避免把尚未确认的 Frontmatter 修改一并写盘。 */
+async function flushBody() {
+  clearBodyTimer();
+  if (bodySavePromise) await bodySavePromise;
+  if (!editorOpen.value || !detail.value || !bodyDirty.value) return true;
+  if (saving.value) {
+    scheduleBodySave();
+    return !bodyDirty.value;
+  }
+  const slug = detail.value.slug;
+  const target = content.value;
+  bodyStatus.value = 'saving';
+  bodySavePromise = (async () => {
+    try {
+      const saved = await updatePost(slug, { content: target });
+      baselineContent.value = typeof saved.content === 'string' ? saved.content : target;
+      bodyStatus.value = 'saved';
+      bodySavedAt.value = nowTime();
+      if (editorOpen.value && detail.value?.slug === slug && content.value !== baselineContent.value) {
+        scheduleBodySave();
+      }
+      return true;
+    } catch (error) {
+      bodyStatus.value = 'error';
+      toastError('正文自动保存失败', error);
+      return false;
+    } finally {
+      bodySavePromise = null;
+    }
+  })();
+  return bodySavePromise;
+}
+
 async function save() {
-  if (saving.value || !dirty.value || !detail.value) return;
+  if (saving.value || !detail.value) return;
+  clearBodyTimer();
+  if (bodySavePromise) await bodySavePromise;
+  if (saving.value) return;
   const patch = buildPatch();
-  if (Object.keys(patch).length === 0) {
+  const sendContent = bodyDirty.value;
+  if (Object.keys(patch).length === 0 && !sendContent) {
     toast.add({
       title: '没有需要保存的修改',
-      description: '表单内容与磁盘一致。',
+      description: 'Frontmatter 与正文都与磁盘一致。',
       color: 'neutral',
       icon: 'i-lucide-check',
     });
     return;
   }
+  const payload = {};
+  if (Object.keys(patch).length > 0) payload.frontmatter = patch;
+  if (sendContent) payload.content = content.value;
+
+  const slug = detail.value.slug;
+  const contentAtSend = content.value;
   saving.value = true;
+  if (sendContent) bodyStatus.value = 'saving';
   try {
-    applyDetail(await updatePost(detail.value.slug, patch));
+    const saved = await updatePost(slug, payload);
+    if (!editorOpen.value || detail.value?.slug !== slug) return;
+    const liveContent = content.value;
+    applyDetail(saved);
+    if (liveContent !== contentAtSend) content.value = liveContent;
+    bodyStatus.value = 'saved';
+    bodySavedAt.value = nowTime();
     try {
       await refreshList();
     } catch (error) {
-      toastError('Frontmatter 已保存，但列表刷新失败', error);
+      toastError('文章已保存，但列表刷新失败', error);
     }
     toast.add({
-      title: 'Frontmatter 已保存',
-      description: `${detail.value.file} · 原子写入`,
+      title: '文章已保存',
+      description: `${detail.value.file} · ${sendContent ? 'Frontmatter 与正文' : 'Frontmatter'}已原子写入`,
       color: 'success',
       icon: 'i-lucide-check-circle',
     });
   } catch (error) {
+    if (sendContent) bodyStatus.value = 'error';
     toastError('保存失败', error);
   } finally {
     saving.value = false;
@@ -377,20 +551,87 @@ async function save() {
 
 function addListValue(list, value) {
   const name = String(value ?? '').trim();
-  if (!name || list.includes(name)) return;
+  if (!name || list.includes(name)) return false;
   list.push(name);
+  return true;
 }
 
 function addCategoryValue(value) {
-  addListValue(form.categories, value);
+  const name = String(value ?? '').trim();
+  if (!addListValue(form.categories, name)) return;
+  if (!Object.hasOwn(taxonomy.value.categorySlugs ?? {}, name)) openRegister('category', name);
 }
 
 function addTagValue(value) {
-  addListValue(form.tags, value);
+  const name = String(value ?? '').trim();
+  if (!addListValue(form.tags, name)) return;
+  if (!Object.hasOwn(taxonomy.value.tagSlugs ?? {}, name)) openRegister('tag', name);
 }
 
 function addKeywordValue(value) {
   addListValue(form.keywords, value);
+}
+
+function openRegister(kind, name) {
+  if (registering.value) return;
+  if (Object.hasOwn(kindMap(kind), name)) return;
+  registerTarget.value = { kind, name };
+  registerSlug.value = '';
+  registerColor.value = nextWashColor(Object.values(taxonomy.value.categoryColors ?? {}));
+  registerError.value = '';
+  registerOpen.value = true;
+}
+
+function closeRegister() {
+  if (registering.value) return;
+  registerOpen.value = false;
+}
+
+async function submitRegister() {
+  const target = registerTarget.value;
+  if (!target || registering.value) return;
+  const slug = registerSlug.value.trim();
+  const label = kindLabel(target.kind);
+  const meta = kindMeta(target.kind);
+  if (!SLUG_RE.test(slug)) {
+    registerError.value = `${label} slug ${SLUG_HINT}`;
+    return;
+  }
+  if (Object.values(kindMap(target.kind)).includes(slug)) {
+    registerError.value = `slug ${slug} 已被其它${label}占用`;
+    return;
+  }
+  const patch = buildTaxonomyEntryPatch(
+    {
+      categorySlugs: taxonomy.value.categorySlugs,
+      tagSlugs: taxonomy.value.tagSlugs,
+      categoryColors: taxonomy.value.categoryColors,
+    },
+    {
+      kind: target.kind,
+      name: target.name,
+      slug,
+      color: registerColor.value,
+    },
+  );
+
+  registering.value = true;
+  registerError.value = '';
+  try {
+    const state = await saveTaxonomy(patch);
+    applyTaxonomyState(state);
+    registerOpen.value = false;
+    toast.add({
+      title: `${label}「${target.name}」已登记`,
+      description: `src/data/taxonomy.json · /${meta.route}/${slug}/`,
+      color: 'success',
+      icon: 'i-lucide-tags',
+    });
+  } catch (error) {
+    registerError.value = errorMessage(error);
+  } finally {
+    registering.value = false;
+  }
 }
 
 function openCreate() {
@@ -459,9 +700,12 @@ async function confirmDelete() {
   try {
     const result = await deletePost(target.slug, { removeAssets: removeAssets.value });
     if (detail.value?.slug === target.slug) {
+      clearBodyTimer();
       editorOpen.value = false;
       baselineForm.value = null;
       detail.value = null;
+      content.value = '';
+      baselineContent.value = '';
     }
     deleteOpen.value = false;
     try {
@@ -492,14 +736,29 @@ function onKeydown(event) {
 }
 
 function onBeforeUnload(event) {
-  if (!dirty.value) return;
+  if (!hasUnsaved.value) return;
   event.preventDefault();
   event.returnValue = '';
 }
 
-onBeforeRouteLeave(() => {
-  if (!dirty.value) return true;
-  return window.confirm('有未保存的 frontmatter 修改，确定离开文章面板吗？');
+watch(content, () => {
+  if (!editorOpen.value) return;
+  if (bodyDirty.value) {
+    scheduleBodySave();
+    return;
+  }
+  clearBodyTimer();
+  if (bodyStatus.value === 'pending') bodyStatus.value = 'idle';
+});
+
+onBeforeRouteLeave(async () => {
+  clearBodyTimer();
+  if (bodyDirty.value) await flushBody();
+  if (hasUnsaved.value && !window.confirm('有未保存的修改，确定离开文章面板吗？')) {
+    if (bodyDirty.value) scheduleBodySave();
+    return false;
+  }
+  return true;
 });
 
 onMounted(() => {
@@ -509,20 +768,60 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  clearBodyTimer();
   window.removeEventListener('keydown', onKeydown);
   window.removeEventListener('beforeunload', onBeforeUnload);
 });
 </script>
 
 <template>
-  <UDashboardPanel id="posts">
+  <UDashboardPanel id="posts" class="h-svh" :ui="panelUi">
     <template #header>
-      <UDashboardNavbar title="文章">
+      <UDashboardNavbar :title="editorOpen ? '编辑文章' : '文章'">
         <template #leading>
-          <UDashboardSidebarCollapse />
+          <UButton
+            v-if="editorOpen"
+            type="button"
+            color="neutral"
+            variant="ghost"
+            icon="i-lucide-arrow-left"
+            label="返回列表"
+            @click="closeEditor"
+          />
+          <UDashboardSidebarCollapse v-else />
         </template>
         <template #right>
-          <div class="flex items-center gap-2">
+          <div v-if="editorOpen" class="flex items-center gap-2">
+            <UBadge
+              :color="bodyStatusMeta.color"
+              :icon="bodyStatusMeta.icon"
+              variant="subtle"
+              class="hidden sm:inline-flex"
+            >
+              {{ bodyStatusMeta.text }}
+            </UBadge>
+            <UBadge v-if="dirty" color="warning" variant="subtle" icon="i-lucide-pencil-line">
+              Frontmatter 未保存
+            </UBadge>
+            <UButton
+              type="button"
+              color="neutral"
+              variant="outline"
+              icon="i-lucide-panel-top"
+              :label="frontmatterOpen ? '收起 Frontmatter' : '展开 Frontmatter'"
+              @click="frontmatterOpen = !frontmatterOpen"
+            />
+            <UButton
+              type="button"
+              color="primary"
+              icon="i-lucide-save"
+              label="保存"
+              :loading="saving"
+              :disabled="(!dirty && !bodyDirty) || saving"
+              @click="save"
+            />
+          </div>
+          <div v-else class="flex items-center gap-2">
             <UBadge color="neutral" variant="subtle" icon="i-lucide-file-text">
               {{ posts.length }} 篇
             </UBadge>
@@ -549,7 +848,218 @@ onBeforeUnmount(() => {
     </template>
 
     <template #body>
-      <UContainer class="max-w-6xl py-6">
+      <div v-if="editorOpen" class="flex h-full min-h-0 flex-col">
+        <div v-if="editorLoading" class="space-y-4 p-6" role="status">
+          <USkeleton class="h-14 w-full rounded-xl" />
+          <USkeleton class="h-96 w-full rounded-xl" />
+        </div>
+
+        <div v-else-if="detail" class="flex h-full min-h-0 flex-col">
+          <div
+            class="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-default px-4 py-2 text-xs text-muted"
+          >
+            <code class="rounded bg-elevated px-1 py-0.5">{{ detail.file }}</code>
+            <span>换行 {{ detail.lineEnding === 'crlf' ? 'CRLF' : 'LF' }}</span>
+            <span aria-hidden="true">·</span>
+            <span>{{ detail.hasAssets ? '有随文图片目录' : '无随文图片' }}</span>
+            <span aria-hidden="true">·</span>
+            <span>正文自动保存，图片可粘贴或拖入</span>
+          </div>
+
+          <div
+            v-show="frontmatterOpen"
+            class="max-h-[46%] min-h-0 overflow-y-auto border-b border-default bg-elevated/10 px-4 py-4"
+          >
+            <div v-if="unmappedEntries.length > 0" class="mb-4">
+              <UAlert
+                color="warning"
+                variant="subtle"
+                icon="i-lucide-triangle-alert"
+                title="这些词条还没有 URI 映射"
+              >
+                <template #description>
+                  <div class="space-y-2">
+                    <p class="text-xs leading-5">
+                      发布后会降级为中文 URL。可就地登记 slug，或稍后到「URI 对照」面板补录。
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                      <UButton
+                        v-for="entry in unmappedEntries"
+                        :key="`${entry.kind}-${entry.name}`"
+                        type="button"
+                        size="xs"
+                        color="warning"
+                        variant="subtle"
+                        icon="i-lucide-tag"
+                        :label="`登记${kindLabel(entry.kind)}「${entry.name}」`"
+                        @click="openRegister(entry.kind, entry.name)"
+                      />
+                    </div>
+                  </div>
+                </template>
+              </UAlert>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+              <UFormField label="标题" required class="sm:col-span-2">
+                <UInput v-model="form.title" class="w-full" aria-label="文章标题" />
+              </UFormField>
+
+              <UFormField label="发布时间" required help="YYYY-MM-DD 或带时区的 ISO 时间。">
+                <UInput
+                  v-model="form.date"
+                  spellcheck="false"
+                  placeholder="2026-10-08T12:00:00+08:00"
+                  class="w-full"
+                  aria-label="发布时间"
+                />
+              </UFormField>
+
+              <UFormField label="更新时间" help="留空即删除该字段。">
+                <UInput
+                  v-model="form.updated"
+                  spellcheck="false"
+                  placeholder="2026-10-09T20:20:44+08:00"
+                  class="w-full"
+                  aria-label="更新时间"
+                />
+              </UFormField>
+
+              <UFormField
+                label="分类"
+                class="sm:col-span-2"
+                help="输入可搜索已有分类；新建词条会立即弹出 slug 登记。"
+              >
+                <UInputMenu
+                  v-model="form.categories"
+                  :items="categorySuggestions"
+                  multiple
+                  create-item
+                  placeholder="选择或输入分类"
+                  class="w-full"
+                  aria-label="文章分类"
+                  @create="addCategoryValue"
+                />
+              </UFormField>
+
+              <UFormField
+                label="标签"
+                class="sm:col-span-2"
+                help="同样支持自动补全；新标签可当场登记 URI。"
+              >
+                <UInputMenu
+                  v-model="form.tags"
+                  :items="tagSuggestions"
+                  multiple
+                  create-item
+                  placeholder="选择或输入标签"
+                  class="w-full"
+                  aria-label="文章标签"
+                  @create="addTagValue"
+                />
+              </UFormField>
+
+              <UFormField label="关键词" class="sm:col-span-2" help="用于 SEO，可留空。">
+                <UInputMenu
+                  v-model="form.keywords"
+                  :items="keywordSuggestions"
+                  multiple
+                  create-item
+                  placeholder="选择或输入关键词"
+                  class="w-full"
+                  aria-label="文章关键词"
+                  @create="addKeywordValue"
+                />
+              </UFormField>
+
+              <UFormField label="文章皮肤">
+                <USelect
+                  v-model="form.skin"
+                  :items="SKIN_OPTIONS"
+                  class="w-full"
+                  aria-label="文章皮肤"
+                />
+              </UFormField>
+
+              <UFormField label="封面" help="文章目录内的相对文件名，例如 cover.avif。">
+                <UInput
+                  v-model="form.cover"
+                  spellcheck="false"
+                  placeholder="cover.avif"
+                  class="w-full"
+                  aria-label="封面文件名"
+                />
+              </UFormField>
+
+              <UFormField label="摘要" class="sm:col-span-2" help="留空即从 Frontmatter 删除。">
+                <UTextarea
+                  v-model="form.description"
+                  :rows="2"
+                  autoresize
+                  placeholder="列表与分享卡片使用的摘要"
+                  class="w-full"
+                  aria-label="文章摘要"
+                />
+              </UFormField>
+
+              <UFormField label="置顶">
+                <div class="flex h-8 items-center">
+                  <USwitch v-model="form.pinned" aria-label="置顶文章" />
+                </div>
+              </UFormField>
+
+              <UFormField label="显示目录">
+                <div class="flex h-8 items-center">
+                  <USwitch v-model="form.toc" aria-label="显示文章目录" />
+                </div>
+              </UFormField>
+            </div>
+
+            <div v-if="unknownKeys.length > 0" class="mt-4 rounded-lg border border-default p-3">
+              <p class="text-xs font-medium text-default">未知字段将原样保留</p>
+              <div class="mt-2 flex flex-wrap gap-1.5">
+                <UBadge
+                  v-for="key in unknownKeys"
+                  :key="key"
+                  color="neutral"
+                  variant="subtle"
+                  size="sm"
+                >
+                  {{ key }}
+                </UBadge>
+              </div>
+            </div>
+
+            <div class="mt-4 flex flex-wrap items-center justify-end gap-2">
+              <UButton
+                type="button"
+                color="neutral"
+                variant="ghost"
+                icon="i-lucide-undo-2"
+                label="撤销 Frontmatter 修改"
+                :disabled="!dirty || saving"
+                @click="resetForm"
+              />
+              <UButton
+                type="button"
+                color="primary"
+                variant="subtle"
+                icon="i-lucide-save"
+                label="保存 Frontmatter"
+                :loading="saving"
+                :disabled="!dirty || saving"
+                @click="save"
+              />
+            </div>
+          </div>
+
+          <div class="min-h-0 flex-1 p-3">
+            <MarkdownEditor v-model="content" :slug="detail.slug" @save="save" />
+          </div>
+        </div>
+      </div>
+
+      <UContainer v-else class="max-w-6xl py-6">
         <div v-if="status === 'loading'" class="space-y-6" role="status">
           <USkeleton class="h-24 w-full rounded-xl" />
           <USkeleton class="h-96 w-full rounded-xl" />
@@ -889,216 +1399,86 @@ onBeforeUnmount(() => {
     </template>
   </UModal>
 
-  <USlideover
-    :open="editorOpen"
-    :ui="{ content: 'w-full sm:max-w-2xl' }"
-    title="编辑文章 Frontmatter"
-    @update:open="onEditorOpenChange"
+  <UModal
+    v-model:open="registerOpen"
+    :title="registerTarget ? `登记${kindLabel(registerTarget.kind)}「${registerTarget.name}」` : '登记词条'"
+    description="写入 src/data/taxonomy.json；登记后文章保存即可生成英文 URL。"
+    :ui="{ content: 'max-w-lg' }"
+    :dismissible="!registering"
+    :close="!registering"
   >
     <template #body>
-      <div v-if="editorLoading" class="space-y-4" role="status">
-        <USkeleton class="h-16 w-full rounded-xl" />
-        <USkeleton class="h-96 w-full rounded-xl" />
-      </div>
-
-      <div v-else-if="detail" class="space-y-5">
-        <div class="rounded-lg border border-default bg-elevated/40 p-3 text-xs text-muted">
-          <p class="break-all">
-            <code class="rounded bg-elevated px-1 py-0.5">{{ detail.file }}</code>
-            · 换行 {{ detail.lineEnding === 'crlf' ? 'CRLF' : 'LF' }}
-            · {{ detail.hasAssets ? '有随文图片目录' : '无随文图片' }}
-          </p>
-          <p class="mt-1">
-            只保存 Frontmatter；正文与未知字段保持原样。图片上传请在 Markdown 编辑器中使用随文插图。
-          </p>
-        </div>
-
+      <div v-if="registerTarget" class="space-y-4">
         <UAlert
-          v-if="unmappedSelected.length > 0"
-          color="warning"
+          v-if="registerError"
+          color="error"
           variant="subtle"
-          icon="i-lucide-triangle-alert"
-          title="这些词条还没有 URI 映射"
-        >
-          <template #description>
-            <p class="text-xs leading-5">
-              {{ unmappedSelected.join('、') }}。发布后会降级为中文 URL，可保存后到「URI 对照」
-              面板补录。
-            </p>
-          </template>
-        </UAlert>
-
-        <div class="grid gap-4 sm:grid-cols-2">
-          <UFormField label="标题" required class="sm:col-span-2">
-            <UInput v-model="form.title" class="w-full" aria-label="文章标题" />
-          </UFormField>
-
-          <UFormField
-            label="发布时间"
-            required
-            help="YYYY-MM-DD 或带时区的 ISO 时间。"
-          >
-            <UInput
-              v-model="form.date"
-              spellcheck="false"
-              placeholder="2026-10-08T12:00:00+08:00"
-              class="w-full"
-              aria-label="发布时间"
-            />
-          </UFormField>
-
-          <UFormField label="更新时间" help="留空即删除该字段。">
-            <UInput
-              v-model="form.updated"
-              spellcheck="false"
-              placeholder="2026-10-09T20:20:44+08:00"
-              class="w-full"
-              aria-label="更新时间"
-            />
-          </UFormField>
-
-          <UFormField
-            label="分类"
-            class="sm:col-span-2"
-            help="输入可搜索已有分类；按回车可创建新词条，保存后建议到「URI 对照」登记 slug。"
-          >
-            <UInputMenu
-              v-model="form.categories"
-              :items="categorySuggestions"
-              multiple
-              create-item
-              placeholder="选择或输入分类"
-              class="w-full"
-              aria-label="文章分类"
-              @create="addCategoryValue"
-            />
-          </UFormField>
-
-          <UFormField label="标签" class="sm:col-span-2" help="同样支持从既有标签自动补全。">
-            <UInputMenu
-              v-model="form.tags"
-              :items="tagSuggestions"
-              multiple
-              create-item
-              placeholder="选择或输入标签"
-              class="w-full"
-              aria-label="文章标签"
-              @create="addTagValue"
-            />
-          </UFormField>
-
-          <UFormField label="关键词" class="sm:col-span-2" help="用于 SEO，可留空。">
-            <UInputMenu
-              v-model="form.keywords"
-              :items="keywordSuggestions"
-              multiple
-              create-item
-              placeholder="选择或输入关键词"
-              class="w-full"
-              aria-label="文章关键词"
-              @create="addKeywordValue"
-            />
-          </UFormField>
-
-          <UFormField label="文章皮肤">
-            <USelect
-              v-model="form.skin"
-              :items="SKIN_OPTIONS"
-              class="w-full"
-              aria-label="文章皮肤"
-            />
-          </UFormField>
-
-          <UFormField label="封面" help="文章目录内的相对文件名，例如 cover.avif。">
-            <UInput
-              v-model="form.cover"
-              spellcheck="false"
-              placeholder="cover.avif"
-              class="w-full"
-              aria-label="封面文件名"
-            />
-          </UFormField>
-
-          <UFormField label="摘要" class="sm:col-span-2" help="留空即从 Frontmatter 删除。">
-            <UTextarea
-              v-model="form.description"
-              :rows="3"
-              autoresize
-              placeholder="列表与分享卡片使用的摘要"
-              class="w-full"
-              aria-label="文章摘要"
-            />
-          </UFormField>
-
-          <UFormField label="置顶">
-            <div class="flex h-8 items-center">
-              <USwitch v-model="form.pinned" aria-label="置顶文章" />
-            </div>
-          </UFormField>
-
-          <UFormField label="显示目录">
-            <div class="flex h-8 items-center">
-              <USwitch v-model="form.toc" aria-label="显示文章目录" />
-            </div>
-          </UFormField>
-        </div>
-
-        <div v-if="unknownKeys.length > 0" class="rounded-lg border border-default p-3">
-          <p class="text-xs font-medium text-default">未知字段将原样保留</p>
-          <div class="mt-2 flex flex-wrap gap-1.5">
-            <UBadge
-              v-for="key in unknownKeys"
-              :key="key"
-              color="neutral"
-              variant="subtle"
-              size="sm"
-            >
-              {{ key }}
-            </UBadge>
-          </div>
-          <p class="mt-2 text-[11px] leading-5 text-muted">
-            保存时只替换上方字段；这些键及其值不会丢失，正文与注释保持原样。
+          icon="i-lucide-alert-circle"
+          :description="registerError"
+        />
+        <div class="rounded-lg border border-default bg-elevated/40 p-3 text-xs text-muted">
+          <p>
+            {{ kindLabel(registerTarget.kind) }}
+            <strong class="text-default">{{ registerTarget.name }}</strong>
+            还没有英文 slug。发布后会降级为中文 URL。
           </p>
         </div>
+        <UFormField label="URL slug" required :help="SLUG_HINT">
+          <UInput
+            v-model="registerSlug"
+            :pattern="SLUG_PATTERN"
+            :title="SLUG_HINT"
+            placeholder="comic-book"
+            spellcheck="false"
+            autocomplete="off"
+            class="w-full"
+            aria-label="词条 slug"
+            @keydown.enter.prevent="submitRegister"
+          />
+        </UFormField>
+        <p class="text-[11px] leading-5 text-muted">
+          路由预览
+          <code class="rounded bg-elevated px-1 py-0.5">
+            /{{ kindMeta(registerTarget.kind).route }}/{{ registerSlug || '…' }}/
+          </code>
+        </p>
+        <UFormField
+          v-if="kindMeta(registerTarget.kind).withColor"
+          label="莫兰迪配色"
+          help="分类胶囊与分类页使用的 wash 色。"
+        >
+          <USelect
+            v-model="registerColor"
+            :items="WASH_OPTIONS"
+            class="w-full"
+            aria-label="分类配色"
+          />
+        </UFormField>
       </div>
     </template>
-
     <template #footer>
-      <div
-        v-if="editorOpen && detail"
-        class="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-      >
-        <div class="flex flex-wrap items-center gap-2">
-          <UBadge
-            :color="dirty ? 'warning' : 'success'"
-            :icon="dirty ? 'i-lucide-pencil-line' : 'i-lucide-check'"
-            variant="subtle"
-          >
-            {{ dirty ? '有未保存的修改' : '已与磁盘同步' }}
-          </UBadge>
-          <span class="max-w-56 truncate text-xs text-muted">{{ detail.file }}</span>
-        </div>
-        <div class="flex items-center justify-end gap-2">
+      <div class="flex w-full items-center justify-between gap-2">
+        <p class="text-[11px] text-muted">登记后不会自动保存文章 Frontmatter。</p>
+        <div class="flex items-center gap-2">
           <UButton
             type="button"
             color="neutral"
             variant="outline"
-            icon="i-lucide-undo-2"
-            label="撤销修改"
-            :disabled="!dirty || saving"
-            @click="resetForm"
+            label="取消"
+            :disabled="registering"
+            @click="closeRegister"
           />
           <UButton
             type="button"
             color="primary"
-            icon="i-lucide-save"
-            label="保存 Frontmatter"
-            :loading="saving"
-            :disabled="!dirty || saving"
-            @click="save"
+            icon="i-lucide-tags"
+            label="写入 taxonomy.json"
+            :loading="registering"
+            :disabled="registering || !registerSlug.trim()"
+            @click="submitRegister"
           />
         </div>
       </div>
     </template>
-  </USlideover>
+  </UModal>
 </template>

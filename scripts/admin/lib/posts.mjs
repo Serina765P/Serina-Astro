@@ -5,8 +5,10 @@ import { POST_FRONTMATTER_FIELDS, POST_SKINS } from '../../../src/lib/post-front
 import { SLUG_PATTERN } from '../../../src/lib/taxonomy.ts';
 import { writeFileAtomic, writeFileAtomicExclusive } from './atomic-write.mjs';
 import {
+  bodyForFile,
   createPostSource,
   joinPostSource,
+  normalizeBodyForEditor,
   splitPostSource,
   yamlOptionsFor,
 } from './frontmatter.mjs';
@@ -86,6 +88,12 @@ function normalizeCover(value) {
     throw new HttpError(400, '封面必须是文章目录内的相对路径，例如 cover.avif');
   }
   return cover;
+}
+
+/** 正文以字符串原样传输；换行归一交给 frontmatter 模块，不在这里改写。 */
+function normalizePostContent(value) {
+  if (typeof value !== 'string') throw new HttpError(400, '正文必须是字符串');
+  return value;
 }
 
 /**
@@ -364,6 +372,7 @@ export async function getPost(root, slugInput) {
     lineEnding: post.part.lineEnding,
     hasAssets: await hasAssetDir(root, slug),
     frontmatter: post.frontmatter,
+    content: normalizeBodyForEditor(post.part.body),
   };
 }
 
@@ -399,12 +408,19 @@ export async function createPost(root, payload) {
 export async function updatePost(root, slugInput, payload) {
   const slug = requirePostSlug(slugInput);
   if (!isPlainObject(payload)) throw new HttpError(400, '请求体必须是 JSON 对象');
-  rejectUnknownKeys(payload, ['frontmatter'], '请求体');
-  const patch = normalizeFrontmatterPatch(payload.frontmatter);
+  rejectUnknownKeys(payload, ['frontmatter', 'content'], '请求体');
+  const hasFrontmatter = Object.hasOwn(payload, 'frontmatter');
+  const hasContent = Object.hasOwn(payload, 'content');
+  if (!hasFrontmatter && !hasContent) throw new HttpError(400, '没有可保存的内容');
+  const patch = hasFrontmatter ? normalizeFrontmatterPatch(payload.frontmatter) : null;
+  const body = hasContent ? normalizePostContent(payload.content) : null;
   const post = await readPostDocument(root, slug);
 
-  applyPatch(post.document, patch);
-  const content = joinPostSource(post.part, post.document.toString(yamlOptionsFor(post.part)));
+  if (patch) applyPatch(post.document, patch);
+  // 只改正文时不 reserialize YAML，确保既有注释、缩进与未知字段逐字节保留。
+  const yamlText = patch ? post.document.toString(yamlOptionsFor(post.part)) : post.part.yaml;
+  const nextBody = body === null ? post.part.body : bodyForFile(body, post.part.lineEnding);
+  const content = joinPostSource(post.part, yamlText, nextBody);
   try {
     await writeFileAtomic(post.file, content);
   } catch (error) {

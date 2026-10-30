@@ -1,12 +1,32 @@
-import { createWriteQueue, readJsonBody, requireJsonContentType, sendJson } from '../lib/http.mjs';
+import {
+  createWriteQueue,
+  readJsonBody,
+  requireJsonContentType,
+  sendFile,
+  sendJson,
+} from '../lib/http.mjs';
 import { readMultipartFile } from '../lib/multipart.mjs';
-import { uploadPostImage } from '../lib/post-images.mjs';
+import { readPostImage, uploadPostImage } from '../lib/post-images.mjs';
 import { createPost, deletePost, getPost, listPosts, updatePost } from '../lib/posts.mjs';
 
 const enqueue = createWriteQueue();
 
-/** 文章集合负责浏览与新建，条目路由负责读取、Frontmatter 保存与删除。 */
-export async function handlePosts(request, response, { root, slug = null, images = false }) {
+/** 文章集合负责浏览与新建，条目路由负责读取、Frontmatter/正文保存与删除。 */
+export async function handlePosts(
+  request,
+  response,
+  { root, slug = null, images = false, imageName = null },
+) {
+  if (imageName !== null) {
+    if (request.method !== 'GET') {
+      sendJson(response, 405, { error: '不支持的方法' }, { allow: 'GET' });
+      return;
+    }
+    const image = await readPostImage(root, slug, imageName);
+    sendFile(response, 200, image.contentType, image.data);
+    return;
+  }
+
   if (images) {
     if (request.method !== 'POST') {
       sendJson(response, 405, { error: '不支持的方法' }, { allow: 'POST' });

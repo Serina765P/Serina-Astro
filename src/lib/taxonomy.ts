@@ -13,3 +13,35 @@ export const WASH_VALUES = [
   'var(--wash-clay)',
   'var(--wash-rose)',
 ] as const;
+
+export type TaxonomyKind = 'category' | 'tag';
+
+export interface TaxonomyMaps {
+  categorySlugs: Record<string, string>;
+  tagSlugs: Record<string, string>;
+  categoryColors: Record<string, string>;
+}
+
+export interface TaxonomyMappingInput {
+  kind: TaxonomyKind;
+  name: string;
+  slug: string;
+  color?: string;
+}
+
+/**
+ * 管理后台的 taxonomy PUT 语义是整表替换而非深合并；登记单个词条时必须带回
+ * 现有映射，否则会把其它分类/标签的 slug 与配色一起清空。
+ */
+export function buildTaxonomyEntryPatch(
+  current: TaxonomyMaps,
+  { kind, name, slug, color }: TaxonomyMappingInput,
+): Partial<TaxonomyMaps> {
+  if (kind === 'category') {
+    return {
+      categorySlugs: { ...current.categorySlugs, [name]: slug },
+      categoryColors: { ...current.categoryColors, [name]: color ?? WASH_VALUES[0] },
+    };
+  }
+  return { tagSlugs: { ...current.tagSlugs, [name]: slug } };
+}

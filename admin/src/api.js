@@ -76,12 +76,25 @@ export function createPost(payload) {
   });
 }
 
-export function updatePost(slug, frontmatter) {
+export function updatePost(slug, patch) {
   return request(`/api/posts/${encodeURIComponent(slug)}`, {
     method: 'PUT',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ frontmatter }),
+    body: JSON.stringify(patch),
   });
+}
+
+export function uploadPostImage(slug, file) {
+  const form = new FormData();
+  form.append('file', file);
+  return request(`/api/posts/${encodeURIComponent(slug)}/images`, {
+    method: 'POST',
+    body: form,
+  });
+}
+
+export function fetchAssets() {
+  return request('/api/assets');
 }
 
 export function deletePost(slug, { removeAssets = false } = {}) {

@@ -38,6 +38,7 @@
     "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-vue": "^6.0.10",
+    "md-editor-v3": "^7.1.0",
     "pagefind": "^1.5.2",
     "playwright-core": "^1.63.0",
     "sharp": "0.35.4",

@@ -160,6 +160,18 @@ describe('GET /api/posts/:slug', () => {
     expect(body.lineEnding).toBe('crlf');
   });
 
+  it('返回正文内容，并把 CRLF 归一成 LF 供编辑器使用', async () => {
+    const { root } = await createWorkspace();
+    const api = await startApi(root, cleanups);
+
+    const alpha = await (await api.request('/api/posts/alpha')).json();
+    const beta = await (await api.request('/api/posts/beta')).json();
+
+    expect(alpha.content).toBe('\n正文第一行\n![图](alpha/cover.avif)\n');
+    expect(beta.content).toBe('\nBeta 正文\n');
+    expect(beta.content).not.toContain('\r');
+  });
+
   it('不存在的 slug 返回 404', async () => {
     const { root } = await createWorkspace();
     const api = await startApi(root, cleanups);
@@ -430,6 +442,93 @@ Delta 正文
   });
 });
 
+describe('PUT /api/posts/:slug content', () => {
+  it('只更新正文时保留 frontmatter 原文、注释与未知字段', async () => {
+    const { root, postsDir } = await createWorkspace();
+    const api = await startApi(root, cleanups);
+    const nextContent = '\n改写的正文\n\n第二段\n';
+
+    const response = await api.put('/api/posts/alpha', { content: nextContent });
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.content).toBe(nextContent);
+    expect(body.frontmatter).toMatchObject({
+      title: '旧标题',
+      customField: { nested: true, list: ['a', 'b'] },
+    });
+    const disk = await readPost(postsDir, 'alpha');
+    expect(disk).toContain('# 文章顶部注释');
+    expect(disk).toContain('customField:');
+    expect(disk.endsWith(nextContent)).toBe(true);
+    expect((await readdir(postsDir)).filter((name) => name.endsWith('.tmp'))).toEqual([]);
+  });
+
+  it('frontmatter 与正文可以在同一次请求里一起保存', async () => {
+    const { root, postsDir } = await createWorkspace();
+    const api = await startApi(root, cleanups);
+
+    const response = await api.put('/api/posts/alpha', {
+      frontmatter: { title: '新标题', tags: ['新标签'] },
+      content: '# 新正文\n',
+    });
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.frontmatter.title).toBe('新标题');
+    expect(body.frontmatter.customField).toEqual({ nested: true, list: ['a', 'b'] });
+    const disk = await readPost(postsDir, 'alpha');
+    expect(disk).toContain('title: 新标题');
+    expect(disk.endsWith('# 新正文\n')).toBe(true);
+  });
+
+  it('CRLF 文章写入正文时统一转换为 CRLF', async () => {
+    const { root, postsDir } = await createWorkspace();
+    const api = await startApi(root, cleanups);
+
+    const response = await api.put('/api/posts/beta', {
+      content: '\n第一段\n\n第二段\n',
+    });
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.lineEnding).toBe('crlf');
+    expect(body.content).toBe('\n第一段\n\n第二段\n');
+    const disk = await readFile(path.join(postsDir, 'beta.mdx'), 'utf8');
+    expect(disk.replaceAll('\r\n', '')).not.toContain('\n');
+    expect(disk.endsWith('\r\n第一段\r\n\r\n第二段\r\n')).toBe(true);
+    expect(disk).toContain('title: Beta');
+  });
+
+  it('允许用空正文清空文章内容', async () => {
+    const { root, postsDir } = await createWorkspace();
+    const api = await startApi(root, cleanups);
+
+    const response = await api.put('/api/posts/gamma', { content: '' });
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).content).toBe('');
+    expect(await readPost(postsDir, 'gamma')).toBe(
+      '---\ntitle: Gamma\ndate: 2025-12-05T15:11:29+08:00\ntoc: false\n---\n',
+    );
+  });
+
+  it.each([
+    ['正文不是字符串', { content: ['# 标题'] }],
+    ['正文为 null', { content: null }],
+    ['未知字段', { body: '正文' }],
+    ['空请求体', {}],
+  ])('拒绝无效请求：%s，磁盘保持原样', async (_label, payload) => {
+    const { root, postsDir } = await createWorkspace();
+    const api = await startApi(root, cleanups);
+
+    const response = await api.put('/api/posts/alpha', payload);
+
+    expect(response.status).toBe(400);
+    expect(await readPost(postsDir, 'alpha')).toBe(ALPHA);
+  });
+});
+
 describe('DELETE /api/posts/:slug', () => {
   it('默认只删文章文件，保留资源目录', async () => {
     const { root, postsDir } = await createWorkspace();
@@ -589,5 +688,48 @@ describe('POST /api/posts/:slug/images', () => {
     });
 
     expect(response.status).toBe(413);
+  });
+});
+
+describe('GET /api/posts/:slug/images/:name', () => {
+  it('回读文章目录内的图片，供编辑器预览', async () => {
+    const { root } = await createWorkspace();
+    const api = await startApi(root, cleanups);
+
+    const response = await api.request('/api/posts/alpha/images/cover.avif');
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('image/avif');
+    expect(Buffer.from(await response.arrayBuffer()).toString()).toBe('fake-image');
+  });
+
+  it('文章或图片不存在时返回 404', async () => {
+    const { root } = await createWorkspace();
+    const api = await startApi(root, cleanups);
+
+    const missingPost = await api.request('/api/posts/missing/images/cover.avif');
+    const missingImage = await api.request('/api/posts/alpha/images/nope.avif');
+
+    expect([missingPost.status, missingImage.status]).toEqual([404, 404]);
+  });
+
+  it('拒绝目录穿越与不受支持的文件名', async () => {
+    const { root } = await createWorkspace();
+    const api = await startApi(root, cleanups);
+
+    const traversal = await api.request('/api/posts/alpha/images/..%2Falpha%2Fcover.avif');
+    const nested = await api.request('/api/posts/alpha/images/%2E%2E%2Fcover.avif');
+    const script = await api.request('/api/posts/alpha/images/cover.svg');
+
+    expect([traversal.status, nested.status, script.status]).toEqual([404, 404, 404]);
+  });
+
+  it('只接受 GET', async () => {
+    const { root } = await createWorkspace();
+    const api = await startApi(root, cleanups);
+
+    const response = await api.send('PUT', '/api/posts/alpha/images', {});
+
+    expect(response.status).toBe(405);
   });
 });
