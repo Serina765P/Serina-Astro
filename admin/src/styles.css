@@ -1,5 +1,6 @@
 @import "tailwindcss" theme(static);
 @import "@nuxt/ui";
+@import "../../src/styles/post-prose.css";
 
 @theme static {
   --font-sans:
@@ -33,19 +34,33 @@ body {
 /* URI 对照色板预览：取值与站点 src/styles/global.css 的亮/暗 wash 颜料一致。
    管理后台是独立 Tailwind 入口，不加载站点全局样式，因此这里单独声明一份。 */
 :root {
+  --surface: #ffffff;
   --wash-pink: #c98b79;
+  --wash-pink-deep: #875044;
   --wash-mist: #91a9b7;
+  --wash-mist-deep: #4b6877;
   --wash-sage: #8fae9a;
+  --wash-sage-deep: #42634e;
   --wash-sand: #cbb28c;
+  --wash-sand-deep: #7d6238;
   --wash-clay: #c18b78;
+  --wash-clay-deep: #74463a;
   --wash-rose: #cc8179;
+  --wash-rose-deep: #8c3f38;
 }
 
 :root.dark {
+  --surface: #1e2327;
   --wash-pink: #7b5049;
+  --wash-pink-deep: #e0aa98;
   --wash-mist: #506874;
+  --wash-mist-deep: #a6c1cc;
   --wash-sage: #536b5b;
+  --wash-sage-deep: #a9c7b2;
   --wash-sand: #6e5b3e;
+  --wash-sand-deep: #d3bd90;
   --wash-clay: #6c4840;
+  --wash-clay-deep: #d4a08f;
   --wash-rose: #76413c;
+  --wash-rose-deep: #d59c93;
 }

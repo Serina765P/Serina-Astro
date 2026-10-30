@@ -1,0 +1,67 @@
+/**
+ * 文章正文共用装饰样式（Single Source of Truth）：
+ * 供前台（src/styles/global.css）与后台 Markdown 预览（admin/src/styles.css）共同消费。
+ * 保持纯 CSS，不依赖 Tailwind 层序或 @apply，确保在两端都能无副作用解析。
+ */
+
+.callout {
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+  border-radius: 1rem;
+  border-left-width: 4px;
+  border-left-style: solid;
+  border-left-color: var(--wash-sand-deep, #7d6238);
+  padding: 0.875rem 1.25rem;
+  font-size: 0.95em;
+  background: color-mix(in srgb, var(--wash-sand, #cbb28c) 12%, var(--surface, #ffffff));
+}
+
+.callout p {
+  margin: 0;
+}
+
+.callout-warning {
+  border-left-color: var(--wash-clay-deep, #74463a);
+  background: color-mix(in srgb, var(--wash-clay, #c18b78) 12%, var(--surface, #ffffff));
+}
+
+.callout-danger {
+  border-left-color: var(--wash-rose-deep, #8c3f38);
+  background: color-mix(in srgb, var(--wash-rose, #cc8179) 12%, var(--surface, #ffffff));
+}
+
+.callout-success {
+  border-left-color: var(--wash-sage-deep, #42634e);
+  background: color-mix(in srgb, var(--wash-sage, #8fae9a) 12%, var(--surface, #ffffff));
+}
+
+.callout-center {
+  text-align: center;
+}
+
+img.custom-emoji {
+  display: inline-block;
+  width: auto;
+  height: 3em;
+  margin: 0 0.08em;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  object-fit: contain;
+  vertical-align: middle;
+  cursor: default;
+}
+
+img.custom-sticker {
+  display: inline-block;
+  width: auto;
+  height: 6em;
+  max-width: 100%;
+  margin: 0 0.1em;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  object-fit: contain;
+  vertical-align: middle;
+  cursor: default;
+}

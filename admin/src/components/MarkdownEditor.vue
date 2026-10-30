@@ -1,5 +1,5 @@
 <script setup>
-import { config, MdEditor, NormalToolbar } from 'md-editor-v3';
+import { config, DropdownToolbar, MdEditor, NormalToolbar } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 import { computed, nextTick, ref } from 'vue';
 import { shortcodeImageHtml, splitEmojiText } from '../../../src/lib/emoji.ts';
@@ -53,7 +53,7 @@ const toast = useToast();
 const isDark = useDarkMode();
 const editorRef = ref(null);
 const pickerOpen = ref(false);
-
+const calloutOpen = ref(false);
 const TOOLBARS = [
   'bold',
   'italic',
@@ -72,6 +72,7 @@ const TOOLBARS = [
   'table',
   '-',
   0,
+  1,
   '=',
   'revoke',
   'next',
@@ -179,6 +180,45 @@ function insertShortcode(code) {
     editorRef.value?.insert(() => ({ targetValue: `:${code}:`, select: false }));
   });
 }
+const CALLOUT_PRESETS = [
+  {
+    type: 'warning',
+    label: '陶土黄 · 警告 / 声明',
+    color: 'var(--wash-clay)',
+    template: (body) => `<div class="callout callout-warning">\n  <strong>🤖 声明：</strong>${body}\n</div>\n`,
+  },
+  {
+    type: 'success',
+    label: '灰绿 · 成果 / 结论',
+    color: 'var(--wash-sage)',
+    template: (body) => `<div class="callout callout-success">\n  <strong>结论：</strong>${body}\n</div>\n`,
+  },
+  {
+    type: 'danger',
+    label: '豆沙红 · 注意 / 危险',
+    color: 'var(--wash-rose)',
+    template: (body) => `<div class="callout callout-danger">\n  <strong>注意：</strong>${body}\n</div>\n`,
+  },
+  {
+    type: 'default',
+    label: '沙色 · 备忘 / 普通',
+    color: 'var(--wash-sand)',
+    template: (body) => `<div class="callout">\n  <strong>备忘：</strong>${body}\n</div>\n`,
+  },
+];
+
+function insertCallout(type) {
+  calloutOpen.value = false;
+  const preset = CALLOUT_PRESETS.find((p) => p.type === type) ?? CALLOUT_PRESETS[0];
+  editorRef.value?.focus();
+  editorRef.value?.insert((selectedText) => {
+    const body = selectedText.trim() || '提示内容...';
+    return {
+      targetValue: preset.template(body),
+      select: false,
+    };
+  });
+}
 </script>
 
 <template>
@@ -218,6 +258,38 @@ function insertShortcode(code) {
             <path d="M8.5 15c1 .9 2.1 1.35 3.5 1.35s2.5-.45 3.5-1.35" />
           </svg>
         </NormalToolbar>
+        <DropdownToolbar
+          title="插入提示框 (Callout)"
+          :visible="calloutOpen"
+          @onChange="calloutOpen = $event"
+        >
+          <template #trigger>
+            <svg
+              class="md-editor-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              aria-hidden="true"
+            >
+              <path d="M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
+            </svg>
+          </template>
+          <template #overlay>
+            <div class="callout-menu">
+              <button
+                v-for="item in CALLOUT_PRESETS"
+                :key="item.type"
+                type="button"
+                class="callout-menu-item"
+                @click="insertCallout(item.type)"
+              >
+                <span class="callout-menu-dot" :style="{ backgroundColor: item.color }"></span>
+                <span>{{ item.label }}</span>
+              </button>
+            </div>
+          </template>
+        </DropdownToolbar>
       </template>
     </MdEditor>
 
@@ -235,31 +307,39 @@ function insertShortcode(code) {
   border-color: var(--ui-border);
   border-radius: var(--ui-radius);
 }
-
-.post-markdown-editor :deep(img.custom-emoji) {
-  display: inline-block;
-  width: auto;
-  height: 3em;
-  margin: 0 0.08em;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  object-fit: contain;
-  vertical-align: middle;
-  cursor: default;
+.callout-menu {
+  display: flex;
+  flex-direction: column;
+  min-width: 11.5rem;
+  padding: 0.35rem;
+  background-color: var(--ui-bg, #ffffff);
+  border: 1px solid var(--ui-border, #e2e8f0);
+  border-radius: var(--ui-radius, 0.5rem);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
 }
 
-.post-markdown-editor :deep(img.custom-sticker) {
+.callout-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  color: var(--ui-text, #334155);
+  text-align: left;
+  transition: background-color 0.15s;
+  cursor: pointer;
+}
+
+.callout-menu-item:hover {
+  background-color: var(--ui-bg-elevated, #f1f5f9);
+}
+
+.callout-menu-dot {
   display: inline-block;
-  width: auto;
-  height: 6em;
-  max-width: 100%;
-  margin: 0 0.1em;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  object-fit: contain;
-  vertical-align: middle;
-  cursor: default;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 9999px;
+  flex-shrink: 0;
 }
 </style>
