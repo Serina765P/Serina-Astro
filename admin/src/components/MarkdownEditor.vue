@@ -3,13 +3,131 @@ import { config, DropdownToolbar, MdEditor, NormalToolbar } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 import { computed, nextTick, ref } from 'vue';
 import { shortcodeImageHtml, splitEmojiText } from '../../../src/lib/emoji.ts';
+import { MEDIA_COMPONENTS, planMediaInsertion } from '../../../src/lib/mdx-media.ts';
 import { uploadPostImage } from '../api.js';
 import { errorMessage } from '../errors.js';
+import MediaPicker from './MediaPicker.vue';
 import ShortcodePicker from './ShortcodePicker.vue';
 import { useDarkMode } from '../use-dark-mode.js';
+
+const MEDIA_COMPONENT_LIST = Object.values(MEDIA_COMPONENTS);
+const MEDIA_COMPONENT_NAMES = MEDIA_COMPONENT_LIST.map((component) => component.name).join('|');
+const MEDIA_TAG_RE = new RegExp(`<(${MEDIA_COMPONENT_NAMES})\\b([^<]*?)\\/>`, 'gu');
+const MEDIA_IMPORT_LINE_RE = new RegExp(
+  `^import\\s+(?:${MEDIA_COMPONENT_NAMES})\\s+from\\s+['"][^'"]+['"];?\\s*$`,
+  'u',
+);
+
+function escapeHtml(value) {
+  return String(value).replace(
+    /[&<>"']/gu,
+    (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch],
+  );
+}
+
+function decodeAttribute(value) {
+  return value
+    .replaceAll('&quot;', '"')
+    .replaceAll('&#39;', "'")
+    .replaceAll('&lt;', '<')
+    .replaceAll('&gt;', '>')
+    .replaceAll('&#92;', '\\')
+    .replaceAll('&#10;', '\n')
+    .replaceAll('&#13;', '\r')
+    .replaceAll('&amp;', '&');
+}
+
+function mediaAttribute(attrs, name) {
+  const quoted = new RegExp(`\\b${name}="([^"]*)"`, 'u').exec(attrs);
+  if (quoted) return decodeAttribute(quoted[1]);
+  const expression = new RegExp(`\\b${name}=\\{([\\s\\S]*?)\\}`, 'u').exec(attrs);
+  if (!expression) return '';
+  const raw = expression[1].trim();
+  try {
+    return String(JSON.parse(raw));
+  } catch {
+    return raw.replace(/^['"]|['"]$/gu, '');
+  }
+}
+
+/** 预览里组件不会真的运行：换成带参数的占位块，方便确认插对了位置 */
+function mediaPlaceholder(name, attrs, inline) {
+  const component = MEDIA_COMPONENT_LIST.find((item) => item.name === name);
+  const label = component?.label ?? name;
+  let detail = '';
+  if (name === 'BilibiliPlayer') {
+    const bvid = mediaAttribute(attrs, 'bvid');
+    const page = mediaAttribute(attrs, 'p');
+    const title = mediaAttribute(attrs, 'title');
+    detail = [bvid, page && page !== '1' ? `P${page}` : '', title].filter(Boolean).join(' · ');
+  } else {
+    const track = mediaAttribute(attrs, 'track');
+    detail = track ? `单曲 ${track}` : '整张歌单';
+  }
+  if (inline) {
+    return `<span class="md-media-placeholder md-media-placeholder-inline inline-flex items-center gap-1 rounded border border-dashed border-default bg-elevated/40 px-2 py-0.5 text-xs text-muted">${escapeHtml(label)}${detail ? ` · ${escapeHtml(detail)}` : ''}</span>`;
+  }
+  return `<div class="md-media-placeholder my-3 flex items-center gap-3 rounded-lg border border-dashed border-default bg-elevated/40 px-3 py-2.5 text-sm">
+  <span class="grid size-8 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">${name === 'BilibiliPlayer' ? '▶' : '♪'}</span>
+  <span class="min-w-0"><strong class="block text-default">${escapeHtml(label)}</strong>${detail ? `<span class="block truncate text-xs text-muted">${escapeHtml(detail)}</span>` : ''}</span>
+  <span class="ml-auto shrink-0 text-[11px] text-muted">预览占位</span>
+</div>`;
+}
+
+function mediaPreviewPlugin(md) {
+  md.core.ruler.after('inline', 'serina-media-embeds', (state) => {
+    // 预览没有模块系统：媒体组件的 import 行只留噪声，整行删掉
+    for (let i = state.tokens.length - 3; i >= 0; i -= 1) {
+      const open = state.tokens[i];
+      const inline = state.tokens[i + 1];
+      const close = state.tokens[i + 2];
+      if (
+        open?.type !== 'paragraph_open' ||
+        inline?.type !== 'inline' ||
+        close?.type !== 'paragraph_close' ||
+        !(inline.children ?? []).every(
+          (child) => child.type === 'text' || child.type === 'softbreak',
+        )
+      ) {
+        continue;
+      }
+      const lines = inline.content.split('\n');
+      const kept = lines.filter((line) => !MEDIA_IMPORT_LINE_RE.test(line.trim()));
+      if (kept.length === lines.length) continue;
+      if (kept.every((line) => !line.trim())) {
+        state.tokens.splice(i, 3);
+      } else {
+        inline.content = kept.join('\n');
+        const textToken = new state.Token('text', '', 0);
+        textToken.content = inline.content;
+        inline.children = [textToken];
+      }
+    }
+
+    for (const token of state.tokens) {
+      if (token.type === 'html_block') {
+        const source = token.content;
+        token.content = source.replace(MEDIA_TAG_RE, (_match, name, attrs, offset) => {
+          // 同一 HTML 块里可能有独占一行的组件，也有夹在正文里的组件：按行首判断
+          const atLineStart = /(?:^|\n)[ \t]*$/u.test(source.slice(0, offset));
+          return mediaPlaceholder(name, attrs, !atLineStart);
+        });
+      } else if (token.type === 'inline') {
+        for (const child of token.children ?? []) {
+          if (child.type !== 'html_inline') continue;
+          child.content = child.content.replace(MEDIA_TAG_RE, (_match, name, attrs) =>
+            mediaPlaceholder(name, attrs, true),
+          );
+        }
+      }
+    }
+  });
+}
+
 config({
   markdownItConfig(md) {
     md.set({ html: true });
+    mediaPreviewPlugin(md);
     md.core.ruler.after('inline', 'serina-custom-emoji', (state) => {
       for (const blockToken of state.tokens) {
         if (blockToken.type !== 'inline' || !blockToken.children) continue;
@@ -46,6 +164,7 @@ config({
 const props = defineProps({
   modelValue: { type: String, default: '' },
   slug: { type: String, required: true },
+  format: { type: String, default: 'md' },
 });
 const emit = defineEmits(['update:modelValue', 'save']);
 
@@ -54,6 +173,9 @@ const isDark = useDarkMode();
 const editorRef = ref(null);
 const pickerOpen = ref(false);
 const calloutOpen = ref(false);
+const mediaMenuOpen = ref(false);
+const mediaOpen = ref(false);
+const mediaKind = ref('music');
 const TOOLBARS = [
   'bold',
   'italic',
@@ -73,6 +195,7 @@ const TOOLBARS = [
   '-',
   0,
   1,
+  2,
   '=',
   'revoke',
   'next',
@@ -180,6 +303,36 @@ function insertShortcode(code) {
     editorRef.value?.insert(() => ({ targetValue: `:${code}:`, select: false }));
   });
 }
+function openMedia(kind) {
+  mediaMenuOpen.value = false;
+  if (props.format !== 'mdx') {
+    toast.add({
+      title: '需要 .mdx 文章',
+      description:
+        '音乐与 B 站播放器是 MDX 组件，当前文章是 .md。新建文章时选 .mdx，或把文件扩展名改为 .mdx 后再插入。',
+      color: 'warning',
+      icon: 'i-lucide-file-warning',
+    });
+    return;
+  }
+  mediaKind.value = kind;
+  mediaOpen.value = true;
+}
+
+function insertMedia(snippet) {
+  const view = editorRef.value?.getEditorView?.();
+  if (!view) return;
+  const { from, to } = view.state.selection.main;
+  const plan = planMediaInsertion(view.state.doc.toString(), from, to, snippet);
+  view.dispatch({
+    changes: plan.changes,
+    selection: { anchor: plan.anchor },
+    scrollIntoView: true,
+  });
+  view.focus();
+  mediaOpen.value = false;
+}
+
 const CALLOUT_PRESETS = [
   {
     type: 'warning',
@@ -276,16 +429,55 @@ function insertCallout(type) {
             </svg>
           </template>
           <template #overlay>
-            <div class="callout-menu">
+            <div class="toolbar-menu">
               <button
                 v-for="item in CALLOUT_PRESETS"
                 :key="item.type"
                 type="button"
-                class="callout-menu-item"
+                class="toolbar-menu-item"
                 @click="insertCallout(item.type)"
               >
-                <span class="callout-menu-dot" :style="{ backgroundColor: item.color }"></span>
+                <span class="toolbar-menu-dot" :style="{ backgroundColor: item.color }"></span>
                 <span>{{ item.label }}</span>
+              </button>
+            </div>
+          </template>
+        </DropdownToolbar>
+        <DropdownToolbar
+          title="插入媒体组件"
+          :visible="mediaMenuOpen"
+          @onChange="mediaMenuOpen = $event"
+        >
+          <template #trigger>
+            <svg
+              class="md-editor-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              aria-hidden="true"
+            >
+              <rect x="3" y="4" width="18" height="16" rx="3" />
+              <path d="m10 9 5 3-5 3V9z" fill="currentColor" stroke="none" />
+            </svg>
+          </template>
+          <template #overlay>
+            <div class="toolbar-menu">
+              <button
+                type="button"
+                class="toolbar-menu-item"
+                @click="openMedia('music')"
+              >
+                <UIcon name="i-lucide-music" class="size-4" />
+                <span>网易云音乐播放器</span>
+              </button>
+              <button
+                type="button"
+                class="toolbar-menu-item"
+                @click="openMedia('bilibili')"
+              >
+                <UIcon name="i-lucide-play" class="size-4" />
+                <span>B 站视频播放器</span>
               </button>
             </div>
           </template>
@@ -294,6 +486,7 @@ function insertCallout(type) {
     </MdEditor>
 
     <ShortcodePicker v-model:open="pickerOpen" @select="insertShortcode" />
+    <MediaPicker v-model:open="mediaOpen" :kind="mediaKind" @insert="insertMedia" />
   </div>
 </template>
 
@@ -307,7 +500,7 @@ function insertCallout(type) {
   border-color: var(--ui-border);
   border-radius: var(--ui-radius);
 }
-.callout-menu {
+.toolbar-menu {
   display: flex;
   flex-direction: column;
   min-width: 11.5rem;
@@ -318,7 +511,7 @@ function insertCallout(type) {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
 }
 
-.callout-menu-item {
+.toolbar-menu-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -331,11 +524,11 @@ function insertCallout(type) {
   cursor: pointer;
 }
 
-.callout-menu-item:hover {
+.toolbar-menu-item:hover {
   background-color: var(--ui-bg-elevated, #f1f5f9);
 }
 
-.callout-menu-dot {
+.toolbar-menu-dot {
   display: inline-block;
   width: 0.625rem;
   height: 0.625rem;

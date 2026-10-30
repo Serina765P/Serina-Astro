@@ -221,6 +221,42 @@ describe('POST /api/posts', () => {
     expect((await readdir(postsDir)).filter((name) => name.endsWith('.tmp'))).toEqual([]);
   });
 
+  it('可以按 format 新建 .mdx 文章', async () => {
+    const { root, postsDir } = await createWorkspace();
+    const api = await startApi(root, cleanups);
+
+    const response = await api.send('POST', '/api/posts', {
+      slug: 'new-mdx',
+      format: 'mdx',
+      frontmatter: { title: '新 MDX 文章', date: '2026-10-30' },
+    });
+
+    expect(response.status).toBe(201);
+    const body = await response.json();
+    expect(body).toMatchObject({ slug: 'new-mdx', format: 'mdx' });
+    expect(await readdir(postsDir)).toContain('new-mdx.mdx');
+    expect(await readdir(postsDir)).not.toContain('new-mdx.md');
+    expect(await readFile(path.join(postsDir, 'new-mdx.mdx'), 'utf8')).toContain(
+      'title: 新 MDX 文章',
+    );
+  });
+
+  it.each(['txt', '', 1, null])('拒绝非法 format：%s，且不落盘', async (format) => {
+    const { root, postsDir } = await createWorkspace();
+    const api = await startApi(root, cleanups);
+
+    const response = await api.send('POST', '/api/posts', {
+      slug: 'bad-format',
+      format,
+      frontmatter: { title: '标题', date: '2026-10-30' },
+    });
+
+    expect(response.status).toBe(400);
+    expect((await response.json()).error).toContain('格式');
+    expect(await readdir(postsDir)).not.toContain('bad-format.md');
+    expect(await readdir(postsDir)).not.toContain('bad-format.mdx');
+  });
+
   it.each([
     ['大写字母', 'Hello'],
     ['中文', '中文slug'],

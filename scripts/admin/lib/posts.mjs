@@ -2,6 +2,7 @@ import { readdir, readFile, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { Document, parseDocument } from 'yaml';
 import {
+  POST_FORMATS,
   POST_FRONTMATTER_FIELDS,
   POST_LICENSES,
   POST_SKINS,
@@ -21,7 +22,6 @@ import { HttpError } from './http.mjs';
 export const POSTS_DIR = path.join('src', 'content', 'posts');
 
 const POST_FILE_PATTERN = /\.(md|mdx)$/u;
-const POST_FORMATS = ['md', 'mdx'];
 const MAX_SLUG_LENGTH = 80;
 const MAX_TITLE_LENGTH = 300;
 const MAX_DESCRIPTION_LENGTH = 5000;
@@ -54,6 +54,15 @@ export function requirePostSlug(value) {
     throw new HttpError(400, '文章 slug 只能使用小写 ASCII 字母、数字与连字符，例如 my-new-post');
   }
   return slug;
+}
+
+/** 新建文章的扩展名；省略时沿用历史默认 .md */
+function requirePostFormat(value) {
+  if (value === undefined) return 'md';
+  if (typeof value !== 'string' || !POST_FORMATS.includes(value)) {
+    throw new HttpError(400, `文章格式必须是 ${POST_FORMATS.join(' 或 ')}`);
+  }
+  return value;
 }
 
 function requireDate(value, label) {
@@ -402,8 +411,9 @@ export async function assertPostExists(root, slugInput) {
 
 export async function createPost(root, payload) {
   if (!isPlainObject(payload)) throw new HttpError(400, '请求体必须是 JSON 对象');
-  rejectUnknownKeys(payload, ['slug', 'frontmatter'], '请求体');
+  rejectUnknownKeys(payload, ['slug', 'frontmatter', 'format'], '请求体');
   const slug = requirePostSlug(payload.slug);
+  const format = requirePostFormat(payload.format);
   const patch = normalizeFrontmatterPatch(payload.frontmatter, {
     requireTitle: true,
     requireDateField: true,
@@ -414,7 +424,7 @@ export async function createPost(root, payload) {
   applyPatch(document, patch);
   const content = createPostSource(document.toString({ lineWidth: 0 }));
   try {
-    await writeFileAtomicExclusive(path.join(root, POSTS_DIR, `${slug}.md`), content);
+    await writeFileAtomicExclusive(path.join(root, POSTS_DIR, `${slug}.${format}`), content);
   } catch (error) {
     if (error.code === 'EEXIST') throw new HttpError(409, `文章 slug 已存在：${slug}`);
     throw new HttpError(500, '创建文章失败', { cause: error });

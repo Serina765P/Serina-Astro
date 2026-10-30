@@ -19,3 +19,7 @@ export const POST_FRONTMATTER_FIELDS = [
 export const POST_SKINS = ['imas-album'] as const;
 export const POST_LICENSES = ['original'] as const;
 export type PostLicense = (typeof POST_LICENSES)[number];
+
+/** 文章文件格式：md 不支持 MDX 组件，mdx 才能插入音乐/B 站播放器等 Astro 组件 */
+export const POST_FORMATS = ['md', 'mdx'] as const;
+export type PostFormat = (typeof POST_FORMATS)[number];

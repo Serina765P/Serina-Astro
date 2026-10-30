@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { onBeforeRouteLeave } from 'vue-router';
 import {
+  POST_FORMATS,
   POST_FRONTMATTER_FIELDS,
   POST_LICENSES,
   POST_SKINS,
@@ -43,6 +44,11 @@ const LICENSE_OPTIONS = [
   { label: '未标注（不声明 CC）', value: NO_LICENSE },
   ...POST_LICENSES.map((value) => ({ value, label: LICENSE_LABELS[value] ?? value })),
 ];
+const FORMAT_LABELS = {
+  md: 'Markdown (.md)',
+  mdx: 'MDX (.mdx) · 可插入音乐 / B 站播放器',
+};
+const CREATE_FORMATS = POST_FORMATS.map((value) => ({ value, label: FORMAT_LABELS[value] }));
 const SORT_OPTIONS = [
   { label: '发布日期 · 新 → 旧', value: 'date-desc' },
   { label: '发布日期 · 旧 → 新', value: 'date-asc' },
@@ -86,7 +92,7 @@ let bodySavePromise = null;
 const createOpen = ref(false);
 const creating = ref(false);
 const createError = ref('');
-const createForm = reactive({ slug: '', title: '', date: '' });
+const createForm = reactive({ slug: '', format: 'md', title: '', date: '' });
 
 const deleteTarget = ref(null);
 const deleteOpen = ref(false);
@@ -651,6 +657,7 @@ async function submitRegister() {
 
 function openCreate() {
   createForm.slug = '';
+  createForm.format = 'md';
   createForm.title = '';
   createForm.date = todayShanghai();
   createError.value = '';
@@ -661,10 +668,15 @@ async function submitCreate() {
   if (creating.value) return;
   createError.value = '';
   const slug = createForm.slug.trim();
+  const format = createForm.format;
   const title = createForm.title.trim();
   const date = createForm.date.trim();
   if (!SLUG_RE.test(slug)) {
     createError.value = `文章 slug ${SLUG_HINT}`;
+    return;
+  }
+  if (!POST_FORMATS.includes(format)) {
+    createError.value = '文章格式必须是 md 或 mdx';
     return;
   }
   if (!title) {
@@ -678,7 +690,7 @@ async function submitCreate() {
 
   creating.value = true;
   try {
-    const created = await createPost({ slug, frontmatter: { title, date } });
+    const created = await createPost({ slug, format, frontmatter: { title, date } });
     createOpen.value = false;
     applyDetail(created);
     editorOpen.value = true;
@@ -1081,7 +1093,12 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="min-h-0 flex-1 p-3">
-            <MarkdownEditor v-model="content" :slug="detail.slug" @save="save" />
+            <MarkdownEditor
+              v-model="content"
+              :slug="detail.slug"
+              :format="detail.format"
+              @save="save"
+            />
           </div>
         </div>
       </div>
@@ -1295,7 +1312,7 @@ onBeforeUnmount(() => {
   <UModal
     v-model:open="createOpen"
     title="新建文章"
-    description="写入 src/content/posts/<slug>.md，slug 必须为小写 ASCII。"
+    description="写入 src/content/posts/<slug>.<md|mdx>，slug 必须为小写 ASCII。"
     :ui="{ content: 'max-w-lg' }"
     :dismissible="!creating"
     :close="!creating"
@@ -1327,9 +1344,20 @@ onBeforeUnmount(() => {
           <code class="rounded bg-elevated px-1 py-0.5">/posts/{{ createForm.slug || '…' }}/</code>
           · 文件
           <code class="rounded bg-elevated px-1 py-0.5">
-            src/content/posts/{{ createForm.slug || '…' }}.md
+            src/content/posts/{{ createForm.slug || '…' }}.{{ createForm.format }}
           </code>
         </p>
+        <UFormField
+          label="文件格式"
+          help="需要插入音乐或 B 站播放器时选 .mdx；.md 不支持 MDX 组件。"
+        >
+          <USelect
+            v-model="createForm.format"
+            :items="CREATE_FORMATS"
+            class="w-full"
+            aria-label="新文章文件格式"
+          />
+        </UFormField>
         <UFormField label="标题" required>
           <UInput
             v-model="createForm.title"
