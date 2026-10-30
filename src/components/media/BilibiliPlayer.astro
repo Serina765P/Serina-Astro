@@ -1,0 +1,82 @@
+---
+// B 站官方播放器嵌入：只收 BV 号与分 P（issue #9）。
+//
+// 地址全部由 src/lib/bilibili.ts 生成，组件只负责标记：
+// · 页面打开时只有封面入口，点击后才插入官方 iframe（运行时见 src/scripts/bilibili.ts），
+//   因此打开文章不产生第三方请求；iframe 自身仍带 loading="lazy"。
+// · 入口本身是指向原视频的链接：脚本不可用时退化成普通跳转，不会留下按不动的假按钮。
+// · 跨源 iframe 拿不到内部播放状态，点击入口时由运行时代为派发 music:interrupt。
+import { Icon } from 'astro-icon/components';
+import { bilibiliEmbed } from '../../lib/bilibili';
+
+interface Props {
+  /** BV 号，形如 BV1aYxg6DEXb */
+  bvid: string;
+  /** 分 P，从 1 开始；省略时取 1 */
+  p?: number | string;
+  /** iframe 与入口的可访问标题；省略时按 BV 号与分 P 生成 */
+  title?: string;
+}
+
+const { bvid, page, playerUrl, videoUrl, title } = bilibiliEmbed(Astro.props);
+---
+
+<figure
+  class="bilibili-embed not-prose my-6 w-full max-w-full"
+  data-bilibili-embed
+  data-bilibili-src={playerUrl}
+  data-bilibili-title={title}
+  data-state="facade"
+>
+  <div
+    class="relative aspect-video w-full overflow-hidden rounded-2xl border border-line bg-code-bg shadow-card"
+    data-bilibili-stage
+    tabindex="-1"
+  >
+    <a
+      href={videoUrl}
+      class="group absolute inset-0 flex flex-col items-center justify-center gap-3 px-4 text-center no-underline focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-strong"
+      data-bilibili-play
+    >
+      <span
+        class="inline-grid size-14 place-items-center rounded-full bg-brand-strong text-brand-on shadow-media group-hover:bg-brand sm:size-16"
+        aria-hidden="true"
+      >
+        <Icon name="simple-icons:bilibili" class="size-7 sm:size-8" />
+      </span>
+      <span class="line-clamp-2 max-w-full text-pretty text-sm font-semibold text-on-scrim">
+        <span class="sr-only">播放：</span>{title}
+      </span>
+      <span class="text-xs text-on-scrim/70 max-[23rem]:hidden">点击加载官方播放器 · 背景音乐将暂停</span>
+    </a>
+
+    <div class="absolute inset-0" data-bilibili-error hidden>
+      <p class="grid size-full place-items-center p-4 text-center text-sm text-on-scrim">
+        <span class="max-w-md text-pretty">
+          播放器没有加载出来，网络、地区限制或浏览器扩展都可能拦下它。
+          <a
+            href={videoUrl}
+            class="text-on-scrim underline decoration-on-scrim/40 underline-offset-4 hover:decoration-on-scrim"
+          >
+            前往 B 站观看
+          </a>
+        </span>
+      </p>
+    </div>
+    <p class="sr-only" role="status" data-bilibili-status></p>
+  </div>
+
+  <figcaption class="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-sub">
+    <a
+      href={videoUrl}
+      class="underline decoration-line underline-offset-4 hover:text-wash-rose-deep"
+    >
+      在 B 站观看原视频
+    </a>
+    <span class="tabular-nums">{bvid} · P{page}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import '../../scripts/bilibili';
+</script>

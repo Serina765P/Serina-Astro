@@ -30,9 +30,7 @@ import {
   previousTrackIndex,
   trackStreamUrl,
 } from '../lib/music';
-import { MUSIC_TRIGGER_SELECTOR } from './music-contract';
-
-const INTERRUPT_EVENT = 'music:interrupt';
+import { MUSIC_INTERRUPT_EVENT, MUSIC_TRIGGER_SELECTOR } from './music-contract';
 
 // 音量是全站偏好：BGM 与文章播放器共用同一个档位，换页/换播放器不会突然变响或变静音。
 // 站点本身已用 localStorage 存主题，这里沿用同一套「读写失败就退回默认」的处理。
@@ -292,7 +290,7 @@ function bind(root: MusicRoot): void {
     setState(root, 'playing');
     if (!current) return;
     announce(root, `正在播放 ${current.title} — ${current.artist}`);
-    document.dispatchEvent(new CustomEvent(INTERRUPT_EVENT, { detail: { source: root } }));
+    document.dispatchEvent(new CustomEvent(MUSIC_INTERRUPT_EVENT, { detail: { source: root } }));
   });
 
   audio.addEventListener('pause', () => {
@@ -357,7 +355,7 @@ export function activate(root: MusicRoot, trigger: HTMLElement | null): void {
 }
 
 // 播放互斥：谁开始播放，谁让其它播放器停。暂停不派发事件，所以不会来回抖动。
-document.addEventListener(INTERRUPT_EVENT, (event) => {
+document.addEventListener(MUSIC_INTERRUPT_EVENT, (event) => {
   const source = (event as CustomEvent<{ source?: Element }>).detail?.source;
   for (const root of document.querySelectorAll<MusicRoot>(
     '[data-music-player][data-music-ready="true"]',
