@@ -3,11 +3,13 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
+import '../styles/music.css';
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Lightbox from '../components/Lightbox.astro';
 import ReadingProgress from '../components/ReadingProgress.astro';
+import BgmPlayer from '../components/music/BgmPlayer.astro';
 
 interface Props {
   title: string;
@@ -99,6 +101,14 @@ const heroFontBuilt = existsSync(path.join(process.cwd(), 'public', 'fonts', 'he
         ))
     }
     <ClientRouter />
+    <noscript>
+      <!-- 播放器要 JS 才响：没有 JS 时只留原平台链接，不摆按不动的控件 -->
+      <style>
+        [data-music-player] .music-transport {
+          display: none;
+        }
+      </style>
+    </noscript>
   </head>
   <body class="flex min-h-screen flex-col">
     <div class="page-loading" data-page-loading>
@@ -134,8 +144,12 @@ const heroFontBuilt = existsSync(path.join(process.cwd(), 'public', 'fonts', 'he
       <slot />
     </main>
     <Footer />
+    <BgmPlayer />
     <Lightbox />
     {readingProgress && <ReadingProgress />}
+    <script>
+      import '../scripts/music-loader';
+    </script>
     <script is:inline>
       (function () {
         var root = document.documentElement;

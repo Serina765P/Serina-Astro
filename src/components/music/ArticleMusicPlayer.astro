@@ -1,0 +1,113 @@
+---
+// 文章内网易云播放器：`track` 给单曲，省略则渲染固定歌单。
+//
+// 与 BGM 共用同一套标记与运行时（MusicTransport + scripts/music.ts），区别只在数据：
+// 单曲模式的快照只有一首，歌单模式带曲目列表。标记与音频地址都在构建期生成，
+// 播放时才由浏览器去解析第一方跳转地址；没有 src 也就不会在读者打开文章时请求音频。
+import playlist from '../../data/music/netease-playlist.json';
+import { isTrackId, PLAYLIST_ENDPOINT_PATH, playlistPageUrl, trackPageUrl } from '../../lib/music';
+import MusicTransport from './MusicTransport.astro';
+
+interface Props {
+  /** 单曲模式的曲目 id；省略则渲染全站歌单 */
+  track?: string;
+}
+
+const { track } = Astro.props as Props;
+const allTracks = playlist.items;
+
+if (track !== undefined && !isTrackId(track)) {
+  throw new Error(`ArticleMusicPlayer: track 必须是纯数字的网易云曲目 id，收到 "${track}"`);
+}
+
+const selected = track ? allTracks.filter((item) => item.id === track) : allTracks;
+if (selected.length === 0) {
+  throw new Error(`ArticleMusicPlayer: 快照里没有曲目 ${track}，先运行 npm run music:snapshot`);
+}
+
+const mode = track ? 'track' : 'playlist';
+const initial = selected[0];
+const platformHref = mode === 'track' ? trackPageUrl(initial.id) : playlistPageUrl();
+// 单曲把这一首内联；歌单走同源静态端点（与 BGM 同一份快照），少 13KB 重复 HTML
+const tracksJson = mode === 'track' ? JSON.stringify(selected).replaceAll('<', '\\u003c') : null;
+const playlistSrc = `${import.meta.env.BASE_URL}${PLAYLIST_ENDPOINT_PATH}`;
+---
+
+<section
+  class="music-card rounded-2xl border border-line bg-surface p-4 shadow-card sm:p-5"
+  data-music-player
+  data-music-src={mode === 'playlist' ? playlistSrc : undefined}
+  data-state="idle"
+  aria-label={mode === 'track' ? '网易云单曲播放器' : '网易云歌单播放器'}
+>
+  <media-i18n>
+    <audio-player keep-alive>
+      <audio preload="none" data-music-audio></audio>
+      <div class="flex items-center gap-3">
+        <!-- 封面同样延后：没有 src 就不会在读者打开文章时请求网易云 CDN，
+             播放第一首时由运行时补上（见 scripts/music.ts 的 showMeta） -->
+        <img
+          class="music-cover size-14 shrink-0 rounded-xl object-cover"
+          data-music-cover
+          alt=""
+          width="56"
+          height="56"
+          decoding="async"
+        />
+        <div class="min-w-0">
+          <p class="text-xs text-sub">{mode === 'track' ? '网易云音乐 · 单曲' : '网易云音乐 · 歌单'}</p>
+          <p class="mt-0.5 truncate text-sm font-semibold text-ink" data-music-title>
+            {initial.title}
+          </p>
+          <p class="truncate text-xs text-sub" data-music-artist>{initial.artist}</p>
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <MusicTransport showSkip={mode === 'playlist'} />
+      </div>
+
+      <p class="music-error mt-2" data-music-error hidden></p>
+
+      <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+        <a
+          class="text-xs text-sub underline underline-offset-2 hover:text-wash-clay-deep"
+          href={platformHref}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {mode === 'track' ? '在网易云打开这首' : '在网易云打开歌单'}
+        </a>
+      </div>
+
+      {
+        mode === 'playlist' && (
+          <details class="music-list-details mt-2">
+            <summary class="music-list-summary">曲目列表（{selected.length}）</summary>
+            <ol class="music-list">
+              {selected.map((item, index) => (
+                <li class="music-row" data-music-row data-music-row-index={index}>
+                  <button
+                    type="button"
+                    class="music-row-button"
+                    data-music-play
+                    data-music-index={index}
+                    aria-label={`播放 ${item.title}`}
+                  >
+                    <span class="music-row-index">{index + 1}</span>
+                    <span class="music-row-title">{item.title}</span>
+                    <span class="music-row-artist">{item.artist}</span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </details>
+        )
+      }
+
+      <p class="sr-only" data-music-status role="status"></p>
+    </audio-player>
+  </media-i18n>
+  {tracksJson && <script is:inline type="application/json" data-music-tracks set:html={tracksJson} />}
+</section>
+

@@ -1,0 +1,59 @@
+---
+// 播放控制条：BGM 面板与文章播放器共用（同一套标记 = 同一套键盘/焦点行为）。
+//
+// 为什么按钮是原生 <button> 而不是 media-play-button：音频播放器默认不加载 Video.js
+// （首屏 0 依赖），未升级的 media-play-button 既没有 role 也不可聚焦。播放在首个交互后
+// 才懒加载 Video.js，标记必须在那之前就可访问；播放/暂停只是十行状态切换，不需要组件。
+// 时间轴、时间与静音仍交给 Video.js 组件 —— 拖动/方向键/aria-valuetext 是那里真正的价值。
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+  /** 单曲模式没有上一首/下一首，隐藏而不是渲染成空操作 */
+  showSkip?: boolean;
+}
+
+const { showSkip = true } = Astro.props as Props;
+---
+
+<div class="music-transport">
+  {
+    showSkip && (
+      <button type="button" class="music-button" data-music-prev aria-label="上一首">
+        <Icon name="material-symbols:skip-previous" class="music-icon" aria-hidden="true" />
+      </button>
+    )
+  }
+  <button
+    type="button"
+    class="music-button music-button--primary"
+    data-music-play
+    aria-label="播放"
+  >
+    <Icon name="material-symbols:play-arrow" class="music-icon music-icon-play" aria-hidden="true" />
+    <Icon name="material-symbols:pause" class="music-icon music-icon-pause" aria-hidden="true" />
+  </button>
+  {
+    showSkip && (
+      <button type="button" class="music-button" data-music-next aria-label="下一首">
+        <Icon name="material-symbols:skip-next" class="music-icon" aria-hidden="true" />
+      </button>
+    )
+  }
+  <media-time-slider class="music-seek">
+    <media-slider-track>
+      <media-slider-fill></media-slider-fill>
+    </media-slider-track>
+    <media-slider-thumb></media-slider-thumb>
+  </media-time-slider>
+  <media-time-group class="music-time">
+    <span class="music-time-fallback">0:00 / --:--</span>
+    <media-time type="current"></media-time>
+    <media-time-separator aria-hidden="true">/</media-time-separator>
+    <media-time type="duration"></media-time>
+  </media-time-group>
+  <media-mute-button class="music-button">
+    <Icon name="material-symbols:volume-up" class="music-icon music-icon-volume" aria-hidden="true" />
+    <Icon name="material-symbols:volume-off" class="music-icon music-icon-muted" aria-hidden="true" />
+  </media-mute-button>
+</div>
+

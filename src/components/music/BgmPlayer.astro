@@ -1,0 +1,67 @@
+---
+// 全站 BGM：底部悬浮条 + 可展开面板，播放固定歌单 8562312822。
+//
+// 三条硬约束（issue #12）：
+// 1. 手动启动：`<audio>` 没有 src、没有 preload，脚本也不在第一屏加载 —— 首次点击
+//    播放按钮才 import 播放器运行时并解析音频地址。
+// 2. ClientRouter 导航不中断：根节点 transition:persist，Astro 换页时把同一棵子树搬过去
+//    （内部 <audio> 因此保留播放状态；Astro 会对未 persist 的媒体元素做「重建」）。
+// 3. 失败不循环重试：错误只展示一次，是否再试由用户点击决定。
+//
+// 歌单快照随标记内联（构建期注入），运行时不需要再发任何第三方请求；
+// 音频仍由浏览器直接访问网易云的第一方跳转地址。
+import { Icon } from 'astro-icon/components';
+import { PLAYLIST_ENDPOINT_PATH, playlistPageUrl } from '../../lib/music';
+import MusicTransport from './MusicTransport.astro';
+
+// 歌单快照走静态端点，首次播放时才拉取（见 src/pages/music/netease-playlist.json.ts）
+const playlistSrc = `${import.meta.env.BASE_URL}${PLAYLIST_ENDPOINT_PATH}`;
+---
+
+<div
+  id="bgm"
+  class="bgm"
+  data-music-player
+  data-music-src={playlistSrc}
+  data-state="idle"
+  data-astro-transition-persist="bgm"
+>
+  <media-i18n>
+    <audio-player keep-alive class="bgm-audio">
+      <audio preload="none" data-music-audio></audio>
+      <div class="bgm-bar">
+        <details class="bgm-details">
+          <summary class="bgm-summary">
+            <span class="bgm-mark" aria-hidden="true">♪</span>
+            <span class="bgm-title" data-music-title>背景音乐</span>
+            <Icon name="material-symbols:keyboard-arrow-down" class="bgm-chevron" aria-hidden="true" />
+          </summary>
+          <div class="bgm-panel">
+            <div class="bgm-now">
+              <img class="bgm-cover" data-music-cover alt="" width="48" height="48" hidden />
+              <p class="bgm-now-title" data-music-title>固定歌单 · 手动播放</p>
+            </div>
+            <p class="bgm-artist" data-music-artist>点击播放后开始，不会自动出声</p>
+            <MusicTransport />
+            <p class="bgm-error" data-music-error hidden></p>
+            <a class="bgm-link" href={playlistPageUrl()} target="_blank" rel="noopener noreferrer">
+              在网易云打开歌单
+            </a>
+          </div>
+        </details>
+        <button
+          type="button"
+          class="bgm-toggle"
+          data-music-play
+          data-music-label="背景音乐"
+          aria-label="播放背景音乐"
+        >
+          <Icon name="material-symbols:play-arrow" class="music-icon music-icon-play" aria-hidden="true" />
+          <Icon name="material-symbols:pause" class="music-icon music-icon-pause" aria-hidden="true" />
+        </button>
+      </div>
+      <p class="sr-only" data-music-status role="status"></p>
+    </audio-player>
+  </media-i18n>
+</div>
+

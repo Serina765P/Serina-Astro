@@ -15,6 +15,10 @@ Serina-Astro 的领域词汇表。术语在这里只有一个含义；新增或�
 | 分类 / category | frontmatter `categories` | 中文名经 `src/data/taxonomy.json` 映射为 URL slug，并映射到莫兰迪 wash 色与胶囊填充类。 |
 | 标签 / tag | frontmatter `tags` | 与分类共用同一份 taxonomy JSON，不在组件里维护第二份清单。 |
 | 文章皮肤 / skin | frontmatter `skin` | 按文章挂载的版式组件，目前只有 `imas-album`。与亮/暗主题（theme）是两件事。 |
+| 原创文章 / original post | frontmatter `license: original` | 由作者显式标记、按 CC BY-NC-SA 4.0 授权的文章；未标记不等于放弃版权，第三方素材不因文章标记而改变权利归属。 |
+| 全站 BGM / global BGM | 固定网易云歌单 `8562312822` | 手动启动的跨页背景音乐；与文章内音乐、视频是不同播放源。文章媒体开始时暂停，结束后不自动恢复。 |
+| 歌单快照 / playlist snapshot | `src/data/music/netease-playlist.json` + `scripts/fetch-netease-playlist.mjs` | 构建期冻结的网易云歌单元数据（id / 标题 / 歌手 / 第一方封面），`npm run music:snapshot` 刷新。音频地址不入库：直链带短时效签名，播放时才拼成第一方跳转 URL `song/media/outer/url?id=<id>.mp3`。可播性随版权/地区/账号变化，快照不据此增删条目。 |
+| 音乐播放器 / music player | `src/components/music/*`、`src/scripts/music*.ts`、`src/lib/music.ts`、静态端点 `/music/netease-playlist.json` | BGM 悬浮条与文章卡片共用一套标记、一套运行时：手动启动、播放互斥（`music:interrupt`）、失败只报一次且不自动重试、单曲不循环。Video.js 10 运行时按需加载，首屏不加载；文章组件 `<ArticleMusicPlayer track="<id>" />` 或省略 `track` 渲染整张歌单。任何其它媒体（如 B 站视频）要停 BGM 时派发 `document.dispatchEvent(new CustomEvent('music:interrupt', { detail: { source } }))`，暂停后不会自动恢复。 |
 | 说说 / shuoshuo | `src/data/shuoshuo/` + `src/lib/shuoshuo.ts` | 短条目流。页面 `/shuoshuo/`，搜索/筛选接口 `index.json.ts`。 |
 | 年度分片 / shard | `src/data/shuoshuo/<沪年>.json` | 信封 `{ source, fetched_at, count, items }`。年份按 `Asia/Shanghai` 取；分片路径契约与 `worker/src/lib.js` 的 `shardPath()` 共享，站点 loader 与 Worker 都按「按 ID 去重、新条目在前」处理。 |
 | 条目 / item | shard 的 `items[]` | `type` 为 `MAIL`（邮件发布，可无标题/无外链/无点赞）或 `OPUS`（历史 B 站动态）。时间来自邮件 `Date` 头，展示时统一换算东八区。 |

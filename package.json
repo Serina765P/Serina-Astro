@@ -18,7 +18,8 @@
     "lint": "biome ci .",
     "test": "vitest run",
     "contrast": "node scripts/contrast-audit.mjs",
-    "shots": "node scripts/shots.mjs"
+    "shots": "node scripts/shots.mjs",
+    "music:snapshot": "node scripts/fetch-netease-playlist.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-satteri": "^0.4.0",
@@ -27,6 +28,7 @@
     "@astrojs/sitemap": "^3.7.4",
     "@iconify-json/material-symbols": "^1.2.0",
     "@iconify-json/simple-icons": "^1.2.0",
+    "@videojs/html": "^10.2.0",
     "astro": "^7.3.1",
     "astro-icon": "^1.2.0"
   },

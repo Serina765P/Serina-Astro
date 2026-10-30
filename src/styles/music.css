@@ -1,0 +1,476 @@
+/* 音乐播放器样式：BGM 悬浮条、文章卡片与共用控制条。
+ *
+ * 为什么是全局文件而不是组件内 <style>：文章组件只在 MDX 里出现，而这条 MDX 渲染链路
+ * （@astrojs/markdown-satteri）不会把被引组件的 scoped 样式带进页面 —— 实测文章页上
+ * 卡片会掉样式。放到随 BaseLayout 静态导入的样式表里，两种挂载方式（Astro 页面 / MDX 正文）
+ * 结果一致。类名统一 music-*／bgm-*，不与其他组件冲突。 */
+
+/* 播放/暂停、静音/取消静音各渲染一枚图标，由根节点的 data-state 决定显隐。
+   没有 data-state = 脚本尚未加载：显示「播放」，与按钮初始 aria-label 一致。 */
+.music-icon-pause,
+media-mute-button .music-icon-muted {
+  display: none;
+}
+[data-music-player][data-state='playing'] .music-icon-play,
+media-mute-button[data-muted] .music-icon-volume {
+  display: none;
+}
+[data-music-player][data-state='playing'] .music-icon-pause,
+media-mute-button[data-muted] .music-icon-muted {
+  display: inline;
+}
+[data-music-player][data-state='loading'] .music-icon-play {
+  opacity: 0.45;
+}
+
+.music-transport {
+  /* 容器查询按控制条自身宽度换行，而不是按视口：BGM 面板只有 22rem 宽，
+     在 900px 的桌面上同样需要折行。 */
+  container-type: inline-size;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.music-button {
+  display: inline-grid;
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--body);
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.music-button:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.music-button:focus-visible {
+  outline: 2px solid var(--brand-strong);
+  outline-offset: 2px;
+}
+
+.music-button--primary {
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--brand-strong);
+}
+
+.music-button--primary:hover {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+}
+
+.music-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* 时间轴与静音由 Video.js 组件承担，运行时加载前它们既不可聚焦也不可用；
+   与其摆两个假控件，不如先只留播放键、时间占位和原平台链接。 */
+[data-music-player]:not([data-music-ready='true']) .music-seek,
+[data-music-player]:not([data-music-ready='true']) media-mute-button {
+  display: none;
+}
+
+.music-seek {
+  position: relative;
+  display: block;
+  flex: 1 1 6rem;
+  min-width: 0;
+  height: 1.5rem;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.music-seek media-slider-track {
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  display: block;
+  height: 0.25rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: var(--surface-2);
+  translate: 0 -50%;
+}
+
+.music-seek media-slider-fill {
+  display: block;
+  width: var(--media-slider-fill, 0%);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--brand);
+}
+
+.music-seek media-slider-thumb {
+  position: absolute;
+  top: 50%;
+  left: var(--media-slider-fill, 0%);
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 2px solid var(--brand-strong);
+  border-radius: 9999px;
+  background: var(--surface);
+  translate: -50% -50%;
+}
+
+.music-seek media-slider-thumb:focus-visible {
+  outline: 2px solid var(--brand-strong);
+  outline-offset: 2px;
+}
+
+.music-time {
+  flex: none;
+  color: var(--sub);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.music-time media-time-separator {
+  margin-inline: 0.15rem;
+}
+
+/* 未拿到音频元数据前显示静态占位：Video.js 的时间元素在 duration 未知时只会渲染 0:00，
+   两份文本还会叠在一起（它会往元素里追加文本，而不是替换我们写的占位）。 */
+.music-time > :not(.music-time-fallback) {
+  display: none;
+}
+[data-music-loaded='true'] .music-time > :not(.music-time-fallback) {
+  display: inline;
+}
+[data-music-loaded='true'] .music-time-fallback {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .music-button {
+    transition: none;
+  }
+}
+
+/* 控件齐全（运行时已加载）且横向不足时：时间轴独占一行，时间数字让位。 */
+@container (width < 22rem) {
+  [data-music-player][data-music-ready='true'] .music-seek {
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  [data-music-player][data-music-ready='true'] .music-time {
+    display: none;
+  }
+}
+
+.music-cover {
+  background: var(--surface-2);
+}
+
+.music-error {
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--wash-clay) 18%, var(--surface));
+  color: var(--wash-clay-deep);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.music-list-summary {
+  width: fit-content;
+  color: var(--sub);
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.music-list-summary:hover {
+  color: var(--ink);
+}
+
+.music-list {
+  max-height: 17rem;
+  margin-top: 0.5rem;
+  padding-right: 0.25rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.music-row-button {
+  display: flex;
+  width: 100%;
+  gap: 0.6rem;
+  align-items: baseline;
+  padding: 0.4rem 0.5rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--body);
+  font-size: 0.8125rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.music-row-button:hover {
+  background: var(--surface-2);
+}
+
+.music-row-button:focus-visible {
+  outline: 2px solid var(--brand-strong);
+  outline-offset: -2px;
+}
+
+.music-row-index {
+  flex: none;
+  width: 1.6em;
+  color: var(--sub);
+  font-variant-numeric: tabular-nums;
+}
+
+.music-row-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.music-row-artist {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--sub);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 当前曲目：运行时给 <li> 打 data-current */
+.music-row[data-current] .music-row-button {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+}
+
+.music-row[data-current] .music-row-index {
+  color: var(--brand-strong);
+}
+
+@media (width < 30rem) {
+  .music-row-artist {
+    display: none;
+  }
+}
+
+/* 悬浮位置：<lg 时让开底部目录胶囊（Toc 的 card 形态占着 left/bottom 同一角），
+   ≥lg 时目录回到侧栏，BGM 才落到左下角。z-index 与返回顶部同档。 */
+.bgm {
+  position: fixed;
+  bottom: 4.75rem;
+  left: 1rem;
+  z-index: var(--z-sticky-head);
+  max-width: calc(100vw - 2rem);
+}
+
+@media (min-width: 64rem) {
+  .bgm {
+    bottom: 1.25rem;
+  }
+}
+
+.bgm-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid var(--line);
+  border-radius: 9999px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.bgm-details {
+  position: relative;
+  min-width: 0;
+}
+
+.bgm-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem 0.35rem 0.65rem;
+  border-radius: 9999px;
+  color: var(--body);
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  cursor: pointer;
+  list-style: none;
+}
+
+.bgm-summary::-webkit-details-marker {
+  display: none;
+}
+
+.bgm-summary:hover {
+  background: var(--surface-2);
+}
+
+.bgm-summary:focus-visible {
+  outline: 2px solid var(--brand-strong);
+  outline-offset: 2px;
+}
+
+.bgm-mark {
+  flex: none;
+  color: var(--brand-strong);
+  font-size: 0.9rem;
+}
+
+.bgm-title {
+  min-width: 0;
+  max-width: min(9rem, 40vw);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.bgm-chevron {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  color: var(--sub);
+  transition: transform 200ms ease;
+}
+
+.bgm-details[open] .bgm-chevron {
+  transform: rotate(180deg);
+}
+
+.bgm-toggle {
+  display: inline-grid;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+  cursor: pointer;
+}
+
+.bgm-toggle:hover {
+  background: var(--brand-strong);
+  color: var(--brand-on);
+}
+
+.bgm-toggle:focus-visible {
+  outline: 2px solid var(--brand-strong);
+  outline-offset: 2px;
+}
+
+.music-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* 面板向上展开，宽度跟着视口收，窄屏不越界 */
+.bgm-panel {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 0;
+  display: none;
+  width: min(21rem, calc(100vw - 2rem));
+  padding: 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--surface);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.bgm-details[open] .bgm-panel {
+  display: block;
+}
+
+.bgm-now {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.bgm-cover {
+  flex: none;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.6rem;
+  object-fit: cover;
+  background: var(--surface-2);
+}
+
+.bgm-now-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.bgm-artist {
+  margin-top: 0.35rem;
+  color: var(--sub);
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.bgm-error {
+  margin-top: 0.6rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--wash-clay) 18%, var(--surface));
+  color: var(--wash-clay-deep);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.bgm-link {
+  display: inline-block;
+  margin-top: 0.6rem;
+  color: var(--sub);
+  font-size: 0.75rem;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.bgm-link:hover {
+  color: var(--wash-clay-deep);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bgm-chevron {
+    transition: none;
+  }
+}
+
+/* 正文里的 .prose details 规则会把这个曲目列表当成折叠面板，再包一层带边框的卡片；
+   它本来就在音乐卡片内部，去掉外框与正文留白，只保留 ▸ 指示符。 */
+.music-list-details {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+.music-list-summary {
+  margin: 0;
+  padding: 0;
+}
+.music-list-details > .music-list {
+  padding-left: 0;
+}

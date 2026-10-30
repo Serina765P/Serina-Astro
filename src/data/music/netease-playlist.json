@@ -1,0 +1,446 @@
+{
+  "source": "https://music.163.com/playlist?id=8562312822",
+  "provider": "https://api.i-meto.com/meting/api?server=netease&type=playlist&id=8562312822",
+  "fetched_at": "2026-10-30T11:35:55.577Z",
+  "count": 73,
+  "items": [
+    {
+      "id": "548650102",
+      "title": "静かな夜に願いを... (M@STER VERSION) (千早・雪歩・真美リミックス)",
+      "artist": "今井麻美 / 浅倉杏美 / 下田麻美",
+      "cover": "https://p3.music.126.net/Vpw-yxwzOZop_aHrAUojSw==/109951163214063191.jpg?param=300y300"
+    },
+    {
+      "id": "2682971936",
+      "title": "Unhappy Light",
+      "artist": "初星学園 / 月村手毬",
+      "cover": "https://p3.music.126.net/UcE7rGpyGs0s6kEvHuoNWw==/109951170595355530.jpg?param=300y300"
+    },
+    {
+      "id": "26212219",
+      "title": "LOST",
+      "artist": "今井麻美 / 下田麻美 / たかはし智秋 / 釘宮理恵 / 花澤香菜",
+      "cover": "https://p3.music.126.net/axlPYZT58ACQDRzbFOJHLw==/2442015325316112.jpg?param=300y300"
+    },
+    {
+      "id": "22764751",
+      "title": "まっくら森の歌(新録音)",
+      "artist": "今井麻美",
+      "cover": "https://p3.music.126.net/U0Xe0njxv2uCHJaguUU2ng==/781752767371079.jpg?param=300y300"
+    },
+    {
+      "id": "536570705",
+      "title": "虹色letters",
+      "artist": "Cleasky",
+      "cover": "https://p3.music.126.net/XDLkvxiJq2-05zfdUvj3NA==/109951170294532682.jpg?param=300y300"
+    },
+    {
+      "id": "1910700226",
+      "title": "Purple Sky",
+      "artist": "雨宮天",
+      "cover": "https://p3.music.126.net/r5VN6N4tQ3bKc2BYNdhBbw==/109951166915214793.jpg?param=300y300"
+    },
+    {
+      "id": "528271642",
+      "title": "ふわりずむ",
+      "artist": "桐谷蝶々",
+      "cover": "https://p3.music.126.net/aKuYSEjBpWv49NqWjxXeyg==/109951170290506985.jpg?param=300y300"
+    },
+    {
+      "id": "36492965",
+      "title": "贈る言葉",
+      "artist": "下田麻美",
+      "cover": "https://p3.music.126.net/jKm3ToAiwqzNraJhBQaCYw==/3389794349993370.jpg?param=300y300"
+    },
+    {
+      "id": "1910700365",
+      "title": "Be proud",
+      "artist": "ストロベリーポップムーン",
+      "cover": "https://p3.music.126.net/uDjCczRRY47gucanCnhofw==/109951166915289875.jpg?param=300y300"
+    },
+    {
+      "id": "1806551709",
+      "title": "Special Wonderful Smile",
+      "artist": "Fleuranges",
+      "cover": "https://p3.music.126.net/qwRtg8y4v5RxMT-tWvAcWA==/109951165822056525.jpg?param=300y300"
+    },
+    {
+      "id": "550137055",
+      "title": "シルエット",
+      "artist": "種田梨沙",
+      "cover": "https://p3.music.126.net/M3rF5qTnQZOn-LsE_2QTTw==/109951170290514505.jpg?param=300y300"
+    },
+    {
+      "id": "30590872",
+      "title": "Bright Blue",
+      "artist": "M・A・O",
+      "cover": "https://p3.music.126.net/9FSnns7paNhV49QoWIiQRA==/109951172696676895.jpg?param=300y300"
+    },
+    {
+      "id": "1819202681",
+      "title": "部屋とYシャツと私",
+      "artist": "長谷川明子",
+      "cover": "https://p3.music.126.net/PtNmFl9yPjhFQLYrc4IUmw==/109951165713523461.jpg?param=300y300"
+    },
+    {
+      "id": "2018433111",
+      "title": "05 手紙 〜拝啓 十五の君へ〜",
+      "artist": "長谷川明子",
+      "cover": "https://p3.music.126.net/Wl00OWXohdYKbz2Nnz9q7g==/109951168271956200.jpg?param=300y300"
+    },
+    {
+      "id": "2669726395",
+      "title": "たいせつなもの",
+      "artist": "初星学園 / フワリ / 秦谷美鈴",
+      "cover": "https://p3.music.126.net/5M-QCiOeLo7kW7xXqK7N-w==/109951170428183985.jpg?param=300y300"
+    },
+    {
+      "id": "29273554",
+      "title": "チクタク",
+      "artist": "長谷川明子 / 仁後真耶子 / 浅倉杏美",
+      "cover": "https://p3.music.126.net/Ig2M6eMjfonAvMgLL3DXDw==/109951172349689558.jpg?param=300y300"
+    },
+    {
+      "id": "26371274",
+      "title": "First Step",
+      "artist": "浅倉杏美",
+      "cover": "https://p3.music.126.net/hAhOkQQ1ApYsERIqtBrcng==/2339760743961304.jpg?param=300y300"
+    },
+    {
+      "id": "1831034175",
+      "title": "プラスチック・アンブレラ",
+      "artist": "成海瑠奈",
+      "cover": "https://p3.music.126.net/ebfYkVFPVO_W_LOQ4Nga4g==/109951170278103831.jpg?param=300y300"
+    },
+    {
+      "id": "536098169",
+      "title": "スタートリップ",
+      "artist": "愛美",
+      "cover": "https://p3.music.126.net/3JFk9FGCc1MyRMxYvv1ztg==/109951170290505062.jpg?param=300y300"
+    },
+    {
+      "id": "460099385",
+      "title": "永遠の花",
+      "artist": "渡部恵子 / 末柄里恵 / 高橋未奈美",
+      "cover": "https://p3.music.126.net/cpRJBWzyYvoBcNKpV_uArA==/18578447976329924.jpg?param=300y300"
+    },
+    {
+      "id": "1334297179",
+      "title": "餞の鳥",
+      "artist": "D/Zeal",
+      "cover": "https://p3.music.126.net/1kvLhDAzzaOMShaquXbRPw==/109951163696906033.jpg?param=300y300"
+    },
+    {
+      "id": "1910702973",
+      "title": "聖ミリオン女学園校歌",
+      "artist": "斉藤佑圭 / 今井麻美 / 近藤唯",
+      "cover": "https://p3.music.126.net/Eb7u9sMCuz7wqIcVdBGoYA==/109951166915259784.jpg?param=300y300"
+    },
+    {
+      "id": "2076109726",
+      "title": "セブンカウント",
+      "artist": "MILLIONSTARS",
+      "cover": "https://p3.music.126.net/hAKQIyYQPCniWYljvo82Zg==/109951170294559280.jpg?param=300y300"
+    },
+    {
+      "id": "36586002",
+      "title": "つぼみ",
+      "artist": "原紗友里",
+      "cover": "https://p3.music.126.net/ntoLq_4osou3U55Ee2uhAQ==/3308430489506767.jpg?param=300y300"
+    },
+    {
+      "id": "36493000",
+      "title": "心もよう",
+      "artist": "new generations",
+      "cover": "https://p3.music.126.net/ntoLq_4osou3U55Ee2uhAQ==/3308430489506767.jpg?param=300y300"
+    },
+    {
+      "id": "1992431934",
+      "title": "ふたり繋ぐ星座",
+      "artist": "平山笑美",
+      "cover": "https://p3.music.126.net/ulvXkjisXpHvSRoc-wCqyQ==/109951168000223660.jpg?param=300y300"
+    },
+    {
+      "id": "28863071",
+      "title": "空想文学少女",
+      "artist": "伊藤美来",
+      "cover": "https://p3.music.126.net/S9pmgpdnqjaZyIx6AAdEMg==/109951170290454600.jpg?param=300y300"
+    },
+    {
+      "id": "3350780313",
+      "title": "月影のアンシェネ",
+      "artist": "田中摩美々 (CV.菅沼千紗)",
+      "cover": "https://p3.music.126.net/6CUyp4xTbPYpSR68AUBnnw==/109951172760610916.jpg?param=300y300"
+    },
+    {
+      "id": "2037061030",
+      "title": "ささのはに、うたかたに。 (M@STER VERSION)",
+      "artist": "M・A・O / 中澤ミナ / 森下来奈 / 立花理香 / 鈴木みのり",
+      "cover": "https://p3.music.126.net/r2jqRnyXaLeerSOLe9Zlcw==/109951168528704633.jpg?param=300y300"
+    },
+    {
+      "id": "556204034",
+      "title": "Melty Fantasia",
+      "artist": "EScape",
+      "cover": "https://p3.music.126.net/7ZL4yZuUfA1FoFxufUZeOA==/109951163275980210.jpg?param=300y300"
+    },
+    {
+      "id": "29418481",
+      "title": "絵本",
+      "artist": "雨宮天",
+      "cover": "https://p3.music.126.net/s0h4KLjfWHKmMLlNzS6AYw==/2533274790580794.jpg?param=300y300"
+    },
+    {
+      "id": "3350781119",
+      "title": "メモワール・アンタクト",
+      "artist": "幽谷霧子 (CV.結名美月)",
+      "cover": "https://p3.music.126.net/6CUyp4xTbPYpSR68AUBnnw==/109951172760610916.jpg?param=300y300"
+    },
+    {
+      "id": "29738481",
+      "title": "瞳の中のシリウス",
+      "artist": "原由実 / 上田麗奈 / 諏訪彩花 / 桐谷蝶々",
+      "cover": "https://p3.music.126.net/Ej9cCEj-4DEJFGxKgl9TRA==/3243559302811151.jpg?param=300y300"
+    },
+    {
+      "id": "1481939562",
+      "title": "さかしまの言葉",
+      "artist": "南早紀",
+      "cover": "https://p3.music.126.net/Z2ic-i8hTcqcPffwtUpotA==/109951170294552120.jpg?param=300y300"
+    },
+    {
+      "id": "1950603144",
+      "title": "しあわせエンドロール",
+      "artist": "山崎はるか",
+      "cover": "https://p3.music.126.net/rcopoWKfjWQlLZIA1Aahzw==/109951170290484410.jpg?param=300y300"
+    },
+    {
+      "id": "1942407341",
+      "title": "交わる季節",
+      "artist": "原由実",
+      "cover": "https://p3.music.126.net/BLZKrj2F4TP8snSkPbciLQ==/109951167351288164.jpg?param=300y300"
+    },
+    {
+      "id": "1942407343",
+      "title": "泣き空、のち",
+      "artist": "Machico",
+      "cover": "https://p3.music.126.net/BLZKrj2F4TP8snSkPbciLQ==/109951167351288164.jpg?param=300y300"
+    },
+    {
+      "id": "1905673821",
+      "title": "きみがくれた言葉があるから",
+      "artist": "浜崎奈々",
+      "cover": "https://p3.music.126.net/9HA35sIoez9ZpQq96FT0BQ==/109951166783108741.jpg?param=300y300"
+    },
+    {
+      "id": "29718714",
+      "title": "Snow White",
+      "artist": "今井麻美",
+      "cover": "https://p3.music.126.net/CsPpqG03R6dy7UxX6XeERA==/6639950721220316.jpg?param=300y300"
+    },
+    {
+      "id": "1313052525",
+      "title": "オーディナリィ・クローバー",
+      "artist": "香里有佐 / 田所あずさ / 夏川椎菜 / 山口立花子 / 桐谷蝶々",
+      "cover": "https://p3.music.126.net/CuXoGerYaLp-n6HcSMX-gg==/109951163574932772.jpg?param=300y300"
+    },
+    {
+      "id": "3415882373",
+      "title": "泡沫に染まる",
+      "artist": "風野灯織 (CV.近藤玲奈) / 月岡恋鐘 (CV.礒部花凜) / 園田智代子 (CV.白石晴香) / 黒木ほの香 / 芹沢あさひ (CV.田中有紀) / 浅倉 透 (CV.和久井 優) / 七草にちか (CV.紫月杏朱彩) / 斑鳩ルカ (CV.川口莉奈)",
+      "cover": "https://p3.music.126.net/CXR7mQp-VhsFkbk3qRcsyA==/109951173687526167.jpg?param=300y300"
+    },
+    {
+      "id": "28493865",
+      "title": "薄荷 -ハッカ-",
+      "artist": "渕上舞",
+      "cover": "https://p3.music.126.net/c6Gi_-w4tKVvszNsz4yJ1Q==/109951172696681739.jpg?param=300y300"
+    },
+    {
+      "id": "3430225987",
+      "title": "花",
+      "artist": "高田憂希",
+      "cover": "https://p3.music.126.net/JF88B8xgsvi8gxBXuK4d-A==/109951173873158417.jpg?param=300y300"
+    },
+    {
+      "id": "1911522698",
+      "title": "SOOTHING PLACE",
+      "artist": "FRAME",
+      "cover": "https://p3.music.126.net/qLbriBYif-2XexAzctgvQQ==/109951170278079678.jpg?param=300y300"
+    },
+    {
+      "id": "3423012016",
+      "title": "ワタシグラビティ",
+      "artist": "芹沢あさひ (CV.田中有紀)",
+      "cover": "https://p3.music.126.net/p2Ay4VTUCGZfbTTC4wF51g==/109951173775955092.jpg?param=300y300"
+    },
+    {
+      "id": "2633435853",
+      "title": "安寧のDystopia",
+      "artist": "土岐隼一 / バレッタ裕 / 狩野翔 / 児玉卓也 / 榎木淳弥 / 中島ヨシキ / 汐谷文康 / 寺島拓篤 / 神原大地 / 永野由祐 / 高塚智人 / 増元拓也 / 中田祐矢 / 野上翔 / 小林大紀 / 古畑恵介 / 濱野大輝 / 浦尾岳大 / 比留間俊哉 / 笠間淳",
+      "cover": "https://p3.music.126.net/PDk4_5UA_GAf4KYYmzGLKw==/109951170014933899.jpg?param=300y300"
+    },
+    {
+      "id": "2030208041",
+      "title": "Toward Pole Star",
+      "artist": "High×Joker",
+      "cover": "https://p3.music.126.net/4s6G9HIXPhws5v1JE-ataQ==/109951170278084269.jpg?param=300y300"
+    },
+    {
+      "id": "28283639",
+      "title": "Fu-Wa-Du-Wa",
+      "artist": "下田麻美 / 平田宏美 / 角元明日香 / 戸田めぐみ",
+      "cover": "https://p3.music.126.net/PHtxxE0GCPWFNEODQO93cQ==/5919770604050564.jpg?param=300y300"
+    },
+    {
+      "id": "2053130979",
+      "title": "Moon Shape/明鏡止水",
+      "artist": "深町寿成",
+      "cover": "https://p3.music.126.net/Y1okL3YPYMu471Pq5yth2A==/109951170278003252.jpg?param=300y300"
+    },
+    {
+      "id": "441489593",
+      "title": "WINTER COMES AROUND(冬の一日)",
+      "artist": "原由実",
+      "cover": "https://p3.music.126.net/brMJ5eg71qVLScenLB2LQw==/3400789484034140.jpg?param=300y300"
+    },
+    {
+      "id": "4933199",
+      "title": "光",
+      "artist": "滝田樹里",
+      "cover": "https://p3.music.126.net/EK-o8p4BYwnV0bN9xo9Ijg==/2534374302951219.jpg?param=300y300"
+    },
+    {
+      "id": "2056967948",
+      "title": "Everything",
+      "artist": "たかはし智秋",
+      "cover": "https://p3.music.126.net/CfzAxFfv2AnQ_6MHt2aReQ==/109951168687452546.jpg?param=300y300"
+    },
+    {
+      "id": "3424185706",
+      "title": "ひととせ結び",
+      "artist": "郁原ゆう",
+      "cover": "https://p3.music.126.net/IHIV4DwEreUc41Dx2Dw5wA==/109951173797242860.jpg?param=300y300"
+    },
+    {
+      "id": "26122820",
+      "title": "S(mile)ING!",
+      "artist": "大橋彩香",
+      "cover": "https://p3.music.126.net/fZOTpZHBk3q_w1eMtb6kkA==/109951172696679245.jpg?param=300y300"
+    },
+    {
+      "id": "28178117",
+      "title": "あのね、聞いてほしいことがあるんだ",
+      "artist": "田村奈央",
+      "cover": "https://p3.music.126.net/L5aMpejiIdzmPFbSe3sIIA==/109951163922796321.jpg?param=300y300"
+    },
+    {
+      "id": "29738479",
+      "title": "恋花",
+      "artist": "原由実",
+      "cover": "https://p3.music.126.net/Ej9cCEj-4DEJFGxKgl9TRA==/3243559302811151.jpg?param=300y300"
+    },
+    {
+      "id": "1930816411",
+      "title": "裏表深層心理",
+      "artist": "末柄里恵",
+      "cover": "https://p3.music.126.net/G6zxgoYj8a9P0RJTTdVOcg==/109951170290484802.jpg?param=300y300"
+    },
+    {
+      "id": "1910715739",
+      "title": "ReTale",
+      "artist": "≡君彩≡",
+      "cover": "https://p3.music.126.net/0guvdUSmEbbx-52n1EGbNw==/109951166915514754.jpg?param=300y300"
+    },
+    {
+      "id": "3436741813",
+      "title": "輝夜",
+      "artist": "今井麻美",
+      "cover": "https://p3.music.126.net/-q0MtK5Jan7Kj-BD-4n3vw==/109951173945763464.jpg?param=300y300"
+    },
+    {
+      "id": "1815402298",
+      "title": "ライラックにつつまれて",
+      "artist": "TIntMe!",
+      "cover": "https://p3.music.126.net/M3uBP_7qvlHqajP8959X3Q==/109951165822036689.jpg?param=300y300"
+    },
+    {
+      "id": "1426338449",
+      "title": "矛盾の月",
+      "artist": "花咲夜",
+      "cover": "https://p3.music.126.net/q_DWI0oCebpPVHKEWjP2TA==/109951165873893319.jpg?param=300y300"
+    },
+    {
+      "id": "29738440",
+      "title": "オレンジの空の下",
+      "artist": "末柄里恵",
+      "cover": "https://p3.music.126.net/RB_dLK19MSoGotXTF-syRA==/6646547791016583.jpg?param=300y300"
+    },
+    {
+      "id": "2132505406",
+      "title": "トワラー",
+      "artist": "MILLIONSTARS Team7th",
+      "cover": "https://p3.music.126.net/kd-yHz_bqkdNuCdKDmyjdQ==/109951170245414865.jpg?param=300y300"
+    },
+    {
+      "id": "29738448",
+      "title": "微笑み日和",
+      "artist": "郁原ゆう",
+      "cover": "https://p3.music.126.net/5feST5PNylSK_zUp-e1yWw==/3231464674904528.jpg?param=300y300"
+    },
+    {
+      "id": "2024883144",
+      "title": "オレンジ・エピソード",
+      "artist": "大関英里 / 雨宮天 / 中村繪里子 / 戸田めぐみ / 村川梨衣",
+      "cover": "https://p3.music.126.net/i15fX6tssRPrcJBdP9VPFw==/109951168382587132.jpg?param=300y300"
+    },
+    {
+      "id": "28063303",
+      "title": "風の魔法",
+      "artist": "浅倉杏美",
+      "cover": "https://p3.music.126.net/8IwJX5w1MEAJOZ4EKZNJcg==/5753744348277523.jpg?param=300y300"
+    },
+    {
+      "id": "3436226119",
+      "title": "Blooming Star (M@STER VERSION)",
+      "artist": "高橋李依 / 原由実",
+      "cover": "https://p3.music.126.net/QqKNM6z1kmPYWUWwU-kxqw==/109951173940715714.jpg?param=300y300"
+    },
+    {
+      "id": "1495058702",
+      "title": "卒業写真",
+      "artist": "中村繪里子",
+      "cover": "https://p3.music.126.net/w5Ovug-ijSApGYTZtK7A4A==/109951165465879041.jpg?param=300y300"
+    },
+    {
+      "id": "522510535",
+      "title": "あめにうたおう♪",
+      "artist": "木戸衣吹",
+      "cover": "https://p3.music.126.net/fyPLxX2KiKAW4K_oYE5LJw==/109951170290519615.jpg?param=300y300"
+    },
+    {
+      "id": "543986127",
+      "title": "スノウレター",
+      "artist": "田村奈央",
+      "cover": "https://p3.music.126.net/YazDiXfLNL2vOZ7UoaQULQ==/109951170290507266.jpg?param=300y300"
+    },
+    {
+      "id": "22722906",
+      "title": "風花",
+      "artist": "原由実",
+      "cover": "https://p3.music.126.net/Ybo-CYyPLJIh7i4qOnEDtw==/648711860410245.jpg?param=300y300"
+    },
+    {
+      "id": "28406434",
+      "title": "ちいさな恋の足音",
+      "artist": "近藤唯",
+      "cover": "https://p3.music.126.net/tbiOod716kF47VQmiE8IWA==/5934064255276844.jpg?param=300y300"
+    },
+    {
+      "id": "1354478288",
+      "title": "I did+I will",
+      "artist": "Jelly PoP Beans",
+      "cover": "https://p3.music.126.net/M7lw4JUepMwDJErlEdDwnA==/109951163893827048.jpg?param=300y300"
+    }
+  ]
+}

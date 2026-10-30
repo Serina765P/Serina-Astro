@@ -193,6 +193,10 @@ const TOKENS = {
   chipFgHover: '--chip-fg-hover',
   catOn: '--cat-on',
   onAccent: '--on-accent',
+  brand: '--brand',
+  brandStrong: '--brand-strong',
+  brandSoft: '--brand-soft',
+  brandOn: '--brand-on',
   actionBg: '--action-bg',
   onAction: '--on-action',
   accent300: '--color-accent-300',
@@ -298,6 +302,12 @@ for (const [mode, T] of Object.entries(tables)) {
   }
   // blockquote 边框为非文字 UI，3:1 即可
   check(mode, 'mist-deep / surface（blockquote 边）', T.mistDeep, T.surface, 3.0);
+  // 音乐播放器：主按钮/当前曲目文字压淡蓝底，悬浮条播放键压实底
+  check(mode, 'brand-strong / surface（播放键）', T.brandStrong, T.surface, 4.5);
+  check(mode, 'brand-strong / brand-soft（当前曲目）', T.brandStrong, T.brandSoft, 4.5);
+  check(mode, 'brand-on / brand-strong（悬浮条 hover）', T.brandOn, T.brandStrong, 4.5);
+  check(mode, 'brand-strong / surface-2（进度条填充，UI）', T.brandStrong, T.surface2, 3.0);
+  check(mode, 'clay-deep / 播放失败底', T.clayDeep, mix(T.washClay, T.surface, 18), 4.5);
 }
 
 /* ── 深底上的组件级半透明前景 ──
