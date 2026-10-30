@@ -76,21 +76,31 @@ media-mute-button[data-muted] .music-icon-muted {
 /* 时间轴与静音由 Video.js 组件承担，运行时加载前它们既不可聚焦也不可用；
    与其摆两个假控件，不如先只留播放键、时间占位和原平台链接。 */
 [data-music-player]:not([data-music-ready='true']) .music-seek,
+[data-music-player]:not([data-music-ready='true']) .music-volume,
 [data-music-player]:not([data-music-ready='true']) media-mute-button {
   display: none;
 }
 
-.music-seek {
+.music-slider {
   position: relative;
   display: block;
-  flex: 1 1 6rem;
   min-width: 0;
   height: 1.5rem;
   cursor: pointer;
   touch-action: none;
 }
 
-.music-seek media-slider-track {
+/* 进度条吃掉剩余宽度，音量滑杆只占固定一小段 */
+.music-seek {
+  flex: 1 1 6rem;
+}
+
+.music-volume {
+  flex: none;
+  width: 4.5rem;
+}
+
+.music-slider media-slider-track {
   position: absolute;
   inset-inline: 0;
   top: 50%;
@@ -102,15 +112,15 @@ media-mute-button[data-muted] .music-icon-muted {
   translate: 0 -50%;
 }
 
-.music-seek media-slider-fill {
+.music-slider media-slider-fill {
   display: block;
   width: var(--media-slider-fill, 0%);
   height: 100%;
   border-radius: inherit;
-  background: var(--brand);
+  background: var(--brand-strong);
 }
 
-.music-seek media-slider-thumb {
+.music-slider media-slider-thumb {
   position: absolute;
   top: 50%;
   left: var(--media-slider-fill, 0%);
@@ -122,9 +132,15 @@ media-mute-button[data-muted] .music-icon-muted {
   translate: -50% -50%;
 }
 
-.music-seek media-slider-thumb:focus-visible {
+.music-slider media-slider-thumb:focus-visible {
   outline: 2px solid var(--brand-strong);
   outline-offset: 2px;
+}
+
+/* Video.js 在平台不支持时给控件加 hidden（例如 iOS 上音量不可写）。
+   我们对这些元素写过 display，必须让 hidden 赢得过它，否则会留下一个按不动的滑杆。 */
+.music-transport > [hidden] {
+  display: none;
 }
 
 .music-time {

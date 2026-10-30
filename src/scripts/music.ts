@@ -19,6 +19,7 @@ import '@videojs/html/ui/time-group';
 import '@videojs/html/ui/time';
 import '@videojs/html/ui/time-separator';
 import '@videojs/html/ui/mute-button';
+import '@videojs/html/ui/volume-slider';
 import {
   describePlaybackFailure,
   describePlaylistLoadFailure,
@@ -32,6 +33,38 @@ import {
 import { MUSIC_TRIGGER_SELECTOR } from './music-contract';
 
 const INTERRUPT_EVENT = 'music:interrupt';
+
+// 音量是全站偏好：BGM 与文章播放器共用同一个档位，换页/换播放器不会突然变响或变静音。
+// 站点本身已用 localStorage 存主题，这里沿用同一套「读写失败就退回默认」的处理。
+const VOLUME_KEY = 'music-volume';
+const MUTED_KEY = 'music-muted';
+
+function readStoredNumber(key: string): number | null {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw === null) return null;
+    const value = Number(raw);
+    return Number.isFinite(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function storeNumber(key: string, value: number): void {
+  try {
+    localStorage.setItem(key, String(value));
+  } catch {
+    /* 隐私模式等 storage 不可用时只是不记忆，不影响播放 */
+  }
+}
+
+/** 绑定播放器时套用记住的音量/静音；没有记录就保持浏览器默认（100%、未静音） */
+function applyStoredVolume(audio: HTMLAudioElement): void {
+  const volume = readStoredNumber(VOLUME_KEY);
+  if (volume !== null) audio.volume = Math.min(1, Math.max(0, volume));
+  const muted = readStoredNumber(MUTED_KEY);
+  if (muted !== null) audio.muted = muted === 1;
+}
 
 interface MusicState {
   audio: HTMLAudioElement;
@@ -247,6 +280,12 @@ function bind(root: MusicRoot): void {
 
   root.__music = state;
   root.dataset.musicReady = 'true';
+  applyStoredVolume(audio);
+
+  audio.addEventListener('volumechange', () => {
+    storeNumber(VOLUME_KEY, audio.volume);
+    storeNumber(MUTED_KEY, audio.muted ? 1 : 0);
+  });
 
   audio.addEventListener('play', () => {
     const current = state.tracks[state.index];

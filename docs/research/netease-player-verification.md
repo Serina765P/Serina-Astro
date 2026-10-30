@@ -18,6 +18,9 @@
 | 原平台链接 | 单曲 → `music.163.com/song?id=…`；歌单 → `playlist?id=8562312822` | 通过 |
 | 可访问控件 | 原生 `<button>` + Video.js 时间轴/静音；`role="status"` 播报 | 通过（无障碍树）：`button "暂停"`、`slider "定位"`、`time 0:01`、`button "静音"`、`status "正在播放 …"` |
 | 键盘 | Tab 顺序进入折叠面板控件；Enter 播放；方向键在时间轴上 +1s | 通过：`aria-valuetext` 为「4秒钟，总时长 6分钟30秒钟」 |
+| 音量 | 焦点到音量滑杆，方向键 / Home / End | 通过：100% → 90%（步进 5），`aria-valuetext` 为「90%」；静音时填充归零，取消静音恢复原档位 |
+| 音量记忆 | 设到 35% 后刷新页面，再分别播 BGM 与文章播放器 | 通过：两者都从 35% 起播（`localStorage.music-volume` / `music-muted`；storage 不可用时退回默认，不报错） |
+| 平台不支持音量 | 给滑杆与静音按钮加 `hidden`（iOS 上音量不可写时 Video.js 会这么做） | 通过：`display: none` 生效，不会留下按不动的滑杆 |
 | 焦点 | `:focus-visible` 描边在按钮、summary、滑块上都可见 | 通过（2px `--brand-strong`） |
 | 失败状态 | 播放第 2 首（该曲 302 到 `music.163.com/404`） | 通过：`MediaError 4`、`state=error`、面板自动展开、文案「这首暂时不可播放。版权、地区或会员限制…」+ 网易云链接 |
 | 失败不打断阅读 | 提示在卡片/面板内，不弹窗、不滚动 | 通过 |
