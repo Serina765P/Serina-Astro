@@ -10,15 +10,19 @@ omp browser / playwright-core 1.63）。临时冒烟文章
 ## 实现要点
 
 - 组件：`src/components/media/BilibiliPlayer.astro`，MDX 里
-  `<BilibiliPlayer bvid="BV1aYxg6DEXb" p={2} title="…" />`。`p` 省略时为 1，
-  字符串写法（`p="2"`）也接受。
+  `<BilibiliPlayer bvid="BV1aYxg6DEXb" p={2} title="…" cover="https://…" />`。
+  `p` 省略时为 1，字符串写法（`p="2"`）也接受。`cover` 可选，填 B 站封面绝对地址；
+  入口用 `referrerpolicy="no-referrer"` 取图（B 站图片 CDN 对站外 referer 返回 403），
+  不填则入口保持纯色舞台。
 - 地址只在 `src/lib/bilibili.ts` 生成：
-  `https://player.bilibili.com/player.html?bvid=<BV>&p=<正整数>&autoplay=0`，
+  `https://player.bilibili.com/player.html?bvid=<BV>&p=<正整数>&autoplay=0&poster=1`，
   不传 aid/cid，没有父页面 pagelist 请求，也没有代理。原视频链接是
   `https://www.bilibili.com/video/<BV>?p=<n>`。
 - 打开文章时只有入口（一个指向原视频的链接），点击后才插入官方 iframe：
   打开页面时对 `player.bilibili.com` 的请求是 0 条，比 `loading="lazy"`
   更彻底；iframe 仍带 `loading="lazy"`。脚本不可用时入口退化为普通跳转。
+- 点击入口是用户手势：运行时会 `autoplay=0` 换成 `autoplay=1` 再写进 iframe，
+  播放器加载后直接起播；标记里的静态 URL 仍写 `autoplay=0`（页面打开不自动播）。
 - 入口标题最多两行（`line-clamp-2`），视口窄于 23rem 时隐藏「点击加载官方播放器 ·
   背景音乐将暂停」提示行：长标题不能把入口撑出 16:9 舞台。完整标题仍在 DOM 里，
   无障碍名称与 iframe `title` 都不截断。
@@ -34,11 +38,12 @@ omp browser / playwright-core 1.63）。临时冒烟文章
 
 | 验收项（issue #9） | 做法 | 结果 |
 | --- | --- | --- |
-| 生成官方播放器 URL | 读 `data-bilibili-src` 与点击后的 `iframe.src` | 通过：`https://player.bilibili.com/player.html?bvid=BV1aYxg6DEXb&p=1&autoplay=0` |
+| 生成官方播放器 URL | 读 `data-bilibili-src` 与点击后的 `iframe.src` | 通过：`https://player.bilibili.com/player.html?bvid=BV1aYxg6DEXb&p=1&autoplay=0&poster=1` |
 | 无需 aid/cid/父页面 API/代理 | 检查 URL 参数与请求列表 | 通过：没有 `api.bilibili.com` 请求，除 iframe 导航外没有额外第三方请求 |
 | 响应式、不溢出正文 | 1440×900、390×844、320×568、280×700（默认标题与 48 字长标题） | 通过：舞台宽度等于正文宽度，16:9；`document.scrollWidth` 等于视口宽，无横向滚动 |
 | 可访问标题 | 检查 iframe `title` | 通过：显式 `title` 原样写入；省略时生成「B 站视频 <BV> 第 <n> P」 |
 | 懒加载 | 打开文章时的 iframe 数、第三方请求；插入后的属性 | 通过：iframe 0 个、`player.bilibili.com` 请求 0 条；插入后 `loading="lazy"` |
+| 封面 | ① 入口 `cover` 参数；② 点击后 iframe 内画面 | 通过（2026-10-31）：`cover` 指向 B 站封面时入口直接显示封面图；`poster=1` 下播放器也显示同一封面，不再是黑底 |
 | 原视频链接 | 入口 `href`、页脚链接、失败提示链接 | 通过：均为 `https://www.bilibili.com/video/BV1aYxg6DEXb?p=1` |
 | 视频开始时暂停 BGM | 先播放 BGM（`#bgm` data-state=playing、`audio.paused=false`），再点入口 | 通过：BGM 变为 `paused`，2.5 秒后仍未恢复 |
 | 结束后不自动恢复 | 在 iframe 内播放视频 2.46 秒后暂停，等待 1.5 秒 | 通过：BGM 保持 `paused` |
@@ -46,13 +51,13 @@ omp browser / playwright-core 1.63）。临时冒烟文章
 | 窄屏 | 390×844、320×568、280×700，默认标题与 48 字长标题 | 通过：长标题被 clamp 到两行，<23rem 时提示行隐藏；入口与页脚都不越界，未裁切 |
 | 加载失败状态 | 把 `data-bilibili-src` 换成不可路由地址，等待超时 | 通过：`data-state="error"`、iframe 被移除、错误提示与原视频链接可见、`role="status"` 播报超时 |
 | 键盘 | 聚焦入口按 Enter | 通过：不跳转，加载 iframe，焦点移到舞台容器 |
-| autoplay 关闭 | iframe 内 `video` 状态 | 通过：`readyState=4`、`duration=143`、`paused=true` |
+| 自动播放边界 | 页面打开 / 点击入口后的 iframe `video` | 通过：打开文章没有 iframe；点击入口后 iframe 带 `autoplay=1`，`readyState=4`、`duration=143`，播放器直接起播 |
 
 ## 实测细节
 
 - 点击前第三方请求里没有 `player.bilibili.com`（字体、giscus 等站内既有请求除外）。
-- 点击后 iframe 内的 `video`：`readyState=4`、`duration=143`、`paused=true`，
-  即 `autoplay=0` 生效；点击播放器控件后 `currentTime` 走到 2.46 秒，BGM 仍暂停。
+- 点击后 iframe 内的 `video`：`readyState=4`、`duration=143`，起播后 `currentTime`
+  继续前进；BGM 在点击入口的同一时刻已暂停，起播 2.5 秒后仍未恢复。
 - 失败态：超时前 iframe 一直在等响应；超时后 DOM 里没有 iframe，错误块显示
   「播放器没有加载出来…前往 B 站观看」，`data-bilibili-status` 为超时文案。
 - ClientRouter 导航后重新插入的组件是 facade 状态；点击入口后页面里只有 1 个
@@ -69,6 +74,6 @@ omp browser / playwright-core 1.63）。临时冒烟文章
   失败态。
 - 暂停发生在点击入口时，而不是 iframe 内视频真正开始播放时（后者不可观察）。
   这是 issue #9 评论里约定的做法：`music:interrupt` 只能在可观察的点击上派发。
-- 入口没有视频封面：没有不依赖第三方请求的稳定封面源，视觉上是深色舞台 +
-  B 站图标 + 标题。
+- 入口封面依赖作者提供 B 站封面绝对地址；不提供时入口仍是深色舞台 + B 站图标 +
+  标题。封面图走 B 站 CDN，图片不可用时入口退化为纯色舞台。
 - 分 P 只实测了 `p=1`（研究视频只有一 P）；其它 `p` 的解析交给官方播放器。

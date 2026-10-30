@@ -47,7 +47,9 @@ function mountEmbed(root: HTMLElement, trigger: HTMLElement): void {
 
   const frame = document.createElement('iframe');
   frame.className = FRAME_CLASS;
-  frame.src = src;
+  // 点击入口本身是用户手势：iframe 加载后直接播放。标记里的 URL 仍保持 autoplay=0
+  // （语义是“页面打开不自动播”），只有用户主动点开时才换成 1。
+  frame.src = src.replace('autoplay=0', 'autoplay=1');
   frame.title = title;
   frame.loading = 'lazy';
   frame.allow = 'autoplay; fullscreen; picture-in-picture; encrypted-media';

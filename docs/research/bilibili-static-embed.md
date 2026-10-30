@@ -7,6 +7,7 @@
 - **父页面不能直接 `fetch` pagelist。** `GET https://api.bilibili.com/x/player/pagelist?bvid=BV1aYxg6DEXb` 在博客源和 `file://` 源均失败；`credentials: "omit"` 与 `"include"` 都一样。响应对这两个源是 **HTTP 403**，且没有 `Access-Control-Allow-Origin`。这不是靠凭据或本地文件就能绕过的 CORS 问题。
 - **官方 iframe 不依赖父页面的 pagelist fetch。** 在博客源和 `file://` 页面中，`https://player.bilibili.com/player.html?bvid=BV1aYxg6DEXb&p=1&autoplay=0` 均成功加载；视频元素达到 `readyState === 4`，时长为 143 秒。iframe 导航与脚本读取跨源 JSON 是不同机制。[MDN 的 CORS 说明](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS)也明确区分嵌入资源与读取其数据。
 - **已知 BV 和 p 时，不必另外提供 aid 或 cid。** [官方外链播放器文档](https://player.bilibili.com/)说明 aid、bvid 二选一；cid 不是必需参数。`p` 从 1 开始，但**一旦提供 cid，`p` 不生效**。实测 `bvid + p=1` 和 `bvid + cid=43099292743` 两种 URL 都能加载目标视频。
+- **外链播放器默认是黑底，不是视频坏了。** 官方文档有 `poster`（展示封面）开关；加 `poster=1` 后初始显示视频封面，观感与站内播放器一致（2026-10-31 复测）。组件的地址因此固定带 `poster=1`。
 - **公开元数据请求不应使用 credentials。** `include` 在实测中没有让请求成功，反而会把可用的 Bilibili cookies 带入跨源请求；它不是公开 pagelist 的解锁条件。官方播放器内部如何管理自己的登录态是独立问题，不要求父页面使用 credentialed fetch。
 
 ## 第一方证据
@@ -29,6 +30,27 @@
 [官方使用文档](https://player.bilibili.com/)给出的基础地址是 `https://player.bilibili.com/player.html`，示例直接使用 `bvid`。参数表定义 `autoplay`、`muted`、`poster`、`danmaku` 等选项，并规定 cid 会覆盖 p。
 
 [本次加载的官方 player HTML](https://player.bilibili.com/player.html?bvid=BV1aYxg6DEXb&p=1&autoplay=0)与文档一致：它把 `bvid`、`cid`、`p`（也兼容 `page`）传给 `nano.createPlayer`，并将 `autoplay` 默认设为 `true`。响应为 200，含 `Cross-Origin-Resource-Policy: cross-origin`，未返回禁止嵌入的 `X-Frame-Options`；`Last-Modified: Mon, 19 Oct 2026 08:04:19 GMT`，是文档和播放器仍在维护的直接迹象。显式 `autoplay=0` 可避免采用源码中的默认自动播放值。
+
+## 被否掉的候选：`www.bilibili.com/blackboard/html5player.html`
+
+视频页内部使用的播放器地址（`blackboard/html5player.html?aid=…&bvid=…&cid=…&p=…`）
+在**白名单站点之外不能嵌入**：
+
+- 页面加载 `s1.hdslb.com/bfs/static/player/main/whitelist.js`，其中 `window.REFERRER_LIST`
+  列出允许的父页面域名（`*.bilibili.com`、`*.weibo.com`、`*.qq.com` 等，**不含**
+  `blog.serinap.top`）。
+- `video.js` 在 `window.top !== window.self` 时读取 `document.referrer`；域名不在列表内
+  就直接中止初始化，iframe 保持空白。
+- 实测（2026-10-30，Chrome 150）：从 `http://127.0.0.1:4322` 以 iframe 加载
+  `…/blackboard/html5player.html?&aid=117512620477045&bvid=BV1aYxg6DEXb&cid=43099292743&p=1`
+  → 文档标题为 `bilibili new player`，9 秒后仍无 `<video>`、正文为空；把同一地址直接
+  顶层打开 → `readyState=4`、`duration≈142`、自动播放。差异来自白名单，不是参数。
+- 同一支视频的 aid/cid 与 BV 对应关系（view API，2026-10-30）：aid
+  `117512620477045` ↔ bvid `BV1aYxg6DEXb` ↔ cid `43099292743`，单 P，时长 143 秒。
+
+结论：该地址只能用于白名单站点或顶层页面，不能作为博客 iframe；官方外链播放器仍是
+`player.bilibili.com/player.html`。站内播放器「打开就有封面」的观感可以用外链播放器的
+`poster=1` 还原（已验证），不需要白名单或代理。
 
 ## 方案取舍
 

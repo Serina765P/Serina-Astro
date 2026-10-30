@@ -29,9 +29,13 @@ function parsePage(value: unknown): number | null {
   return Number.isSafeInteger(page) ? page : null;
 }
 
-/** 官方外链播放器：bvid + p，不传 cid（cid 存在时 p 会被忽略） */
+/**
+ * 官方外链播放器：bvid + p，不传 cid（cid 存在时 p 会被忽略）。
+ * `poster=1` 是官方文档里的「展示封面」开关：不开启时播放器初始只有黑底，
+ * 开启后和站内播放器一样先显示视频封面。
+ */
 export function bilibiliPlayerUrl(bvid: string, page = 1): string {
-  return `${PLAYER_URL}?bvid=${bvid}&p=${page}&autoplay=0`;
+  return `${PLAYER_URL}?bvid=${bvid}&p=${page}&autoplay=0&poster=1`;
 }
 
 /** 原视频回退链接：播放器加载失败、以及页脚「在 B 站观看」都用它 */
@@ -48,19 +52,46 @@ export interface BilibiliEmbed {
   videoUrl: string;
   /** iframe 的 title 与入口按钮的可访问名称 */
   title: string;
+  /** 入口封面（B 站封面绝对地址）；未提供时为 null */
+  cover: string | null;
 }
 
 interface BilibiliInput {
   bvid: unknown;
   p?: unknown;
   title?: unknown;
+  cover?: unknown;
+}
+
+/**
+ * 入口封面只接受绝对 http(s) 地址：B 站封面 CDN 会对站外 referer 返回 403，
+ * 组件用 `referrerpolicy="no-referrer"` 取图，因此这里只要挡住 javascript:/data:
+ * 之类的协议即可。
+ */
+function parseCover(value: unknown): string | null {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== 'string') {
+    throw new Error(`BilibiliPlayer: cover 必须是 http(s) 地址，收到 ${JSON.stringify(value)}`);
+  }
+  const cover = value.trim();
+  if (!cover) return null;
+  let url: URL;
+  try {
+    url = new URL(cover);
+  } catch {
+    throw new Error(`BilibiliPlayer: cover 必须是 http(s) 地址，收到 ${JSON.stringify(value)}`);
+  }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    throw new Error(`BilibiliPlayer: cover 只支持 http(s) 地址，收到 ${JSON.stringify(value)}`);
+  }
+  return cover;
 }
 
 /**
  * 校验组件入参并一次性算出所有地址。
  * 构建期抛错比渲染一个坏 iframe 好：错误信息直接指向文章里的那一次调用。
  */
-export function bilibiliEmbed({ bvid, p, title }: BilibiliInput): BilibiliEmbed {
+export function bilibiliEmbed({ bvid, p, title, cover }: BilibiliInput): BilibiliEmbed {
   if (!isBvid(bvid)) {
     throw new Error(
       `BilibiliPlayer: bvid 必须是 BV + 10 位字母数字（如 BV1aYxg6DEXb），收到 ${JSON.stringify(bvid)}`,
@@ -77,5 +108,6 @@ export function bilibiliEmbed({ bvid, p, title }: BilibiliInput): BilibiliEmbed 
     playerUrl: bilibiliPlayerUrl(bvid, page),
     videoUrl: bilibiliVideoUrl(bvid, page),
     title: custom || `B 站视频 ${bvid} 第 ${page} P`,
+    cover: parseCover(cover),
   };
 }

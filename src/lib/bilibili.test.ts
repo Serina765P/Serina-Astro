@@ -21,7 +21,7 @@ describe('isBvid', () => {
 describe('bilibiliPlayerUrl', () => {
   it('generates the official player URL with autoplay off', () => {
     expect(bilibiliPlayerUrl(BVID, 1)).toBe(
-      'https://player.bilibili.com/player.html?bvid=BV1aYxg6DEXb&p=1&autoplay=0',
+      'https://player.bilibili.com/player.html?bvid=BV1aYxg6DEXb&p=1&autoplay=0&poster=1',
     );
   });
 
@@ -58,6 +58,20 @@ describe('bilibiliEmbed', () => {
 
   it('falls back to the derived title for blank titles', () => {
     expect(bilibiliEmbed({ bvid: BVID, title: '   ' }).title).toContain(BVID);
+  });
+
+  it('keeps an optional http(s) cover', () => {
+    expect(
+      bilibiliEmbed({ bvid: BVID, cover: ' https://i0.hdslb.com/bfs/archive/x.jpg ' }).cover,
+    ).toBe('https://i0.hdslb.com/bfs/archive/x.jpg');
+    expect(bilibiliEmbed({ bvid: BVID, cover: '' }).cover).toBeNull();
+    expect(bilibiliEmbed({ bvid: BVID }).cover).toBeNull();
+  });
+
+  it('rejects non-http(s) or malformed covers', () => {
+    expect(() => bilibiliEmbed({ bvid: BVID, cover: 'javascript:alert(1)' })).toThrow(/cover/i);
+    expect(() => bilibiliEmbed({ bvid: BVID, cover: '/local.jpg' })).toThrow(/cover/i);
+    expect(() => bilibiliEmbed({ bvid: BVID, cover: 42 })).toThrow(/cover/i);
   });
 
   it('rejects invalid BV ids', () => {

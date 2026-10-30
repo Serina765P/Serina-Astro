@@ -5,6 +5,7 @@
 // · 页面打开时只有封面入口，点击后才插入官方 iframe（运行时见 src/scripts/bilibili.ts），
 //   因此打开文章不产生第三方请求；iframe 自身仍带 loading="lazy"。
 // · 入口本身是指向原视频的链接：脚本不可用时退化成普通跳转，不会留下按不动的假按钮。
+// · 可选 `cover`：入口直接显示视频封面（跨站取图需 no-referrer，见 lib）。
 // · 跨源 iframe 拿不到内部播放状态，点击入口时由运行时代为派发 music:interrupt。
 import { Icon } from 'astro-icon/components';
 import { bilibiliEmbed } from '../../lib/bilibili';
@@ -16,9 +17,11 @@ interface Props {
   p?: number | string;
   /** iframe 与入口的可访问标题；省略时按 BV 号与分 P 生成 */
   title?: string;
+  /** 入口封面（B 站封面绝对地址）；省略时入口保持纯色 */
+  cover?: string;
 }
 
-const { bvid, page, playerUrl, videoUrl, title } = bilibiliEmbed(Astro.props);
+const { bvid, page, playerUrl, videoUrl, title, cover } = bilibiliEmbed(Astro.props);
 ---
 
 <figure
@@ -33,6 +36,25 @@ const { bvid, page, playerUrl, videoUrl, title } = bilibiliEmbed(Astro.props);
     data-bilibili-stage
     tabindex="-1"
   >
+    {
+      cover && (
+        <>
+          <img
+            src={cover}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            decoding="async"
+            referrerpolicy="no-referrer"
+            class="pointer-events-none absolute inset-0 size-full object-cover"
+          />
+          <div
+            class="pointer-events-none absolute inset-0 bg-scrim-backdrop/70"
+            aria-hidden="true"
+          />
+        </>
+      )
+    }
     <a
       href={videoUrl}
       class="group absolute inset-0 flex flex-col items-center justify-center gap-3 px-4 text-center no-underline focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-strong"
@@ -47,7 +69,7 @@ const { bvid, page, playerUrl, videoUrl, title } = bilibiliEmbed(Astro.props);
       <span class="line-clamp-2 max-w-full text-pretty text-sm font-semibold text-on-scrim">
         <span class="sr-only">播放：</span>{title}
       </span>
-      <span class="text-xs text-on-scrim/70 max-[23rem]:hidden">点击加载官方播放器 · 背景音乐将暂停</span>
+      <span class="text-xs text-on-scrim/90 max-[23rem]:hidden">点击加载官方播放器 · 背景音乐将暂停</span>
     </a>
 
     <div class="absolute inset-0" data-bilibili-error hidden>
