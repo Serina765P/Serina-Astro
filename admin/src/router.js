@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { PLACEHOLDER_TABS } from './navigation.js';
 import PlaceholderPanel from './panels/PlaceholderPanel.vue';
+import PostPanel from './panels/PostPanel.vue';
 import ShuoshuoPanel from './panels/ShuoshuoPanel.vue';
 import SitePanel from './panels/SitePanel.vue';
 import TaxonomyPanel from './panels/TaxonomyPanel.vue';
@@ -17,6 +18,12 @@ export const router = createRouter({
   routes: [
     { path: '/', redirect: '/site' },
     ...placeholderRoutes,
+    {
+      path: '/posts',
+      name: 'posts',
+      component: PostPanel,
+      meta: { tabId: 'posts' },
+    },
     {
       path: '/shuoshuo',
       name: 'shuoshuo',

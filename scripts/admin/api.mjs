@@ -1,4 +1,5 @@
 import { HttpError, sendJson } from './lib/http.mjs';
+import { handlePosts } from './routes/posts.mjs';
 import { handleShuoshuo } from './routes/shuoshuo.mjs';
 import { handleSiteInfo } from './routes/site-info.mjs';
 import { handleTaxonomy } from './routes/taxonomy.mjs';
@@ -7,6 +8,17 @@ const ROUTES = [
   { pattern: /^\/api\/site-info$/u, handler: handleSiteInfo },
   { pattern: /^\/api\/shuoshuo$/u, handler: handleShuoshuo },
   { pattern: /^\/api\/taxonomy$/u, handler: handleTaxonomy },
+  { pattern: /^\/api\/posts$/u, handler: handlePosts },
+  {
+    pattern: /^\/api\/posts\/([^/]+)\/images$/u,
+    handler: handlePosts,
+    params: ([, encoded]) => ({ slug: decodeURIComponent(encoded), images: true }),
+  },
+  {
+    pattern: /^\/api\/posts\/([^/]+)$/u,
+    handler: handlePosts,
+    params: ([, encoded]) => ({ slug: decodeURIComponent(encoded) }),
+  },
   {
     pattern: /^\/api\/shuoshuo\/([^/]+)$/u,
     handler: handleShuoshuo,

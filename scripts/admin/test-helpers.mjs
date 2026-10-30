@@ -53,5 +53,15 @@ export async function startApi(root, cleanups) {
         headers: { 'content-type': 'application/json', origin: base },
         body: typeof body === 'string' ? body : JSON.stringify(body),
       }),
+    del: (pathname) => fetch(`${base}${pathname}`, { method: 'DELETE', headers: { origin: base } }),
+    upload: (pathname, { file, type, name }) => {
+      const form = new FormData();
+      form.append('file', new Blob([file], { type }), name);
+      return fetch(`${base}${pathname}`, {
+        method: 'POST',
+        headers: { origin: base },
+        body: form,
+      });
+    },
   };
 }

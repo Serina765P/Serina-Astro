@@ -59,3 +59,32 @@ export function saveTaxonomy(taxonomy) {
     body: JSON.stringify(taxonomy),
   });
 }
+
+export function fetchPosts() {
+  return request('/api/posts');
+}
+
+export function fetchPost(slug) {
+  return request(`/api/posts/${encodeURIComponent(slug)}`);
+}
+
+export function createPost(payload) {
+  return request('/api/posts', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updatePost(slug, frontmatter) {
+  return request(`/api/posts/${encodeURIComponent(slug)}`, {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ frontmatter }),
+  });
+}
+
+export function deletePost(slug, { removeAssets = false } = {}) {
+  const query = removeAssets ? '?removeAssets=1' : '';
+  return request(`/api/posts/${encodeURIComponent(slug)}${query}`, { method: 'DELETE' });
+}

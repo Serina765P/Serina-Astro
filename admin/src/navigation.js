@@ -4,9 +4,6 @@ export const TABS = [
     path: '/posts',
     label: '文章',
     icon: 'i-lucide-file-text',
-    placeholder: true,
-    summary: '文章列表、Markdown 双栏编辑、Frontmatter 表单与插图上传将在后续工单接入。',
-    points: ['按标题、分类、标签检索', 'Markdown 写作与短代码选择器', 'slug 校验、封面与图片资产'],
   },
   {
     id: 'shuoshuo',
