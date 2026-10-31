@@ -12,14 +12,36 @@
 //   node scripts/shots.mjs            # 拍一轮，与基线比对（稳定图有差异则 exit 1）
 //
 // 前置：先构建（node node_modules/astro/bin/astro.mjs build）。脚本自身拉起 astro preview。
-// 浏览器：优先用系统 Edge（playwright-core 不下载浏览器；本机 ms-playwright 缓存的
-//   chromium 是 1228，而 playwright-core 1.63 要求 1243，直接 launch 找不到可执行文件）。
+// 浏览器：优先用系统 Edge；没有 Edge 的平台（Linux VPS）回退到 playwright 自带
+// chromium（两个项目都装在 `worker/` 之外，用 `npx playwright install chromium` 装）。
+// playwright-core 不随包下载浏览器，缓存版本要与它的要求对齐。
 
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
+
+/** 按顺序挑第一个能启动的浏览器：系统 Edge → 自带 chromium */
+async function launchBrowser() {
+  const attempts = [
+    { label: 'msedge', opts: { channel: 'msedge', headless: true } },
+    { label: 'chromium', opts: { headless: true } },
+  ];
+  const errors = [];
+  for (const { label, opts } of attempts) {
+    try {
+      const browser = await chromium.launch(opts);
+      console.log(`浏览器：${label}`);
+      return browser;
+    } catch (err) {
+      errors.push(`${label}: ${err.message.split('\n')[0]}`);
+    }
+  }
+  throw new Error(
+    `没有可用的浏览器，先跑 npx playwright install chromium\n  ${errors.join('\n  ')}`,
+  );
+}
 
 const PORT = Number(process.env.SHOTS_PORT ?? 4399);
 // 显式绑 IPv4：astro preview 默认只监听 ::1，而 fetch/navigation 用 127.0.0.1 会被拒
@@ -132,7 +154,7 @@ async function captureStable(page) {
 /** 出图一轮。write=true 时落盘 PNG 并打印体积（供人工走查） */
 async function shoot(write) {
   const hashes = {};
-  const browser = await chromium.launch({ channel: 'msedge', headless: true });
+  const browser = await launchBrowser();
   try {
     for (const theme of THEMES) {
       // 一个主题一个 context：localStorage 在 context 内共享，addInitScript 保证
