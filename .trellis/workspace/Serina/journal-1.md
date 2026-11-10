@@ -43,3 +43,26 @@
 ### Next Steps
 
 - 用新任务跑通一次完整的 Trellis Plan → Execute → Finish
+
+
+## Session 2: 全站视觉收敛与阅读排版修订
+<!-- trellis-session: v=2 fp=bb989a98f02a65ab -->
+
+**Date**: 2026-11-10
+**Task**: 全站视觉收敛与阅读排版修订
+**Branch**: `main`
+
+### Summary
+
+两道闸门（正确性 + 1440/1920 五宽度视觉测量）后完成两轮改造：第一轮收敛五档字号、去渐变/描边/静止阴影、重排首页与列表并加动效层；第二轮把正文量度提到 40em、面板 52rem、加 ≥1600 宽屏框架，修 TOC 折叠按钮折行与表格圆角/列宽，正文改系统字体栈（删除 4 个 CDN 样式表），并按 Humanizer 26 条规则复核 164 条界面文案（2 处修正）。已推送并触发 Pages 部署成功。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `62d50eb` | feat(design): 五档字号与无装饰分隔的视觉收敛 |
+| `1445031` | fix(reading): 40em 正文、宽屏框架、TOC 折行与表格字号 |
+
+### Status
+
+[OK] **Completed**
