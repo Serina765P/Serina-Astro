@@ -162,7 +162,7 @@ const groupLabel = (item: ShuoshuoItem) => {
                 )}
 
                 {(item.like > 0 || item.link) && (
-                  <footer class="mt-3 flex flex-wrap items-center gap-4 text-xs text-sub">
+                  <footer class="mt-3 flex flex-wrap items-center gap-4 text-note text-sub">
                     {item.like > 0 && (
                       <span class="inline-flex items-center gap-1">
                         <Icon name="material-symbols:favorite" class="size-3.5" aria-hidden="true" />
@@ -380,7 +380,7 @@ const groupLabel = (item: ShuoshuoItem) => {
 
     if (item.like > 0) {
       const footer = document.createElement('footer');
-      footer.className = 'mt-3 flex flex-wrap items-center gap-4 text-xs text-sub';
+      footer.className = 'mt-3 flex flex-wrap items-center gap-4 text-note text-sub';
       const like = document.createElement('span');
       like.className = 'inline-flex items-center gap-1';
       like.textContent = `♥ ${item.like}`;
@@ -392,7 +392,7 @@ const groupLabel = (item: ShuoshuoItem) => {
       let footer = article.querySelector('footer');
       if (!footer) {
         footer = document.createElement('footer');
-        footer.className = 'mt-3 flex flex-wrap items-center gap-4 text-xs text-sub';
+        footer.className = 'mt-3 flex flex-wrap items-center gap-4 text-note text-sub';
         article.append(footer);
       }
       const link = document.createElement('a');

@@ -68,27 +68,30 @@ const showToc = data.toc !== false && !data.categories.includes('小游戏');
 
   <Container width="wide" class="flex justify-center gap-10">
     <article class="min-w-0 max-w-4xl flex-1">
-      <!-- 文章面板：Apple 式大标题 + 舒适栏宽 -->
-      <div class="rounded-2xl border border-line bg-surface p-5 shadow-card sm:p-8 lg:p-10">
+      <!-- 文章面板（D3）：无描边、无圆角、无阴影 —— 用 --surface 比页面 --bg 高一档色阶
+           划出阅读区，边界不再靠 1px 线条。 -->
+      <div class="post-panel bg-surface p-5 sm:p-8 lg:p-10">
         <header class="mb-9">
-          {
-            category && (
-              <a
-                href={`/categories/${categorySlug(category)}/`}
-                class:list={[
-                  'inline-flex items-center rounded-full px-3.5 py-1 text-xs text-cat-on transition-opacity hover:opacity-85',
-                  categoryFillClass(category),
-                ]}
-              >
-                {category}
-              </a>
-            )
-          }
-          <h1 class="mt-4 text-[clamp(1.5rem,3vw,2.25rem)] leading-tight tracking-[0.02em] text-ink [text-wrap:balance]">
+          <!-- 分类 chip 从 h1 上方移到元信息行（屋规：标题上方不放小标签）。放在 h1 之后
+               既保住了分类入口，也不再被探针判成 eyebrow。 -->
+          <h1 class="post-title text-ink [text-wrap:balance]">
             {data.title}
           </h1>
 
-          <div class="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-sub">
+          <div class="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-note text-sub">
+            {
+              category && (
+                <a
+                  href={`/categories/${categorySlug(category)}/`}
+                  class:list={[
+                    'inline-flex items-center rounded-full px-2.5 py-0.5 text-note text-cat-on transition-opacity hover:opacity-85',
+                    categoryFillClass(category),
+                  ]}
+                >
+                  {category}
+                </a>
+              )
+            }
             <span class="inline-flex items-center gap-1">
               <Icon name="material-symbols:calendar-month" class="size-3.5" aria-hidden="true" />
               <time datetime={data.date.toISOString()}>发布于 {formatDate(data.date)}</time>
@@ -131,11 +134,11 @@ const showToc = data.toc !== false && !data.categories.includes('小游戏');
         {
           older ? (
             <Card as="a" href={`/posts/${older.id}/`} class="group p-4">
-              <span class="flex items-center gap-1 text-xs text-sub">
+              <span class="flex items-center gap-1 text-note text-sub">
                 <Icon name="material-symbols:keyboard-arrow-left" class="size-4" aria-hidden="true" />
                 上一篇
               </span>
-              <span class="mt-1 line-clamp-1 block text-sm text-ink group-hover:text-wash-pink-deep">
+              <span class="mt-1 line-clamp-1 block text-base text-ink group-hover:text-wash-pink-deep">
                 {older.data.title}
               </span>
             </Card>
@@ -146,11 +149,11 @@ const showToc = data.toc !== false && !data.categories.includes('小游戏');
         {
           newer && (
             <Card as="a" href={`/posts/${newer.id}/`} class="group p-4 text-right">
-              <span class="flex items-center justify-end gap-1 text-xs text-sub">
+              <span class="flex items-center justify-end gap-1 text-note text-sub">
                 下一篇
                 <Icon name="material-symbols:keyboard-arrow-right" class="size-4" aria-hidden="true" />
               </span>
-              <span class="mt-1 line-clamp-1 block text-sm text-ink group-hover:text-wash-pink-deep">
+              <span class="mt-1 line-clamp-1 block text-base text-ink group-hover:text-wash-pink-deep">
                 {newer.data.title}
               </span>
             </Card>
@@ -174,3 +177,25 @@ const showToc = data.toc !== false && !data.categories.includes('小游戏');
   </Container>
   <BackToTop />
 </BaseLayout>
+
+<style>
+  /* 文章标题是五档字号（D2）的唯一例外，原因写在前面：display 档是给 6–10 字的页面标题
+     准备的，31 字的中文长标题在 60px 下断成 3 行反而更难读。长标题的换行约束优先于
+     刻度整齐：390 宽 28px，1440 宽封顶 40px，大约每行 17–20 个汉字。 */
+  .post-title {
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    font-weight: 700;
+    letter-spacing: 0;
+    line-height: 1.3;
+  }
+
+  /* 正文列（--measure = 36em = 576px @16px 正文）与标题共用一条左边缘。面板取 46rem：
+     1440 宽实测文章栏 840px、面板 736px（居中，两侧各 52px）、内容盒 656px（lg:p-10 各 40px）。
+     不把面板铺满 840px —— 否则正文右侧会空出 264px 的整列死区；也不只居中正文：
+     正文一旦居中，标题与元信息的左边缘就会和正文错开约 40px，读起来像排版事故。
+     代价是正文右侧留 80px 余量（36em 量度之外的面板余宽），是行尾之后的留白，不是空列。 */
+  .post-panel {
+    max-width: 46rem;
+    margin-inline: auto;
+  }
+</style>

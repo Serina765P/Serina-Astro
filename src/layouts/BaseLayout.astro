@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
+import '../styles/motion.css';
 import '../styles/music.css';
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
@@ -135,7 +136,7 @@ const heroFontBuilt = existsSync(path.join(process.cwd(), 'public', 'fonts', 'he
     </div>
     <a
       href="#main"
-      class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-skip focus:rounded-full focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:text-ink focus:shadow-card"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-skip focus:rounded-full focus:bg-surface focus:px-4 focus:py-2 focus:text-base focus:text-ink"
     >
       跳到正文
     </a>
@@ -149,6 +150,9 @@ const heroFontBuilt = existsSync(path.join(process.cwd(), 'public', 'fonts', 'he
     {readingProgress && <ReadingProgress />}
     <script>
       import '../scripts/music-loader';
+    </script>
+    <script>
+      import '../scripts/motion';
     </script>
     <script is:inline>
       (function () {

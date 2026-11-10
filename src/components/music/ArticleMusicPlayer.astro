@@ -34,7 +34,7 @@ const playlistSrc = `${import.meta.env.BASE_URL}${PLAYLIST_ENDPOINT_PATH}`;
 ---
 
 <section
-  class="music-card rounded-2xl border border-line bg-surface p-4 shadow-card sm:p-5"
+  class="music-card rounded-2xl border border-line bg-surface p-4 sm:p-5"
   data-music-player
   data-music-src={mode === 'playlist' ? playlistSrc : undefined}
   data-state="idle"
@@ -55,11 +55,11 @@ const playlistSrc = `${import.meta.env.BASE_URL}${PLAYLIST_ENDPOINT_PATH}`;
           decoding="async"
         />
         <div class="min-w-0">
-          <p class="text-xs text-sub">{mode === 'track' ? '网易云音乐 · 单曲' : '网易云音乐 · 歌单'}</p>
-          <p class="mt-0.5 truncate text-sm font-semibold text-ink" data-music-title>
+          <p class="text-note text-sub">{mode === 'track' ? '网易云音乐 · 单曲' : '网易云音乐 · 歌单'}</p>
+          <p class="mt-0.5 truncate text-base font-semibold text-ink" data-music-title>
             {initial.title}
           </p>
-          <p class="truncate text-xs text-sub" data-music-artist>{initial.artist}</p>
+          <p class="truncate text-note text-sub" data-music-artist>{initial.artist}</p>
         </div>
       </div>
 
@@ -71,7 +71,7 @@ const playlistSrc = `${import.meta.env.BASE_URL}${PLAYLIST_ENDPOINT_PATH}`;
 
       <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
         <a
-          class="text-xs text-sub underline underline-offset-2 hover:text-wash-clay-deep"
+          class="text-note text-sub underline underline-offset-2 hover:text-wash-clay-deep"
           href={platformHref}
           target="_blank"
           rel="noopener noreferrer"

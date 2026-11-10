@@ -11,7 +11,8 @@ const current = Astro.url.pathname;
 const isActive = (href: string) => (href === '/' ? current === '/' : current.startsWith(href));
 ---
 
-<header class="sticky top-0 z-nav border-b border-line bg-nav backdrop-blur-md backdrop-saturate-150">
+<!-- 去 1px 下边框（D3）：吸顶头用不透明 --nav-bg 与正文分色阶，分隔不靠线条 -->
+<header class="sticky top-0 z-nav bg-nav">
   <!-- 与页脚、首页/归档/分类/标签页共用同一个 Container 档位（standard = 64rem）：
        原先 w-full + lg:px-10 没有任何上限，宽屏下站点名/图标贴视口两端，而正文与页脚居中，
        视觉上等于两套网格；1024px 处内边距还比 Container 多 16px，左边缘也对不齐。
@@ -27,21 +28,24 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
         height={64}
         layout="fixed"
         loading="eager"
-        class="size-8 shrink-0 rounded-full shadow-card"
+        class="size-8 shrink-0 rounded-full"
       />
       <span class="truncate tracking-[0.12em] text-ink">{SITE.title}</span>
     </a>
 
-    <nav class="hidden items-center gap-1 lg:flex" aria-label="主导航">
+    <!-- 导航不收缩、链接不换行：16px（D2 的 base 档）比原来的 14px 宽，回退字体下
+         8 条链接 + 图标在 1024 容器里会各自折成两行。图标内距与字距都收紧到最小，
+         仍然放不下时再拆图标 —— 导航文字本身已经说清楚，图标只是重复。 -->
+    <nav class="hidden shrink-0 items-center gap-1 lg:flex" aria-label="主导航">
       {
         NAV.map((item) => (
           <a
             href={item.href}
             aria-current={isActive(item.href) ? 'page' : undefined}
             class:list={[
-              'flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm transition-colors',
+              'flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-3 py-1.5 text-base transition-colors',
               isActive(item.href)
-                ? 'bg-surface font-medium text-ink shadow-card'
+                ? 'bg-surface font-medium text-ink'
                 : 'text-sub hover:bg-surface-2 hover:text-ink',
             ]}
           >
@@ -78,11 +82,12 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
           />
         </summary>
 
-        <!-- 面板：原先继承 header 的半透明 --nav-bg + 模糊底，展开时正文会透上来（P2-14） -->
+        <!-- 面板：走实心 --surface，与头部（不透明 --nav-bg）再差一档色阶，
+             展开时既不透视正文、也能看出面板边界（P2-14 / D3 去玻璃）。 -->
         <nav
           id="mobile-menu"
           aria-label="移动端导航"
-          class="absolute inset-x-0 top-full border-t border-b border-line bg-surface px-4 pt-2 pb-4"
+          class="absolute inset-x-0 top-full bg-surface px-4 pt-2 pb-4"
         >
           <ul class="grid grid-cols-2 gap-1">
             {
@@ -92,7 +97,7 @@ const isActive = (href: string) => (href === '/' ? current === '/' : current.sta
                     href={item.href}
                     aria-current={isActive(item.href) ? 'page' : undefined}
                     class:list={[
-                      'flex items-center gap-2 rounded-2xl px-3 py-2 text-sm transition-colors',
+                      'flex items-center gap-2 rounded-2xl px-3 py-2 text-base transition-colors',
                       isActive(item.href)
                         ? 'bg-surface-2 font-medium text-ink'
                         : 'text-sub hover:bg-surface-2',

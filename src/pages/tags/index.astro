@@ -18,7 +18,7 @@ for (const post of posts) {
 }
 const sorted = [...tags.values()].sort((a, b) => b.count - a.count);
 
-// 按文章数量决定字号（2.6rem → 0.95rem 之间），克制的标签云
+// 按文章数量决定字号（1.8rem → 0.95rem 之间，连续刻度而非五档 —— 这里的字号本身就是「热度」信息），克制的标签云
 const max = Math.max(...sorted.map((t) => t.count), 1);
 const min = Math.min(...sorted.map((t) => t.count), 1);
 const fontSize = (count: number) => {
@@ -35,17 +35,17 @@ const fontSize = (count: number) => {
     {sorted.length === 0 ? (
       <p class="empty-state mt-6">暂无标签。</p>
     ) : (
-      <ul class="flex flex-wrap gap-x-5 gap-y-3" aria-label="全部标签">
+      <ul class="flex flex-wrap gap-x-5 gap-y-3" aria-label="全部标签" data-motion>
       {
         sorted.map(({ name, count }) => (
-          <li>
+          <li data-motion-item>
             <a
               href={`/tags/${tagSlug(name)}/`}
               class="inline-flex items-baseline gap-1.5 text-wash-pink-deep transition-colors hover:text-wash-rose-deep"
               style={`font-size: ${fontSize(count)};`}
             >
               <span class="font-medium"># {name}</span>
-              <span class="text-xs text-sub tabular-nums">{count}</span>
+              <span class="text-note text-sub tabular-nums">{count}</span>
             </a>
           </li>
         ))

@@ -1,23 +1,24 @@
 ---
 /**
- * 页面标题块基元（P1-1）：把 8 处「h1 + 可选 eyebrow / subtitle」的字面重复收敛到一处。
- * - eyebrow：标题上方的小字（如「分类」「标签」），小字号 + 宽字距；存在时 h1 自动上移 1 档间距
- * - subtitle：标题下方的说明（如「共 N 篇文章」），统一 mt-2 text-sm text-sub
- * - class：覆盖 <header> 自身的布局类（默认 mb-8；搜索页用 mb-6）。
- *   宽度不归它管 —— 页面级宽度由 <Container> 提供（S12 起）
+ * 页面标题块基元（P1-1）：把各页「h1 + 可选 subtitle」的字面重复收敛到一处。
+ * - h1：text-display —— 页面级标题是全站最大的一档（D2），不再按页面各写 text-3xl / text-[clamp()]；
+ *   字距归零，标题靠字号与字重立住，不靠 tracking 拉开
+ * - 不再提供 eyebrow：标题上方的小标签是探针判定的装饰性 kicker，信息应由标题或 subtitle 承担
+ * - subtitle：标题下方的说明（如「共 N 篇文章」），它是说明句、要能读，故走 text-base 而不是 note 档
+ * - class：覆盖 <header> 自身的布局类。默认 mb-10（2.5rem）—— 标题到内容的间距，不是分区间距；
+ *   --space-section 只负责分节之间（1440 宽 88px），放到这里会在标题与它的列表之间撑出空洞。
+ *   搜索页用 mb-6。宽度不归它管 —— 页面级宽度由 <Container> 提供（S12 起）
  */
 interface Props {
   title: string;
-  eyebrow?: string;
   subtitle?: string;
   class?: string;
 }
 
-const { title, eyebrow, subtitle, class: className = 'mb-8' } = Astro.props;
+const { title, subtitle, class: className = 'mb-10' } = Astro.props;
 ---
 
 <header class={className}>
-  {eyebrow && <p class="text-sm tracking-[0.2em] text-sub">{eyebrow}</p>}
-  <h1 class:list={['text-3xl tracking-[0.15em] text-ink', eyebrow && 'mt-1']}>{title}</h1>
-  {subtitle && <p class="mt-2 text-sm text-sub">{subtitle}</p>}
+  <h1 class="text-display tracking-normal text-ink">{title}</h1>
+  {subtitle && <p class="mt-2 text-base text-sub">{subtitle}</p>}
 </header>

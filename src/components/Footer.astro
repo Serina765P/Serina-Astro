@@ -9,7 +9,7 @@ const washes = ['var(--wash-pink)', 'var(--wash-mist)', 'var(--wash-sage)', 'var
 ---
 
 <footer class="pb-10 pt-4">
-  <Container width="standard" class="text-center text-sm text-sub">
+  <Container width="standard" class="text-center text-base text-sub">
     <div class="mb-5 flex justify-center gap-2.5" aria-hidden="true">
       {washes.map((color) => <i class="h-2 w-8 rounded-full opacity-65" style={`background:${color}`} />)}
     </div>
@@ -27,7 +27,7 @@ const washes = ['var(--wash-pink)', 'var(--wash-mist)', 'var(--wash-sage)', 'var
       {" "}· Powered by{" "}
       <a href="https://astro.build" target="_blank" rel="noopener" class="transition-colors hover:text-wash-pink-deep">Astro</a>
     </p>
-    <p class="mt-1 text-xs text-sub">
+    <p class="mt-1 text-note text-sub">
       {SITE_META.description.split('\n')[0]}
     </p>
   </Container>

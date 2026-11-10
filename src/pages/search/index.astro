@@ -24,13 +24,13 @@ import { SITE } from '../../site.config';
         aria-label="搜索全站"
         enterkeyhint="search"
         autocomplete="off"
-        class="w-full rounded-full border border-line bg-surface py-2.5 pr-4 pl-11 text-sm text-ink transition-colors placeholder:text-sub focus:border-wash-pink-deep"
+        class="w-full rounded-full border border-line bg-surface py-2.5 pr-4 pl-11 text-base text-ink transition-colors placeholder:text-sub focus:border-wash-pink-deep"
       />
     </div>
 
     <!-- 状态行必须常驻可访问树：display:none 的 live region 不会被播报。
          高度用 min-h-4 预留一行，避免出现/消失时把下方结果推来推去。 -->
-    <p id="search-status" class="mt-3 min-h-4 text-xs text-sub tabular-nums" aria-live="polite"></p>
+    <p id="search-status" class="mt-3 min-h-4 text-note text-sub tabular-nums" aria-live="polite"></p>
     <ul id="search-results" class="mt-4 space-y-3 pb-16"></ul>
   </Container>
 </BaseLayout>
@@ -105,7 +105,7 @@ import { SITE } from '../../site.config';
               a.textContent = (result.meta && result.meta.title) || result.url;
               var excerpt = document.createElement('div');
               excerpt.className =
-                'mt-1 text-sm text-sub [&_mark]:rounded-sm [&_mark]:bg-accent-200 [&_mark]:text-accent-900 dark:[&_mark]:bg-accent-700 dark:[&_mark]:text-accent-50';
+                'mt-1 text-base text-sub [&_mark]:rounded-sm [&_mark]:bg-accent-200 [&_mark]:text-accent-900 dark:[&_mark]:bg-accent-700 dark:[&_mark]:text-accent-50';
               excerpt.innerHTML = result.excerpt;
               li.append(a, excerpt);
               resultsEl.appendChild(li);

@@ -4,7 +4,8 @@ import { Icon } from 'astro-icon/components';
 /**
  * 标签 chip 基元（P1-3）：4 处标签 / 社交 chip 单点定义。
  *
- * 三档尺寸不是笔误，别为了「统一」抹平 —— 卡片与文章页的 chip 最紧凑（px-2.5 py-0.5）、
+ * 三档尺寸不是笔误，别为了「统一」抹平 —— 字号统一走 text-note 一档（D2），
+ * 差别只在盒子的内边距：卡片与文章页的 chip 最紧凑（px-2.5 py-0.5）、
  * 首页标签云略大（px-3.5 py-1）、友链社交 chip 因带图标再高一档（px-3.5 py-1.5）。
  * hover 一律走 chip 语义 token（亮暗各一套，暗色不再闪白，见 P0-1）。
  */
@@ -24,9 +25,9 @@ const { href, label, size = 'compact', icon, class: className = '', ...rest } = 
 
 const SIZES = {
   // min-h-6：标签本身很小，但可点区域不低于 WCAG 2.5.8 的 24×24
-  compact: 'inline-flex min-h-6 items-center px-2.5 py-0.5 text-xs text-sub',
-  cloud: 'inline-flex items-center px-3.5 py-1 text-xs text-chip-fg',
-  social: 'inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs text-chip-fg',
+  compact: 'inline-flex min-h-6 items-center px-2.5 py-0.5 text-note text-sub',
+  cloud: 'inline-flex items-center px-3.5 py-1 text-note text-chip-fg',
+  social: 'inline-flex items-center gap-1.5 px-3.5 py-1.5 text-note text-chip-fg',
 } as const;
 ---
 

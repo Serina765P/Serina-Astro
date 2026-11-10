@@ -2,7 +2,6 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Container from '../../components/primitives/Container.astro';
-import Card from '../../components/primitives/Card.astro';
 import PageHeader from '../../components/primitives/PageHeader.astro';
 import { categoryColor, categorySlug } from '../../site.config';
 import { SITE } from '../../site.config';
@@ -24,28 +23,71 @@ const sorted = [...categories.values()].sort((a, b) => b.count - a.count);
   <Container width="standard">
     <PageHeader title="分类" />
 
-    {sorted.length === 0 ? (
-      <p class="empty-state mt-6">暂无分类。</p>
-    ) : (
-      <ul class="grid gap-3 sm:grid-cols-2">
-      {
-        sorted.map(({ name, count }) => (
-          <li>
-            <Card
-              as="a"
-              href={`/categories/${categorySlug(name)}/`}
-              class="flex items-center justify-between px-5 py-4"
-            >
-              <span class="flex items-center gap-2.5 text-body">
-                <span aria-hidden="true" class="size-2.5 rounded-full" style={`background:${categoryColor(name)}`}></span>
-                {name}
-              </span>
-              <span class="text-sm text-sub tabular-nums">{count} 篇</span>
-            </Card>
-          </li>
-        ))
-      }
-      </ul>
-    )}
+    {
+      sorted.length === 0 ? (
+        <p class="empty-state mt-6">暂无分类。</p>
+      ) : (
+        <ul class="category-list" aria-label="全部分类" data-motion>
+          {sorted.map(({ name, count }) => (
+            <li data-motion-item>
+              <a href={`/categories/${categorySlug(name)}/`} class="category-row">
+                <span
+                  aria-hidden="true"
+                  class="category-mark"
+                  style={`background:${categoryColor(name)}`}
+                />
+                <span class="category-name">{name}</span>
+                <span class="category-count">{count} 篇</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
   </Container>
 </BaseLayout>
+
+<style>
+  /* 分类页（D3）：六个分类不值得两列卡片 —— 卡片网格会把 6 行内容摊成 3 行空白。
+     单列索引行：名字在左、篇数在右，行间不加分隔线，只用留白与 hover 底色。 */
+  .category-list {
+    display: grid;
+    gap: 0.25rem;
+    margin-inline: -0.75rem;
+  }
+
+  .category-row {
+    display: flex;
+    min-height: 3.25rem;
+    align-items: center;
+    gap: 0.875rem;
+    border-radius: 0;
+    padding: 0.875rem 0.75rem;
+    transition: background-color 180ms ease;
+  }
+
+  .category-row:hover,
+  .category-row:focus-visible {
+    background: var(--brand-wash);
+  }
+
+  .category-mark {
+    width: 0.5rem;
+    height: 0.5rem;
+    flex: none;
+    border-radius: 9999px;
+  }
+
+  .category-name {
+    color: var(--ink);
+    font-size: var(--text-lead);
+    line-height: 1.4;
+  }
+
+  .category-count {
+    margin-left: auto;
+    color: var(--sub);
+    font-size: var(--text-note);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

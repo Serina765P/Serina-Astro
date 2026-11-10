@@ -40,6 +40,7 @@ const cover = getPostCover(post.id, post.data.cover);
 <Card
   as="article"
   lift={!isDirectory}
+  data-tilt={isDirectory ? '' : undefined}
   class:list={[
     'group relative overflow-hidden',
     isDirectory ? (cover ? 'directory directory-with-cover' : 'directory') : '',
@@ -63,13 +64,17 @@ const cover = getPostCover(post.id, post.data.cover);
   <span
     aria-hidden="true"
     class:list={[
-      'absolute left-0 w-[5px] rounded-r-full',
-      isDirectory ? 'top-0 bottom-0' : cover ? 'top-44 bottom-0 sm:top-52' : 'top-5 bottom-5',
+      'absolute left-0',
+      isDirectory
+        ? 'top-0 bottom-0 w-0.5 rounded-full'
+        : cover
+          ? 'top-44 bottom-0 w-[5px] rounded-r-full sm:top-52'
+          : 'top-5 bottom-5 w-[5px] rounded-r-full',
     ]}
     style={`background:${spine}`}
   />
   <div class:list={['relative', cover && !isDirectory ? 'p-5 sm:p-6 sm:pl-7' : '']}>
-    <Heading class="text-lg leading-snug sm:text-xl">
+    <Heading class="text-lead">
       <a
         href={href}
         class:list={[
@@ -90,7 +95,7 @@ const cover = getPostCover(post.id, post.data.cover);
       </a>
     </Heading>
 
-    <div class="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-sub">
+    <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-note text-sub">
       {
         post.data.pinned && <span class="rounded-full bg-chip px-2.5 py-0.5 text-chip-fg">置顶</span>
       }
@@ -117,13 +122,13 @@ const cover = getPostCover(post.id, post.data.cover);
 
     {
       post.data.description && (
-        <p class="relative mt-3 line-clamp-2 text-sm leading-relaxed text-sub">{post.data.description}</p>
+        <p class="relative mt-2.5 line-clamp-2 text-base leading-normal text-body">{post.data.description}</p>
       )
     }
 
     {
       post.data.tags.length > 0 && (
-        <ul class="relative mt-3.5 flex flex-wrap gap-1.5" aria-label="标签">
+        <ul class="relative mt-3 flex flex-wrap gap-1.5" aria-label="标签">
           {post.data.tags.slice(0, 4).map((tag) => (
             <li>
               <TagChip href={`/tags/${tagSlug(tag)}/`} label={`# ${tag}`} />
@@ -136,18 +141,20 @@ const cover = getPostCover(post.id, post.data.cover);
 </Card>
 
 <style>
+  /* 目录式变体：卡片本身已无描边/圆角/阴影（card-surface），这里只负责
+     去掉卡片底色、把悬停反馈换成品牌浅底。
+     transform 的缓动属于 tilt（motion.ts）：必须写在这里，因为本规则带 Astro 作用域属性
+     （.directory[data-astro-cid-*]，特异性 0,2,0）会压过 motion.css 里裸的 [data-tilt]（0,1,0），
+     写在那边的 transition 实测永远不生效（计算值只剩 background-color）。 */
   .directory {
-    border-radius: 0;
-    border-inline: 0;
-    border-top-color: transparent;
     background: transparent;
-    box-shadow: none;
-    transition: background-color 180ms ease, border-color 180ms ease;
+    transition:
+      background-color 180ms ease,
+      transform 160ms ease-out;
   }
 
   .directory:hover,
   .directory:focus-within {
-    border-bottom-color: color-mix(in srgb, var(--brand) 44%, var(--line));
     background: var(--brand-wash);
   }
 
@@ -189,14 +196,23 @@ const cover = getPostCover(post.id, post.data.cover);
     min-height: 10rem;
   }
 
+  /* 行与行之间只用 padding-block 分隔（1.25rem），不再有 gap，也没有 1px 线：
+     相邻两行得到 2.5rem 的呼吸，hover 的 --brand-wash 只盖住行本身。 */
   .directory-with-cover > div {
     grid-column: 2;
     grid-row: 1;
-    padding: 1.25rem 1.25rem 1.25rem 1.5rem;
+    padding: 1.25rem;
   }
 
   .directory:not(.directory-with-cover) > div {
-    padding: 1.25rem 1.5rem 1.25rem 1.25rem;
+    padding-block: 1.25rem;
+    padding-inline: 1.5rem 1.25rem;
+  }
+
+  /* 描述是段落，量度跟正文同一把尺（--measure 36em，这里 16px → 576px）：
+     不设上限时 16px 的中文在 ~780px 的行宽上会跑到 110+ 字/行。 */
+  .directory p {
+    max-width: var(--measure);
   }
 
   @media (max-width: 48rem) {
@@ -210,7 +226,7 @@ const cover = getPostCover(post.id, post.data.cover);
 
     .directory-with-cover > div,
     .directory:not(.directory-with-cover) > div {
-      padding: 1rem 0.75rem 1rem 1rem;
+      padding: 1.25rem 0.75rem 1.25rem 1rem;
     }
   }
 

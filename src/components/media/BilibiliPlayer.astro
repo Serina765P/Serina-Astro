@@ -32,7 +32,7 @@ const { bvid, page, playerUrl, videoUrl, title, cover } = bilibiliEmbed(Astro.pr
   data-state="facade"
 >
   <div
-    class="relative aspect-video w-full overflow-hidden rounded-2xl border border-line bg-code-bg shadow-card"
+    class="relative aspect-video w-full overflow-hidden rounded-2xl border border-line bg-code-bg"
     data-bilibili-stage
     tabindex="-1"
   >
@@ -66,14 +66,14 @@ const { bvid, page, playerUrl, videoUrl, title, cover } = bilibiliEmbed(Astro.pr
       >
         <Icon name="simple-icons:bilibili" class="size-7 sm:size-8" />
       </span>
-      <span class="line-clamp-2 max-w-full text-pretty text-sm font-semibold text-on-scrim">
+      <span class="line-clamp-2 max-w-full text-pretty text-base font-semibold text-on-scrim">
         <span class="sr-only">播放：</span>{title}
       </span>
-      <span class="text-xs text-on-scrim/90 max-[23rem]:hidden">点击加载官方播放器 · 背景音乐将暂停</span>
+      <span class="text-note text-on-scrim/90 max-[23rem]:hidden">点击加载官方播放器 · 背景音乐将暂停</span>
     </a>
 
     <div class="absolute inset-0" data-bilibili-error hidden>
-      <p class="grid size-full place-items-center p-4 text-center text-sm text-on-scrim">
+      <p class="grid size-full place-items-center p-4 text-center text-base text-on-scrim">
         <span class="max-w-md text-pretty">
           播放器没有加载出来，网络、地区限制或浏览器扩展都可能拦下它。
           <a
@@ -88,7 +88,7 @@ const { bvid, page, playerUrl, videoUrl, title, cover } = bilibiliEmbed(Astro.pr
     <p class="sr-only" role="status" data-bilibili-status></p>
   </div>
 
-  <figcaption class="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-sub">
+  <figcaption class="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-note text-sub">
     <a
       href={videoUrl}
       class="underline decoration-line underline-offset-4 hover:text-wash-rose-deep"

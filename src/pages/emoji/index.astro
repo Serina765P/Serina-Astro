@@ -32,8 +32,8 @@ const examples = [
     </div>
 
     <section class="emoji-composer mt-6" aria-labelledby="emoji-preview-title">
-      <h2 id="emoji-preview-title" class="text-sm font-semibold text-ink">试写预览</h2>
-      <p class="mt-1 text-xs text-sub">输入普通文字和短代码，例如 <code>:765pro_wink:</code> 或 <code>:ml_太好了:</code></p>
+      <h2 id="emoji-preview-title" class="text-base font-semibold text-ink">试写预览</h2>
+      <p class="mt-1 text-note text-sub">输入普通文字和短代码，例如 <code>:765pro_wink:</code> 或 <code>:ml_太好了:</code></p>
       <label class="sr-only" for="emoji-composer-input">输入要预览的内容</label>
       <textarea id="emoji-composer-input" rows="2" spellcheck="false">今天状态不错 :765pro_微笑: 做完事情来喝茶 :afterglow_饮茶: :ml_太好了:</textarea>
       <p class="emoji-preview-label">预览</p>
@@ -48,14 +48,14 @@ const examples = [
 
     <section id="panel-emoji" role="tabpanel" aria-labelledby="emoji-tab">
       <section class="mt-9" aria-labelledby="emoji-samples-title">
-        <h2 id="emoji-samples-title" class="text-sm font-semibold text-ink">行内效果</h2>
+        <h2 id="emoji-samples-title" class="text-base font-semibold text-ink">行内效果</h2>
         <div class="emoji-examples mt-3">
           {examples.map((example) => <p set:html={renderShuoshuoContent(example)} />)}
         </div>
       </section>
 
       <section class="mt-10" aria-labelledby="emoji-catalog-title">
-        <h2 id="emoji-catalog-title" class="text-sm font-semibold text-ink">全部表情</h2>
+        <h2 id="emoji-catalog-title" class="text-base font-semibold text-ink">全部表情</h2>
         <form id="emoji-filter" class="emoji-filter mt-3" role="search">
           <label class="emoji-search">
             <span class="sr-only">搜索表情</span>
@@ -70,7 +70,7 @@ const examples = [
             </select>
           </label>
         </form>
-        <p id="emoji-status" class="mt-3 text-xs text-sub" aria-live="polite">共 {EMOJI.length} 张表情</p>
+        <p id="emoji-status" class="mt-3 text-note text-sub" aria-live="polite">共 {EMOJI.length} 张表情</p>
         <div class="emoji-set-groups mt-4">
           {sets.map((set) => (
             <section class="emoji-set-group" data-emoji-set-group data-set={set.key} aria-labelledby={`emoji-set-${set.key}`}>
@@ -105,8 +105,8 @@ const examples = [
 
     <section id="panel-sticker" role="tabpanel" aria-labelledby="sticker-tab" hidden>
       <section class="mt-9" aria-labelledby="sticker-catalog-title">
-        <h2 id="sticker-catalog-title" class="text-sm font-semibold text-ink">全部贴纸</h2>
-        <p class="mt-1 text-xs text-sub">悬停播放动画，单击复制短代码，右上角按钮下载动图。</p>
+        <h2 id="sticker-catalog-title" class="text-base font-semibold text-ink">全部贴纸</h2>
+        <p class="mt-1 text-note text-sub">悬停播放动画，单击复制短代码，右上角按钮下载动图。</p>
         <form id="sticker-filter" class="emoji-filter mt-3" role="search">
           <label class="emoji-search">
             <span class="sr-only">搜索贴纸</span>
@@ -114,9 +114,9 @@ const examples = [
             <input id="sticker-query" type="search" placeholder="搜索名称、台词或短代码…" autocomplete="off" />
           </label>
         </form>
-        <p id="sticker-status" class="mt-3 text-xs text-sub" aria-live="polite">共 {STICKER.length} 张贴纸</p>
+        <p id="sticker-status" class="mt-3 text-note text-sub" aria-live="polite">共 {STICKER.length} 张贴纸</p>
         <div id="sticker-grid" class="sticker-grid mt-4"></div>
-        <noscript><p class="mt-4 text-sm text-sub">贴纸图鉴需要 JavaScript 才能显示。</p></noscript>
+        <noscript><p class="mt-4 text-base text-sub">贴纸图鉴需要 JavaScript 才能显示。</p></noscript>
         <p id="sticker-empty" class="empty-state mt-7" hidden>没有找到匹配的贴纸。</p>
       </section>
     </section>
@@ -343,14 +343,14 @@ const examples = [
     @apply flex gap-1 rounded-xl border border-line bg-surface p-1;
   }
   .emoji-tab {
-    @apply flex min-h-10 flex-1 items-center justify-center gap-2 rounded-lg px-3 text-sm font-medium text-sub transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wash-pink-deep;
+    @apply flex min-h-10 flex-1 items-center justify-center gap-2 rounded-lg px-3 text-base font-medium text-sub transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wash-pink-deep;
     cursor: pointer;
   }
   .emoji-tab[aria-selected='true'] {
     @apply bg-surface-2 text-ink;
   }
   .emoji-tab-count {
-    @apply rounded-full bg-chip px-2 py-0.5 text-[0.65rem] font-normal text-chip-fg;
+    @apply rounded-full bg-chip px-2 py-0.5 text-note font-normal text-chip-fg;
   }
   .emoji-composer,
   .emoji-examples {
@@ -363,19 +363,19 @@ const examples = [
     }
   }
   .emoji-composer textarea {
-    @apply mt-3 block w-full resize-y rounded-xl border border-line bg-surface-2 px-3 py-2.5 text-sm leading-relaxed text-body outline-none transition-colors focus:border-wash-pink-deep;
+    @apply mt-3 block w-full resize-y rounded-xl border border-line bg-surface-2 px-3 py-2.5 text-base leading-relaxed text-body outline-none transition-colors focus:border-wash-pink-deep;
   }
   .emoji-composer code {
     @apply rounded bg-surface-2 px-1 py-0.5 font-mono text-[0.9em] text-ink;
   }
   .emoji-preview-label {
-    @apply mt-3 text-xs text-sub;
+    @apply mt-3 text-note text-sub;
   }
   .emoji-preview {
-    @apply mt-1 min-h-10 whitespace-pre-wrap break-words rounded-xl bg-surface-2 px-3 py-2 text-sm leading-relaxed text-body;
+    @apply mt-1 min-h-10 whitespace-pre-wrap break-words rounded-xl bg-surface-2 px-3 py-2 text-base leading-relaxed text-body;
   }
   .emoji-examples p {
-    @apply m-0 py-2 text-sm leading-relaxed text-body;
+    @apply m-0 py-2 text-base leading-relaxed text-body;
   }
   .emoji-examples p + p {
     @apply border-t border-line;
@@ -388,7 +388,7 @@ const examples = [
   }
   .emoji-search input,
   .emoji-set-select select {
-    @apply min-w-0 flex-1 bg-transparent text-sm text-ink outline-none;
+    @apply min-w-0 flex-1 bg-transparent text-base text-ink outline-none;
   }
   .emoji-search input::placeholder {
     color: var(--sub);
@@ -400,10 +400,10 @@ const examples = [
     @apply cursor-pointer;
   }
   .emoji-copy-status {
-    @apply min-h-5 text-xs text-wash-sage-deep;
+    @apply min-h-5 text-note text-wash-sage-deep;
   }
   .emoji-manual-wrap {
-    @apply flex flex-wrap items-center gap-2 text-xs text-sub;
+    @apply flex flex-wrap items-center gap-2 text-note text-sub;
   }
   .emoji-manual-wrap input {
     @apply min-h-9 rounded-lg border border-line bg-surface px-2 font-mono text-ink;
@@ -418,10 +418,10 @@ const examples = [
     min-width: 0;
   }
   .emoji-set-heading {
-    @apply mb-3 flex items-center gap-2 text-sm font-semibold text-ink;
+    @apply mb-3 flex items-center gap-2 text-base font-semibold text-ink;
   }
   .emoji-set-count {
-    @apply rounded-full bg-chip px-2 py-0.5 text-[0.65rem] font-normal text-chip-fg;
+    @apply rounded-full bg-chip px-2 py-0.5 text-note font-normal text-chip-fg;
   }
   .emoji-tile {
     @apply flex min-w-0 flex-col items-center rounded-xl border border-line bg-surface p-3 text-center transition-colors hover:border-wash-pink-deep hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wash-pink-deep;
@@ -433,10 +433,10 @@ const examples = [
     object-fit: contain;
   }
   .emoji-tile-label {
-    @apply mt-2 max-w-full truncate text-xs font-medium text-ink;
+    @apply mt-2 max-w-full truncate text-note font-medium text-ink;
   }
   .emoji-tile code {
-    @apply mt-1 max-w-full truncate font-mono text-[0.62rem] text-sub;
+    @apply mt-1 max-w-full truncate font-mono text-note text-sub;
   }
   .sticker-grid {
     @apply grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4;

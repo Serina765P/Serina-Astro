@@ -30,7 +30,7 @@ const sorted = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf(
 
 <BaseLayout title={`标签：${name} · ${SITE.title}`} description={`标签「${name}」下的文章`} pathname={`/tags/${tagSlug(name)}/`}>
   <Container width="standard">
-    <PageHeader title={`# ${name}`} eyebrow="标签" subtitle={`共 ${sorted.length} 篇文章`} />
+    <PageHeader title={`# ${name}`} subtitle={`共 ${sorted.length} 篇文章`} />
 
     <div class="space-y-4">
       {sorted.map((post) => <PostCard post={post} />)}

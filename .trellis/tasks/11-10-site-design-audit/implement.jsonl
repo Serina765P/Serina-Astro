@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/frontend/index.md", "reason": "技术栈、Pre-Development Checklist、token/层序约束"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "组件与样式约定，primitive 复用与 a11y"}
+{"file": ".trellis/spec/frontend/client-scripts.md", "reason": "ClientRouter 生命周期与幂等绑定模式"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "门禁命令、对比度阈值、产物断言"}
+{"file": ".trellis/tasks/11-10-site-design-audit/research/inspect-probe-home.md", "reason": "首页探针 11 FAIL/10 WARN 与 triage 结论"}
+{"file": ".trellis/tasks/11-10-site-design-audit/design.md", "reason": "技术设计与决策 D1-D5"}

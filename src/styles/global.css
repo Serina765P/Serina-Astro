@@ -21,7 +21,9 @@
   --sub: #5e6870;
   --on-wash: #1f2930;
   --line: rgba(31, 41, 48, 0.16);
-  --nav-bg: rgba(243, 244, 242, 0.9);
+  /* 吸顶头取不透明底色（去玻璃感）：半透明 + backdrop-blur 会让滚动内容透上来。
+     直接别名 --bg，暗色随 :root.dark 自动跟随，不需要在暗色块里再写一遍。 */
+  --nav-bg: var(--bg);
   --code-bg: #262d34;
   --code-ink: #eef3f5;
 
@@ -82,7 +84,6 @@
   --sub: #aeb9bf;
   --on-wash: #eef2f3;
   --line: rgba(238, 242, 243, 0.16);
-  --nav-bg: rgba(30, 35, 39, 0.9);
   --code-bg: #14191d;
   --code-ink: #e1e8eb;
 
@@ -208,8 +209,8 @@
   --color-accent-900: var(--paint-accent-900);
   --color-accent-950: var(--paint-accent-950);
 
-  --shadow-card: 0 2px 12px rgb(31 41 48 / 0.08);
-  --shadow-card-hover: 0 8px 22px rgb(31 41 48 / 0.13);
+  /* 卡片阴影已删除（D3）：卡片不再浮起，只靠 --surface 与 --bg 的色阶差与页面分开。
+     阴影只留给真正压在别的像素之上的素材（下两条）。 */
   /* 素材阴影（专辑封面 / 灯箱）：收敛 ImasAlbum 与 Lightbox 的硬编码 rgb()
      hover 值先如实照搬现状（纯黑 20%），是否回暖调由消费点一并决定 */
   --shadow-media: 0 2px 10px rgb(31 41 48 / 0.16);
@@ -234,12 +235,43 @@
   --container-content: 51rem;
   --container-standard: 64rem;
   --container-wide: 72rem;
-  /* 语义圆角：取值必须等于实现。card-surface 用的是 rounded-2xl（1rem），
-     这里若写 1.5rem 就只是文档 —— 改它不会有任何视觉变化，反而形成第二份真值。
-     --radius-chip / --radius-panel 目前没有任何消费点，故不保留：需要时先接入 @utility 再加回。 */
-  --radius-card: 1rem;
-  /* 素材圆角（S16）：专辑封面 / 无封面占位 —— 比卡片小一档，小图上比例更合适 */
-  --radius-media: 0.75rem;
+
+  /* ── 字号刻度（D2）：页面级 chrome 与常规正文只渲染这五档，页面/组件里不要再写
+     text-xs / text-lg / text-[0.95rem] 这类散档 —— 档位一多，层级就塌（卡片标题 18px
+     与正文 16px 只差 2px）。密集 UI 里既有的局部字号（代码块、TOC 条目、说说时间线、
+     emoji 图鉴、小游戏、标签云）列在 .trellis/spec/frontend/visual-system.md，属待归并清单，
+     不得再扩大。行高随档位绑定在 --text-*--line-height 上，需要另一套节奏时（标题 vs 正文）
+     才单独写 leading-*。
+       display 页面级 h1（首页 hero / 各页 h1 / 文章 h1）：clamp 到 390 宽 ≈ 36px，1440 宽封顶 60px
+       heading 分区 h2（「最近写下的」「小站索引」）
+       lead    文章列表行标题 / 卡片标题 / 导语
+       base    正文、描述、按钮（Tailwind 自带档，这里只定行高）
+       note    元信息、时间、标签 chip
+     注意别把 token 命名成 body —— --color-body 已经生成了 text-body 这个颜色工具类。 */
+  --text-display: clamp(2.25rem, 5vw, 3.75rem);
+  --text-display--line-height: 1.15;
+  --text-heading: 1.875rem;
+  --text-heading--line-height: 1.25;
+  --text-lead: 1.25rem;
+  --text-lead--line-height: 1.4;
+  --text-base--line-height: 1.75;
+  --text-note: 0.8125rem;
+  --text-note--line-height: 1.5;
+
+  /* ── 分区间距与正文量度（D3）──
+     --space-section：页面分节之间的唯一取值（390 宽 48px，1440 宽 88px），
+       替代按组件各写一档横向/纵向 margin 的做法；首页的 recent-section / site-index
+       都消费它。它只管「节与节之间」—— 分区内部（标题到内容、统计到两栏）一律小于它；
+       页面标题到自己的列表用 PageHeader 的 mb-10，别把分区间距塞进组件内部。
+     --measure：正文行宽 36em（约 36 个中文字符/行）；em 相对 .prose 自己的字号，随档位缩放。 */
+  --space-section: clamp(3rem, 6vw, 5.5rem);
+  --measure: 36em;
+
+  /* 卡片圆角不再是 token：`@utility card-surface` 直接写 `rounded-none`，没有第二个真值；
+     消费点若需要读值，再加 token 并让 recipe 引用它（同 --radius-chip / --radius-panel 的处理）。
+     素材圆角（S16）：专辑封面 / 无封面占位。与卡片同一口径取 0（D3）—— 圆角二选一，不留中间档；
+     全圆只留给 chip / 胶囊（rounded-full 是形状而非卡片语言） */
+  --radius-media: 0;
 
   --font-mono:
     ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, 'Courier New', monospace;
@@ -301,13 +333,16 @@
 }
 
 /* ── 卡片 recipe（P1-2）：Astro 侧走 <Card> 组件，JS 侧（搜索结果 li 由脚本拼 className）走这两条
-   utility，两条消费路径共用同一份定义。card-surface = 静止态外观；card-lift = 悬停抬升。 ── */
+   utility，两条消费路径共用同一份定义。card-surface = 静止态外观；card-lift = 悬停抬升。
+
+   D3：卡片不描边、不投影、不圆角 —— 与页面的分隔只靠 --surface 与 --bg 的色阶差；
+   抬升也只走 transform，不加阴影（阴影留给真正浮在内容之上的素材，见 --shadow-media）。 ── */
 @utility card-surface {
-  @apply rounded-2xl border border-line bg-surface shadow-card;
+  @apply rounded-none bg-surface;
 }
 
 @utility card-lift {
-  @apply transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-card-hover;
+  @apply transition-transform hover:-translate-y-0.5;
 }
 
 /* ── 层级（S17）：Tailwind 的 --z-* 不是命名空间，须用 @utility 转成工具类 ──
@@ -527,7 +562,6 @@
     border-radius: 9999px;
     background: var(--surface);
     color: var(--body);
-    box-shadow: var(--shadow-card);
     opacity: 0;
     pointer-events: none;
     transform: translateY(0.5rem);
@@ -628,12 +662,13 @@
   }
 
   /* 图片预览对话框：整屏遮罩走 --scrim-backdrop；预览图压在 80% 黑上，
-     阴影本来就看不出来，收敛到素材阴影 --shadow-media（S16） */
+     阴影本来就看不出来，收敛到素材阴影 --shadow-media（S16）。
+     圆角与媒体同一口径取 0（D3：--radius-media），不在灯箱里另留一档 */
   .lightbox-dialog {
     @apply m-auto max-w-[92vw] max-h-[92vh] bg-transparent p-0 backdrop:bg-scrim-backdrop backdrop:backdrop-blur-sm;
   }
   .lightbox-dialog img {
-    @apply max-h-[92vh] max-w-[92vw] rounded-2xl object-contain shadow-media;
+    @apply max-h-[92vh] max-w-[92vw] rounded-none object-contain shadow-media;
   }
 
   /* TOC 长目录：容器内滚轮浏览，细滚动条（PostLayout .toc-scroll） */
@@ -652,8 +687,8 @@
     background: transparent;
   }
 
+  /* 说说的筛选栏与卡片之间不画分隔线（D3）：靠留白与控件自身的边界区分 */
   .shuoshuo-tools {
-    border-block: 1px solid var(--line);
     padding-block: 0.75rem;
   }
   .shuoshuo-tools-main {
@@ -667,7 +702,7 @@
   }
   .shuoshuo-tools input,
   .shuoshuo-tools select {
-    @apply min-h-11 border border-line bg-surface text-sm text-ink transition-colors;
+    @apply min-h-11 border border-line bg-surface text-base text-ink transition-colors;
   }
   .shuoshuo-tools input {
     @apply w-full rounded-xl pl-10 pr-3.5;
@@ -681,7 +716,7 @@
   }
   .shuoshuo-submit,
   .shuoshuo-reset {
-    @apply inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-4 text-sm transition-colors;
+    @apply inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-4 text-base transition-colors;
     touch-action: manipulation;
   }
   .shuoshuo-submit {
@@ -691,10 +726,10 @@
     @apply text-sub hover:bg-surface-2 hover:text-ink;
   }
   .shuoshuo-refine {
-    @apply mt-3 border-t border-line pt-3;
+    @apply mt-3 pt-3;
   }
   .shuoshuo-refine summary {
-    @apply flex min-h-9 cursor-pointer list-none items-center justify-between gap-3 text-sm text-body;
+    @apply flex min-h-9 cursor-pointer list-none items-center justify-between gap-3 text-base text-body;
     touch-action: manipulation;
   }
   .shuoshuo-refine summary::-webkit-details-marker {
@@ -796,11 +831,11 @@
   .shuoshuo-card {
     grid-column: 3;
     min-width: 0;
-    padding-bottom: 1.35rem;
-    border-bottom: 1px solid var(--line);
+    padding-bottom: 1.75rem;
   }
   .shuoshuo-title {
-    @apply mb-1 text-base font-semibold text-ink;
+    /* 标题行高单独钉住：--text-base 的行高已改为正文节奏 1.75，标题沿用会显得散 */
+    @apply mb-1 text-base leading-normal font-semibold text-ink;
     text-wrap: balance;
   }
   .shuoshuo-content {
@@ -993,8 +1028,16 @@
    `.prose` 默认调色板 (0,1,0)；字重/引用不正体同理靠特异性取胜，.prose 相关 !important 归零
    （.astro-code 的 bg ! 保留 —— 那是压 shiki 内联样式的，与 typography 无关）。 */
 @layer utilities {
+  /* 正文量度（D3）：36em ≈ 36 个中文字符/行。.prose 的实际字号是 typography 的 1rem（实测 16px），
+     所以 36em = 576px —— 浏览器实测 pcshurufa 首段每行 36 字、正文列宽 576px。
+     之前正文铺满整块面板，1440 宽下测得 133 字符/行 —— 远超可读上限。
+     宽度归这里管，Prose.astro 上不要再写 max-w-none 把它覆盖掉。 */
+  .prose {
+    max-width: var(--measure);
+  }
+
   .prose.prose {
-    --tw-prose-body: var(--body);
+    --tw-prose-body: var(--ink);
     --tw-prose-headings: var(--ink);
     --tw-prose-lead: var(--sub);
     --tw-prose-links: var(--wash-pink-deep);
@@ -1002,7 +1045,7 @@
     --tw-prose-counters: var(--sub);
     --tw-prose-bullets: var(--line);
     --tw-prose-hr: var(--line);
-    --tw-prose-quotes: var(--body);
+    --tw-prose-quotes: var(--ink);
     --tw-prose-quote-borders: var(--wash-mist-deep);
     --tw-prose-captions: var(--sub);
     --tw-prose-kbd: var(--ink);

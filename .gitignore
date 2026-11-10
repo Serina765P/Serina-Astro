@@ -28,6 +28,10 @@ pnpm-debug.log*
 # 视觉回归截图（本地比对用，不进版本库）
 .shots/
 
+# design-taste-frontend 的探针产物（inspect.mjs 的截图与 report.json）
+# 属本地测量数据，不提交；Biome 读本文件忽略它，否则 report.json 的格式会压掉 lint 闸门
+.taste-skill/
+
 # 构建期生成的首页标题字体子集 + 下载缓存（生成物，不进版本库）
 public/fonts/hero-mincho.css
 public/fonts/hero-mincho/

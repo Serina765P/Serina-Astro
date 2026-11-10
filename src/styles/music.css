@@ -306,7 +306,6 @@ media-mute-button[data-muted] .music-icon-muted {
   border: 1px solid var(--line);
   border-radius: 9999px;
   background: var(--surface);
-  box-shadow: var(--shadow-card);
 }
 
 .bgm-details {
@@ -405,7 +404,6 @@ media-mute-button[data-muted] .music-icon-muted {
   border: 1px solid var(--line);
   border-radius: 1rem;
   background: var(--surface);
-  box-shadow: var(--shadow-card-hover);
 }
 
 .bgm-details[open] .bgm-panel {

@@ -15,7 +15,7 @@
 
 1. 先读 `CONTEXT.md` 的术语与 `docs/adr/` 中与本区域相关的 ADR。
 2. 页面先看 `src/pages/` 的现有路由命名；组件先找 `src/components/primitives/` 是否已有基元。
-3. 改样式前读 `src/styles/global.css` 的 token 与层序说明；不要在组件里另造颜色/宽度。
+3. 改样式前读 `src/styles/global.css` 的 token 与层序说明，以及 [visual-system.md](./visual-system.md) 的五档字号与留白规则；不要在组件里另造颜色、宽度或字号。
 4. 改 TOC 时同时读 `src/lib/toc.ts`（构树）、`src/scripts/toc.ts`（运行时）、`src/components/Toc.astro` 与 `TocTree.astro`（渲染）。
 5. 加客户端脚本时确认 `astro:page-load` 绑定与 `document.documentElement.dataset.*Bound` 幂等标记。
 6. 改内容 schema 时同步 `src/content.config.ts`、`src/lib/post-frontmatter.ts`、`scripts/admin/lib/frontmatter.mjs`。
@@ -39,6 +39,7 @@
 | [client-scripts.md](./client-scripts.md) | ClientRouter 下的脚本生命周期、懒加载与事件委托 |
 | [state-management.md](./state-management.md) | 构建期数据、URL 状态、`localStorage`、跨组件事件 |
 | [type-safety.md](./type-safety.md) | 严格 TS、schema 真值、边界校验 |
+| [visual-system.md](./visual-system.md) | 五档字号、留白节奏、圆角/阴影/分隔、动效与视觉闸门 |
 | [quality-guidelines.md](./quality-guidelines.md) | 命令、测试、CI、URL、对比度与构建断言 |
 
 ## 写作约定

@@ -1,0 +1,41 @@
+/* 动效层的样式部分：入场过渡 + 打印降级。tilt 的复位缓动不在本文件 ——
+ * 消费元素（PostCard 的 .directory）自带作用域规则，特异性更高，见文件末尾注释。
+ *
+ * 渐进增强：默认没有任何隐藏态。motion.ts 确认 IntersectionObserver 可用后，才给 <html>
+ * 加 data-motion="on"；只有那一刻 [data-motion] 下的 [data-motion-item] 才进入隐藏初态，
+ * 脚本逐项加 .is-revealed 触发一次过渡（错位时长由脚本写进 --motion-delay）。
+ * 因此脚本失败 / 被禁用时页面完整可读，reduced-motion 下整段也不生效。
+ *
+ * 只动 transform 与 opacity：不产生渐变、阴影或布局位移。 */
+
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-motion='on'] [data-motion] [data-motion-item] {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+    transition:
+      opacity 520ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 520ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: var(--motion-delay, 0ms);
+  }
+
+  :root[data-motion='on'] [data-motion] [data-motion-item].is-revealed {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* 文章行 tilt 的过渡不在这里：消费元素（PostCard 的 .directory）自带作用域规则，
+   特异性高于裸的 [data-tilt]，写在这里的 transition 永远不生效。缓动值见
+   src/components/PostCard.astro 的 .directory。 */
+
+/* 打印/导出 PDF 时不能有隐藏态：视口外的条目永远不会被 IntersectionObserver 揭示，
+   否则打印出来是空白。只覆盖 opacity/transform 的目标值还不够 —— transition 仍然会
+   从隐藏态跑一遍（实测切到 print 的瞬间 18 项 opacity=0，700ms 后仍 15 项 <1），
+   打印快照若在这段时间取帧就是空白，所以过渡本身也要关掉。 */
+@media print {
+  :root[data-motion='on'] [data-motion] [data-motion-item] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
