@@ -65,20 +65,24 @@ const { nodes, collapsible, idPrefix, listId } = Astro.props;
     list-style: none;
   }
 
-  /* 只有嵌套层才缩进：一级节紧贴竖线，每深一层加一档 */
+  /* 子列表跨两列：始终整行折到下一行。只有嵌套层才缩进：一级节紧贴竖线，每深一层加一档 */
   .toc-item > .toc-list {
+    grid-column: 1 / -1;
     padding-left: 0.75rem;
   }
 
-  /* 横向 flex + 换行：链接占满整行、toggle 贴右，子列表 width:100% 自然折到下一行 */
+  /* 两列 grid：链接吃满剩余宽度、toggle 贴右独占第二列，二者永远同一行。
+     之前是 flex-wrap + 链接 flex-grow —— 长标题吃满整行后把按钮挤到第二行
+     （1440 实测 toggle 比链接低 29px）。第一列 minmax(0, 1fr) 让长标题在列内换行，
+     而不是把整行撑宽；没有 toggle 的条目第二列为 0，左缘与有按钮的条目一致。
+     改后实测 1920 / 1440 / 1024：toggleTop − linkTop = 2px（最长标题，含 2–3 行）。 */
   .toc-item {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
   }
 
   .toc-link {
-    flex-grow: 1;
     min-width: 0;
     padding: 0.3rem 0.75rem;
     color: var(--sub);
@@ -102,7 +106,10 @@ const { nodes, collapsible, idPrefix, listId } = Astro.props;
        按钮一变大就会挤行高、把整棵树的节奏改掉。 */
     position: relative;
     display: grid;
-    flex: none;
+    /* 纵向钉在第一行：多行标题下行高 48.8 / 68.4，居中会让按钮顶边比链接顶边低
+       12.4 / 22.2px。2px 让 24px 按钮的光学中心贴近首行 19.6px 的文字（差 0.6px）。 */
+    align-self: start;
+    margin-block-start: 2px;
     width: 1.5rem;
     height: 1.5rem;
     place-content: center;

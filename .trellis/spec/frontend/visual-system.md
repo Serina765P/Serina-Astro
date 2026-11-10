@@ -23,7 +23,7 @@
 ## 留白与量度
 
 - `--space-section`（`clamp(3rem, 6vw, 5.5rem)`）只用于**分区之间**。分区内部的标题→内容间距必须明显更小（约 1.75rem），行与行之间靠 `padding-block` 而不是 `gap`。
-- `--measure`（`36em`）约束 `.prose` 行宽。文章面板取 46rem 并居中，正文列与标题/元信息共用一条左边缘（`src/layouts/PostLayout.astro` 的注释给了实测数字）；不要只居中正文，那会让标题与正文错开。面板右侧的量度余宽（1440 宽 80px）是行尾留白，不是第二列。
+- `--measure`（`40em` = 640px @16px）约束 `.prose` 行宽（约 40 个汉字/行）。文章面板取 52rem（832px）并居中；面板内的标题、元信息、正文共用同一条 `--measure` 列并水平居中（`src/layouts/PostLayout.astro` 的 `.post-panel > header / .prose`，注释给了 1920/1440/1024 实测数字）；不要只居中正文，那会让标题与正文错开。
 - 页面宽度只经 `<Container>`；锚点偏移只在 `global.css` 的 `[id]` 规则里定义。
 
 ## 圆角、阴影、分隔
@@ -48,7 +48,7 @@
 | 命令 | 覆盖 |
 | --- | --- |
 | `node scripts/contrast-audit.mjs` | token 对比度（正文 4.5、大字 3.0） |
-| `inspect.mjs`（design-taste-frontend） | 1440/768/390 三宽度实测：字号档数、行宽、外边距、分隔线、渐变、阴影、动效数 |
+| `inspect.mjs`（design-taste-frontend） | 1920/1440/1024/768/390 五宽度实测：字号档数、行宽、外边距、分隔线、渐变、阴影、动效数 |
 
 `inspect.mjs` 在本机需要 `CHROME_PATH` 指向带 `--no-sandbox` 的 Chromium 包装脚本（root 环境）：
 
@@ -60,6 +60,6 @@ node /root/.agents/skills/design-taste-frontend/scripts/inspect.mjs http://127.0
 
 三条已知误报，复测时直接 `allow` 并写明理由：
 
-- `mono` —— CJK 全角字宽让启发式把 `IBM Plex Sans SC` 判成等宽。
-- `font-fallback` —— 字体从 CDN 加载，探针可能在字体就绪前取样（用 `document.fonts.check` 复核）。
-- `off-centre` —— `scrollbar-gutter: stable` 预留的 15px gutter 造成的左右差，容器在滚动区内是居中的。
+- `mono` —— CJK 全角字宽让启发式把正文系统栈（`system-ui`）判成等宽。
+- `font-fallback` —— hero 的本地子集可能在探针取样时尚未就绪（正文已是系统栈，不涉及；用 `document.fonts.check` 复核）。
+- `off-centre` —— 两处已知来源：`scrollbar-gutter: stable` 预留的 15px gutter；以及 TOC 侧栏按 `min(19.6rem, calc(50vw - 23rem))` 溢到容器右侧留白（`Toc.astro`，约 90px）。两者都是刻意的，容器本身在滚动区内居中。

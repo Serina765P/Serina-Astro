@@ -187,10 +187,16 @@
 }
 
 @theme {
-  /* 正文字体：IBM Plex Sans SC（OFL-1.1，ZeoSeven item 389，CDN 分字重 CSS 见 BaseLayout）。
-     同一 font-family 五档真实字重（300/400/500/600/700），字重层级见 @layer base 与 .prose 规则 */
+  /* 正文字体：系统栈（R4）。拉丁取 system-ui / Segoe UI，CJK 逐级回退
+     PingFang（macOS / iOS）→ Hiragino（旧 Mac）→ 雅黑（Windows）→ Noto / 思源（Linux / Android）
+     → 文泉驿。不再请求 ZeoSeven 的四档正文 CSS：真实字重因平台而异（雅黑 400 / 700，
+     PingFang 含 500 / 600），缺档时回落到最近的真实字重
+     （font-synthesis-weight: none，不合成假粗体），
+     字重层级见 @layer base 与 .prose 规则。hero 的朝华明朝体仍是本地子集，见 --font-hero。 */
   --font-sans:
-    'IBM Plex Sans SC', 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', system-ui, sans-serif;
+    system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei UI', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Source Han Sans SC',
+    'WenQuanYi Micro Hei', sans-serif;
 
   /* 首页 hero 大标题：朝华标题明朝体（item 2101，单字重 Bold 700） */
   --font-hero: 'ZhaohuaMinA Bold', 'Songti SC', 'SimSun', serif;
@@ -230,7 +236,8 @@
        content  51rem = 内容 48rem（复刻旧 max-w-3xl：长文 / PageLayout）
        standard 64rem（旧 max-w-5xl 本来就是含内边距的总宽：列表页 / 页脚 / 首页）
        wide     72rem（旧 max-w-6xl，同上：文章 + TOC）
-     narrow/content 的旧值是不含内边距的内容宽，故 +3rem —— 目的是这一批零视觉变化。 */
+     narrow/content 的旧值是不含内边距的内容宽，故 +3rem —— 目的是这一批零视觉变化。
+     ≥1600 时 standard / wide 各放大一档（72rem / 80rem），见 @layer base 的媒体查询。 */
   --container-narrow: 45rem;
   --container-content: 51rem;
   --container-standard: 64rem;
@@ -263,9 +270,9 @@
        替代按组件各写一档横向/纵向 margin 的做法；首页的 recent-section / site-index
        都消费它。它只管「节与节之间」—— 分区内部（标题到内容、统计到两栏）一律小于它；
        页面标题到自己的列表用 PageHeader 的 mb-10，别把分区间距塞进组件内部。
-     --measure：正文行宽 36em（约 36 个中文字符/行）；em 相对 .prose 自己的字号，随档位缩放。 */
+     --measure：正文行宽 40em（约 40 个中文字符/行）；em 相对 .prose 自己的字号，随档位缩放。 */
   --space-section: clamp(3rem, 6vw, 5.5rem);
-  --measure: 36em;
+  --measure: 40em;
 
   /* 卡片圆角不再是 token：`@utility card-surface` 直接写 `rounded-none`，没有第二个真值；
      消费点若需要读值，再加 token 并让 recipe 引用它（同 --radius-chip / --radius-panel 的处理）。
@@ -372,9 +379,21 @@
     color-scheme: dark;
   }
 
+  /* 宽屏框架（R6，≥1600）：主设计宽度改为 1920。放大的是页面框架，不是行宽 ——
+     --measure 不动，阅读列仍是 40em（640px）。1440 及以下不命中，逐像素保持原样。
+     @theme 里的容器值在 theme 层，这里在 base 层覆写（层序更高）；--container-* 的消费点
+     取值时才读变量，所以媒体查询里的覆写对已生成的 max-w-wide / max-w-standard 生效。 */
+  @media (min-width: 1600px) {
+    :root {
+      --container-wide: 80rem; /* 1280：文章 + TOC */
+      --container-standard: 72rem; /* 1152：列表页 / 页脚 / 首页 */
+    }
+  }
+
   html {
     scroll-behavior: smooth;
-    /* 同族五档字重均为真实 face；禁止合成以防中间字重（如 450）被伪造 */
+    /* 正文改用系统栈（真实字重因平台而异）；禁止合成，缺档时回落到最近的真实字重，
+       不伪造中间字重（如 450 或假半粗） */
     font-synthesis-weight: none;
   }
 
@@ -409,8 +428,8 @@
     }
   }
 
-  /* 正文字体：--font-sans（IBM Plex Sans SC）全局应用，字重全是真实 face。
-     字重层级：大标题 Bold(700) / 小标题 SemiBold(600) / 正文 Regular(400)，强调交给真实字重。 */
+  /* 正文字体：--font-sans（系统栈）全局应用。字重层级：大标题 Bold(700) / 小标题 SemiBold(600)
+     / 正文 Regular(400)；系统栈没有 500 / 600 时按最近真实字重渲染，强调交给字重而非合成。 */
   h1 {
     font-weight: 700;
   }
@@ -1028,10 +1047,12 @@
    `.prose` 默认调色板 (0,1,0)；字重/引用不正体同理靠特异性取胜，.prose 相关 !important 归零
    （.astro-code 的 bg ! 保留 —— 那是压 shiki 内联样式的，与 typography 无关）。 */
 @layer utilities {
-  /* 正文量度（D3）：36em ≈ 36 个中文字符/行。.prose 的实际字号是 typography 的 1rem（实测 16px），
-     所以 36em = 576px —— 浏览器实测 pcshurufa 首段每行 36 字、正文列宽 576px。
-     之前正文铺满整块面板，1440 宽下测得 133 字符/行 —— 远超可读上限。
-     宽度归这里管，Prose.astro 上不要再写 max-w-none 把它覆盖掉。 */
+  /* 正文量度（D3）：40em ≈ 40 个中文字符/行。.prose 的实际字号是 typography 的 1rem（实测 16px），
+     所以 40em = 640px —— 浏览器实测 pcshurufa 正文列宽 640px，首段每行 40 字。
+     之前正文铺满整块面板，1440 宽下测得 133 字符/行 —— 远超可读上限；36em（576px）则比
+     面板内容盒窄太多。宽度归这里管，Prose.astro 上不要再写 max-w-none 把它覆盖掉。
+     水平居中只在文章面板里加（PostLayout 的 .post-panel > .prose），这里是全站共用的
+     max-width：about / links 这类 PageLayout 页面仍左对齐自己的标题。 */
   .prose {
     max-width: var(--measure);
   }
@@ -1057,19 +1078,20 @@
   }
 
   /* ── 表格统一（S 表格视觉对齐）：与 details / 卡片 / 代码块同一套容器语言
-     （1rem 圆角 + 1px --line 描边 + token 色），取代 typography 默认的无框表格。
+     （0 圆角 + 1px --line 描边 + token 色 + 1em 正文档），取代 typography 默认的无框表格。
+     圆角取 0（D3：卡片与媒体二选一，不留 9–16px 中间档）；字号并入正文档 —— 原来 0.9em
+     实测 14.4px，是全站五档之外多出来的第六档。
      全部落在 utilities 层：typography 的表格规则同层（:where 包裹、特异性 (0,1,0)），
      components 层的覆盖是层序死规则（S18 同款教训；此前 details 表格的 m-0 /
      text-[0.9em] / 首尾列 pl-4 实测全未生效）。行分隔线改由单元格承载——
-     border-collapse: separate 下 tr 边框渲染不可靠；separate + border-spacing 0
-     + overflow hidden 才能让表头色带贴合圆角（collapse 下 overflow 被忽略）。 */
+     border-collapse: separate 下 tr 边框渲染不可靠。 */
   .prose.prose table {
     border-collapse: separate;
     border-spacing: 0;
     border: 1px solid var(--line);
-    border-radius: 1rem;
+    border-radius: 0;
     overflow: hidden;
-    font-size: 0.9em;
+    font-size: 1em;
   }
   .prose.prose :is(thead, tfoot, tbody tr) {
     border: 0;
@@ -1079,6 +1101,9 @@
     padding-block: 0.55rem;
     padding-inline: 1rem;
     vertical-align: middle;
+    /* 长无空格串（文件路径、短代码、URL）可断行：否则它们决定列的 min-content，
+       在 auto 布局下把同类表格的其余列压到 50–70px（5.1 表实测 52 / 71 / 64 / 387）。 */
+    overflow-wrap: anywhere;
   }
   .prose.prose thead th {
     background: var(--surface-2);
@@ -1110,6 +1135,17 @@
       white-space: nowrap;
     }
   }
+  /* 单元格下限 5rem（80px，含 1rem×2 内边距）：短数据列（「偶像」「次数」这类 1–4 字）不再被
+     长文本列按 max-content 比例挤到一两字宽 —— 5.1 表（/posts/mltd-appellations-statistics/）
+     前三列原来 52 / 71 / 64。这只是下限、不是写死列宽：长文本列仍按内容分配，并靠上面的
+     overflow-wrap: anywhere 在词内折行。全站最宽的表是 7 列（/posts/datastructure-01/），
+     7×80 + 边框 562 < 40rem 的正文列，不会撑出面板。
+     只在 ≥48rem 生效：640–768 之间表格还没切成横滑容器、正文列窄于 640，下限会顶出面板。 */
+  @media (min-width: 48rem) {
+    .prose.prose :is(th, td) {
+      min-width: 5rem;
+    }
+  }
   /* 字重阶：大标题 700 / 小标题 600 / 强调 600 / 行内 code 400 / 引用不正体。
      值与此前 !important 版本一致，只是换用特异性（(0,1,1) > typography 的 (0,1,0)） */
   .prose h1 {
@@ -1123,6 +1159,12 @@
   }
   .prose code {
     font-weight: 400;
+  }
+  /* 行内 code 里的长路径 / 短代码（`Akane-Commu/013_card_blst_023aka0624.md#L107`）默认不可断行：
+     390 宽实测把整个文档撑出 65px 的横向滚动（/posts/mltd-appellations-statistics/）。
+     与表格 th/td 同一处理 —— 只在被迫时才在词内折行，正常阅读不受影响。 */
+  .prose :not(pre) > code {
+    overflow-wrap: anywhere;
   }
   .prose blockquote {
     font-style: normal;

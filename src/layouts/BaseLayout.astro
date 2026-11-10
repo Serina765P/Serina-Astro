@@ -82,17 +82,13 @@ const heroFontBuilt = existsSync(path.join(process.cwd(), 'public', 'fonts', 'he
       })();
     </script>
     <BaseHead title={title} description={description} keywords={keywords} ogType={ogType} pathname={pathname} />
-    <!-- 字体（均走 ZeoSeven CDN，OFL-1.1）：
-         正文 IBM Plex Sans SC（item 389，同族四档字重：Regular400 默认 / Medium500 / SemiBold600 加粗与小标题 / Bold700 大标题）。
-         首页 hero 的朝华标题明朝体（item 2101）不再直接引用 CDN：它的 result.css 是 202KB / 385 条
+    <!-- 字体：
+         正文用系统栈（global.css 的 --font-sans），不再请求 ZeoSeven 的四档正文 CSS
+         （此前是 1 个 preconnect + 4 个 result.css）。
+         首页 hero 的朝华标题明朝体（item 2101）不直接引用 CDN：它的 result.css 是 202KB / 385 条
          @font-face，标题这 10 个字会触发 10 个分片共 325KB。改为构建期生成「只含用到的字形」的
          本地子集（scripts/build-hero-font.mjs → public/fonts/hero-mincho.css），字体家族名不变，
          global.css 的 --font-hero 无需改动。 -->
-    <link rel="preconnect" href="https://fontsapi.zeoseven.com" crossorigin />
-    <link rel="stylesheet" href="https://fontsapi.zeoseven.com/389/main/result.css" />
-    <link rel="stylesheet" href="https://fontsapi.zeoseven.com/389/medium/result.css" />
-    <link rel="stylesheet" href="https://fontsapi.zeoseven.com/389/semi-bold/result.css" />
-    <link rel="stylesheet" href="https://fontsapi.zeoseven.com/389/bold/result.css" />
     {
       heroFont &&
         (heroFontBuilt ? (

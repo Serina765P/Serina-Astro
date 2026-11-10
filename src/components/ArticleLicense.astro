@@ -5,15 +5,20 @@ import { SITE } from '../site.config';
 interface Props {
   title: string;
   id: string;
+  /** 调用方可以追加布局类（PostLayout 用它把版权块并入正文的同一条居中列） */
+  class?: string;
 }
 
-const { title, id } = Astro.props;
+const { title, id, class: className = '' } = Astro.props;
 const canonicalUrl = `${SITE.url}/posts/${id}/`;
 const ccUrl = 'https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans';
 ---
 
 <section
-  class="mt-10 rounded-xl border border-line bg-surface-2 p-4 text-note text-sub sm:p-5"
+  class:list={[
+    'mt-10 rounded-xl border border-line bg-surface-2 p-4 text-note text-sub sm:p-5',
+    className,
+  ]}
   aria-label="文章版权声明"
 >
   <div class="flex items-center gap-2 font-medium text-ink">

@@ -97,7 +97,7 @@ gh variable set CLOUDFLARE_PAGES_PROJECT --body "<pages project name>"
 
 ## 字体
 
-正文 IBM Plex Sans SC，首页标题朝华标题明朝体，均经 ZeoSeven Fonts CDN 加载，许可见各条目页。
+正文用系统字体栈（`--font-sans`，按平台回退到 PingFang、雅黑、Noto 等），不加载正文网页字体；首页标题朝华标题明朝体是构建期由 ZeoSeven item 2101 子集化的本地 woff2（`public/fonts/hero-mincho.css`），构建失败时才回退 CDN。许可见各条目页。
 
 ## 授权与版权
 
