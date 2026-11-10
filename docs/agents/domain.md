@@ -1,6 +1,7 @@
 # Domain Docs
 
-How the engineering skills should consume this repo's domain documentation when exploring the codebase.
+How AI sessions consume this repo's domain documentation when exploring the
+codebase.
 
 ## Before exploring, read these
 
@@ -12,9 +13,8 @@ This is a **single-context** repo: there is one glossary and one ADR directory.
 the same `CONTEXT.md`; do not create a second context for it.
 
 If a file doesn't exist, **proceed silently** — don't flag its absence or propose
-creating it upfront. `/domain-modeling` (reached via `/grill-with-docs` and
-`/improve-codebase-architecture`) creates `CONTEXT.md` entries and ADRs lazily
-when terms or decisions actually get resolved.
+creating it upfront. `CONTEXT.md` entries and ADRs are written lazily, when terms
+or decisions actually get resolved during a task.
 
 ## File structure
 
@@ -23,7 +23,7 @@ when terms or decisions actually get resolved.
 ├── CONTEXT.md            ← glossary, the single source of domain vocabulary
 ├── docs/
 │   ├── adr/              ← ADRs, numbered 0001-…
-│   ├── agents/           ← per-repo config for the engineering skills
+│   ├── agents/           ← per-repo conventions for AI sessions
 │   ├── custom-emoji.md   ← existing Chinese SOPs for asset upkeep
 │   └── custom-sticker.md
 ├── AGENTS.md             ← local working agreements (gitignored)
@@ -51,7 +51,7 @@ the synonyms it explicitly avoids.
 
 If the concept isn't in the glossary yet, that's a signal — either you're
 inventing language the project doesn't use (reconsider) or there's a real gap
-(note it for `/domain-modeling`).
+(record it in the task's `research/` and add it when the decision is settled).
 
 ## Flag ADR conflicts
 

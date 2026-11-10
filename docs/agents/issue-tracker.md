@@ -1,8 +1,8 @@
 # Issue tracker: GitHub
 
-Issues, specs, and tickets for this repo live as GitHub issues in
-`Serina765P/Serina-Astro`. Use the `gh` CLI for all operations; run it inside the
-clone so the repo resolves automatically.
+Issues for this repo live as GitHub issues in `Serina765P/Serina-Astro`. Trellis
+tasks (`.trellis/tasks/`) hold execution specs and tickets. Use the `gh` CLI for
+all issue operations; run it inside the clone so the repo resolves automatically.
 
 ## Conventions
 
@@ -19,28 +19,24 @@ Titles and bodies may be written in Chinese; keep the project's vocabulary from
 ## Pull requests as a triage surface
 
 **PRs as a request surface: no.** External PRs are not treated as feature
-requests; `/triage` reads this flag.
+requests during triage.
 
 ## Delivery boundary
 
-Creating, labelling, and closing issues is normal working state. Commits and
-pushes still wait for the user's testing confirmation — see the Delivery section
-of `AGENTS.md`. `/implement` ends at a reviewed diff, not at `git push`.
+Creating, labelling, and closing issues is normal working state. Code work runs
+as a Trellis task; commits follow `.trellis/workflow.md` Phase 3.4, and pushes
+stay within the user's current request.
 
-## When a skill says "publish to the issue tracker"
+## Backlog vs. execution
 
-Create a GitHub issue.
+Create a GitHub issue when work is not yet a committed task. Fetch it with
+`gh issue view <number> --comments`. When execution starts, create a Trellis
+task and link the issue from its `prd.md`.
 
-## When a skill says "fetch the relevant ticket"
+## Larger efforts
 
-Run `gh issue view <number> --comments`.
-
-## Wayfinding operations
-
-Used by `/wayfinder`. The **map** is a single issue with **child** issues as tickets.
-
-- **Map**: a single issue labelled `wayfinder:map`, holding the Notes / Decisions-so-far / Fog body.
-- **Child ticket**: an issue linked to the map as a GitHub sub-issue (`gh api` on the sub-issues endpoint). Where sub-issues aren't enabled, add the child to a task list in the map body and put `Part of #<map>` at the top of the child body. Labels: `wayfinder:<type>` (`research`/`prototype`/`grilling`/`task`).
-- **Blocking**: GitHub's native issue dependencies. Add an edge with `gh api --method POST repos/Serina765P/Serina-Astro/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>`, where `<blocker-db-id>` is the blocker's numeric database id (`gh api repos/Serina765P/Serina-Astro/issues/<n> --jq .id`), **not** the `#number`. Fall back to a `Blocked by: #<n>` line in the child body when dependencies are unavailable.
-- **Claim**: `gh issue edit <n> --add-assignee @me`.
-- **Resolve**: `gh issue comment <n> --body "<answer>"`, then `gh issue close <n>`, then append a context pointer to the map's Decisions-so-far.
+When one request contains independently verifiable deliverables, use a Trellis
+parent task with child tasks
+(`task.py create "<title>" --slug <name> --parent <dir>`). Keep ordering in the
+child `prd.md` / `implement.md`; the task tree is not a dependency system.
+GitHub issues hold the backlog, the task tree holds execution state.
