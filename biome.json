@@ -16,7 +16,10 @@
       "**/*.jsx",
       "**/*.tsx",
       "**/*.json",
-      "**/*.jsonc"
+      "**/*.jsonc",
+      "!**/.claude",
+      "!**/.omp",
+      "!**/.trellis"
     ]
   },
   "formatter": {
