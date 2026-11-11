@@ -88,3 +88,25 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 4: 标题宋体子集自托管
+<!-- trellis-session: v=2 fp=5ff1bbcc83eb9794 -->
+
+**Date**: 2026-11-11
+**Task**: 标题宋体子集自托管
+**Branch**: `main`
+
+### Summary
+
+构建期扫描文章 h1/h2 的 363 个字符，从 Google Fonts 取 Noto Serif SC 700 子集（70KB），生成 public/fonts/heading-serif.css 并接入 BaseLayout；生成失败回退系统衬线；首页 hero 保持现状。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `bd286b4` | feat(reading): 自托管思源宋体标题子集 |
+
+### Status
+
+[OK] **Completed**
