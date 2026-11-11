@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/frontend/visual-system.md", "reason": "字号/字体栈与视觉闸门约定"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "布局组件与 scoped 样式约定"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "门禁与构建断言"}
+{"file": ".trellis/tasks/11-11-heading-serif-subset/design.md", "reason": "子集脚本、接入点与回退设计"}

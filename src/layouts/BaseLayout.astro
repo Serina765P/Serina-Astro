@@ -40,6 +40,11 @@ const {
 // 生成失败（离线 / 分片改版）时该文件不存在，下面回退到 CDN 的完整 CSS —— 旧行为
 // 是 202KB CSS + 最多 325KB 分片，慢但正确，不会退化成系统衬线。
 const heroFontBuilt = existsSync(path.join(process.cwd(), 'public', 'fonts', 'hero-mincho.css'));
+// 构建期由 scripts/build-heading-font.mjs 生成，只含文章 h1 / h2 用到的字形。
+// 生成失败时该文件不存在，--font-serif 回退系统衬线（Noto Serif CJK / Songti SC / SimSun）。
+const headingFontBuilt = existsSync(
+  path.join(process.cwd(), 'public', 'fonts', 'heading-serif.css'),
+);
 ---
 
 <!doctype html>
@@ -97,6 +102,9 @@ const heroFontBuilt = existsSync(path.join(process.cwd(), 'public', 'fonts', 'he
           <link rel="stylesheet" href="https://fontsapi.zeoseven.com/2101/main/result.css" />
         ))
     }
+    <!-- 文章标题的思源宋体子集：只在构建期生成成功时加载；字体 face 带 unicode-range，
+         页面没有对应标题时浏览器不会请求 woff2。 -->
+    {headingFontBuilt && <link rel="stylesheet" href="/fonts/heading-serif.css" />}
     <ClientRouter />
     <noscript>
       <!-- 播放器要 JS 才响：没有 JS 时只留原平台链接，不摆按不动的控件 -->

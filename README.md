@@ -97,7 +97,7 @@ gh variable set CLOUDFLARE_PAGES_PROJECT --body "<pages project name>"
 
 ## 字体
 
-正文用系统字体栈（`--font-sans`，按平台回退到 PingFang、雅黑、Noto 等），不加载正文网页字体；首页标题朝华标题明朝体是构建期由 ZeoSeven item 2101 子集化的本地 woff2（`public/fonts/hero-mincho.css`），构建失败时才回退 CDN。许可见各条目页。
+正文用系统字体栈（`--font-sans`，按平台回退到 PingFang、雅黑、Noto 等），不加载正文网页字体；首页标题朝华标题明朝体是构建期由 ZeoSeven item 2101 子集化的本地 woff2（`public/fonts/hero-mincho.css`），构建失败时才回退 CDN。文章标题的思源宋体（Noto Serif SC 700）同样是构建期子集：`scripts/build-heading-font.mjs` 扫描文章 h1 / h2 的字符，从 Google Fonts 取子集（当前 363 字 / 约 70KB → `public/fonts/heading-serif.css`），生成失败时回退系统衬线。两套字体产物都不入库。许可见各条目页。
 
 ## 授权与版权
 

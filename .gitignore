@@ -35,6 +35,8 @@ pnpm-debug.log*
 # 构建期生成的首页标题字体子集 + 下载缓存（生成物，不进版本库）
 public/fonts/hero-mincho.css
 public/fonts/hero-mincho/
+public/fonts/heading-serif.css
+public/fonts/heading-serif/
 .cache/
 
 # 工作台本地数据（项目记忆 / 会话任务），只在本机有效

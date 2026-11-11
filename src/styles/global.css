@@ -198,11 +198,14 @@
     'Microsoft YaHei UI', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Source Han Sans SC',
     'WenQuanYi Micro Hei', sans-serif;
 
-  /* 文章标题的衬线栈（C 方向）：思源宋体优先，其次 Noto Serif CJK（Linux / Android），
-     macOS 落 Songti SC，Windows 落 SimSun。只用系统字体，不加载任何字体文件；
-     正文仍是 --font-sans，衬线只给文章 h1 / h2，h3 / h4 保持无衬线避免小字号发虚。 */
+  /* 文章标题的衬线栈（C 方向）：第一优先是构建期生成的 Noto Serif SC 700 子集
+     （scripts/build-heading-font.mjs → public/fonts/heading-serif.css，只含文章 h1 / h2
+     用到的约 363 个字，~70KB，运行时自托管）。子集没生成时继续按系统栈回退：
+     Source Han Serif SC（用户本机装了思源）→ Noto Serif CJK SC（Linux / Android）→
+     Songti SC（macOS）→ SimSun（Windows，观感较差但可用）。
+     正文仍是 --font-sans；衬线只给文章 h1 / h2，h3 / h4 保持无衬线避免小字号发虚。 */
   --font-serif:
-    'Source Han Serif SC', 'Noto Serif CJK SC', 'Songti SC', 'SimSun', serif;
+    'Noto Serif SC', 'Source Han Serif SC', 'Noto Serif CJK SC', 'Songti SC', 'SimSun', serif;
 
   /* 首页 hero 大标题：朝华标题明朝体（item 2101，单字重 Bold 700） */
   --font-hero: 'ZhaohuaMinA Bold', 'Songti SC', 'SimSun', serif;
