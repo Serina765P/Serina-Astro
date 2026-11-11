@@ -11,20 +11,22 @@
 | `--text-display` | `clamp(2.25rem, 5vw, 3.75rem)` | 首页 hero、各列表页 h1 |
 | `--text-heading` | `1.875rem` | 分区 h2 |
 | `--text-lead` | `1.25rem` | 列表行标题、卡片标题、条目标题 |
-| `--text-base` | `1rem`（行高 1.75） | 正文、描述、按钮、导航 |
+| `--text-base` | `1rem`（行高 1.75） | 描述、按钮、导航（正文档另计） |
 | `--text-note` | `0.8125rem` | 元信息、时间、chip、页脚 |
 
-- 长中文标题（文章页 h1）用局部 `clamp(1.75rem, 3vw, 2.5rem)`，不套 display 档 —— 换行约束优先于刻度整齐（`src/layouts/PostLayout.astro`）。
+- 长中文标题（文章页 h1）用局部 `clamp(1.75rem, 2.5vw, 2.3rem)`，不套 display 档 —— 换行约束优先于刻度整齐（`src/layouts/PostLayout.astro`）。
 - 不要再写 `text-xs` / `text-sm` / `text-lg` / `text-[0.95rem]`。新增档位前先证明现有五档无法表达。
-- 正文内部的 h2 / h3 走 `@tailwindcss/typography` 的相对刻度（1.5em / 1.25em），也不并入五档。
-- 五档管的是页面级 chrome 与常规正文。以下密集 UI 保留局部字号，不并入五档：正文代码块（`.astro-code` 14px、语言标签 10.9px）、TOC 侧栏条目与移动端 pill（14px）、emoji 图鉴的短代码标签（11.7px）与图鉴网格、说说时间线的元信息（12–15.2px）、首屏竖排装饰字（`aria-hidden`，窄屏 1.2–1.6rem）、MilliPachi 小游戏（组件自带 `<style is:inline>`）、标签云的连续字号（「热度」信息）。
+- 正文内部的 h2 / h3 / h4 走 `@tailwindcss/typography` 的相对刻度（17px 基准：h2 1.55em、h3 1.18em、h4 1.06em），也不并入五档；文章 h1 / h2 用 `--font-serif`（Source Han Serif SC → Noto Serif CJK SC → Songti SC → SimSun → serif），h3 / h4 保持 `--font-sans`。
+- 正文档是五档之外的唯一例外：`--prose-size: 1.0625rem`（17px）、行高 1.85、字距 0.01em；`--measure = 40 × --prose-size = 680px`（约 40 个汉字/行）。页面 chrome 仍只用五档。
+- 五档管的是页面级 chrome；正文档按上一条的独立刻度。以下密集 UI 保留局部字号，不并入五档：正文代码块（`.astro-code` 14px、语言标签 10.9px）、TOC 侧栏条目与移动端 pill（14px）、emoji 图鉴的短代码标签（11.7px）与图鉴网格、说说时间线的元信息（12–15.2px）、首屏竖排装饰字（`aria-hidden`，窄屏 1.2–1.6rem）、MilliPachi 小游戏（组件自带 `<style is:inline>`）、标签云的连续字号（「热度」信息）。
 - 正文不得小于 16px；页面 chrome 的可读文字不得小于 13px。上面这些密集 UI 里既有的小字是待归并项，新增代码不得再扩大这个范围。
 
 ## 留白与量度
 
 - `--space-section`（`clamp(3rem, 6vw, 5.5rem)`）只用于**分区之间**。分区内部的标题→内容间距必须明显更小（约 1.75rem），行与行之间靠 `padding-block` 而不是 `gap`。
-- `--measure`（`40em` = 640px @16px）约束 `.prose` 行宽（约 40 个汉字/行）。文章面板取 52rem（832px）并居中；面板内的标题、元信息、正文共用同一条 `--measure` 列并水平居中（`src/layouts/PostLayout.astro` 的 `.post-panel > header / .prose`，注释给了 1920/1440/1024 实测数字）；不要只居中正文，那会让标题与正文错开。
+- `--measure`（`40 × --prose-size` = 680px @17px）约束 `.prose` 行宽（约 40 个汉字/行）。文章面板取 52rem（832px）并居中；面板内的标题、元信息、正文共用同一条 `--measure` 列并水平居中（`src/layouts/PostLayout.astro` 的 `.post-panel > header / .prose`，注释给了 1920/1440/1024 实测数字：1440 下文本列 x 244.5–924.5、1024 下自适应到 625px）；不要只居中正文，那会让标题与正文错开。
 - 页面宽度只经 `<Container>`；锚点偏移只在 `global.css` 的 `[id]` 规则里定义。
+- `--measure` 是绝对长度（`calc(40 × --prose-size)` = 680px）。不要改回 `40em`：`PostLayout` 的 `.post-panel > header` 是 16px 上下文，同一个 `40em` 会解析成 640px，标题列与正文列错开 20px（本次实测发现）。
 
 ## 圆角、阴影、分隔
 
@@ -33,6 +35,7 @@
 - 分区不靠 1px 描边或渐变分隔：用留白、`--surface` / `--bg` 的色阶差，或一次整块换底色。
 - 卡片 recipe 只有 `@utility card-surface` / `card-lift` 一份；`Card.astro` 与脚本里的搜索结果 li 共用它。
 - 渐变一律不用（包括按钮与文字）。照片上的中性压暗遮罩是唯一例外。
+- 正文表格不用外框与表头底色：表头 1px 上边线 + 1.5px 下边线（`--ink` 55%），行分隔线 65% `--line`，hover 40% `--surface-2`；窄屏整表横滑（`global.css` 的 `.prose.prose table` 块）。
 
 ## 动效
 

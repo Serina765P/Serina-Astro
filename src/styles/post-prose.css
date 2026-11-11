@@ -8,11 +8,11 @@
   margin-top: 1.25rem;
   margin-bottom: 1.25rem;
   border-radius: 1rem;
-  border-left-width: 4px;
+  border-left-width: 3px;
   border-left-style: solid;
   border-left-color: var(--wash-sand-deep, #7d6238);
-  padding: 0.875rem 1.25rem;
-  font-size: 0.95em;
+  padding: 0.8em 1.1em;
+  font-size: 1em;
   background: color-mix(in srgb, var(--wash-sand, #cbb28c) 12%, var(--surface, #ffffff));
 }
 
