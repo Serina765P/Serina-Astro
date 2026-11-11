@@ -1,8 +1,9 @@
 ---
 /**
  * 页面标题块基元（P1-1）：把各页「h1 + 可选 subtitle」的字面重复收敛到一处。
- * - h1：text-display + font-hero —— 页面级标题是全站最大的一档（D2），字体与首页 hero 共用
- *   朝华明朝体子集；不再按页面各写 text-3xl / text-[clamp()]；字距归零，标题靠字号与字重立住
+ * - h1：text-page + font-hero —— 内页标题单独一档（clamp 到 36px），不再是首页 hero 的
+ *   display 档；字号收下来以后，只有几行内容的分类页不会被标题占掉首屏。字距归零，
+ *   标题靠字号与字重立住
  * - 不再提供 eyebrow：标题上方的小标签是探针判定的装饰性 kicker，信息应由标题或 subtitle 承担
  * - subtitle：标题下方的说明（如「共 N 篇文章」），它是说明句、要能读，故走 text-base 而不是 note 档
  * - class：覆盖 <header> 自身的布局类。默认 mb-10（2.5rem）—— 标题到内容的间距，不是分区间距；
@@ -19,6 +20,6 @@ const { title, subtitle, class: className = 'mb-10' } = Astro.props;
 ---
 
 <header class={className}>
-  <h1 class="font-hero text-display tracking-normal text-ink">{title}</h1>
+  <h1 class="font-hero text-page tracking-normal text-ink">{title}</h1>
   {subtitle && <p class="mt-2 text-base text-sub">{subtitle}</p>}
 </header>

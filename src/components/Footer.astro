@@ -1,18 +1,14 @@
 ---
-import { SITE, SITE_META } from '../site.config';
+import { SITE } from '../site.config';
 import Container from './primitives/Container.astro';
 import { yearInShanghai } from '../lib/utils';
 
 const year = yearInShanghai(new Date());
 const range = year > SITE.since ? `${SITE.since} - ${year}` : String(SITE.since);
-const washes = ['var(--wash-pink)', 'var(--wash-mist)', 'var(--wash-sage)', 'var(--wash-sand)'];
 ---
 
 <footer class="pb-10 pt-4">
   <Container width="standard" class="text-center text-base text-sub">
-    <div class="mb-5 flex justify-center gap-2.5" aria-hidden="true">
-      {washes.map((color) => <i class="h-2 w-8 rounded-full opacity-65" style={`background:${color}`} />)}
-    </div>
     <p>
       © {range}
       {" "}
@@ -26,9 +22,6 @@ const washes = ['var(--wash-pink)', 'var(--wash-mist)', 'var(--wash-sage)', 'var
       >个人主页</a>
       {" "}· Powered by{" "}
       <a href="https://astro.build" target="_blank" rel="noopener" class="transition-colors hover:text-wash-pink-deep">Astro</a>
-    </p>
-    <p class="mt-1 text-note text-sub">
-      {SITE_META.description.split('\n')[0]}
     </p>
   </Container>
 </footer>

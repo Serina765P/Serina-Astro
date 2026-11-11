@@ -4,11 +4,8 @@ import { getCollection } from 'astro:content';
 import { Icon } from 'astro-icon/components';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PostCard from '../components/PostCard.astro';
-import TagChip from '../components/primitives/TagChip.astro';
 import Container from '../components/primitives/Container.astro';
-import { formatDate } from '../lib/utils';
-import { stripShuoshuoTags } from '../lib/shuoshuo';
-import { HERO, SITE, SITE_META, tagSlug } from '../site.config';
+import { HERO, SITE, SITE_META } from '../site.config';
 
 const posts = (await getCollection('posts')).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
@@ -20,21 +17,10 @@ const recent = [...posts]
   )
   .slice(0, 6);
 
-const shuoshuo = await getCollection('shuoshuo');
-const latestSay = [...shuoshuo].sort(
-  (a, b) => b.data.published_at.valueOf() - a.data.published_at.valueOf(),
-)[0];
-
-const tagCount = new Map<string, number>();
-for (const post of posts) {
-  for (const tag of post.data.tags) tagCount.set(tag, (tagCount.get(tag) ?? 0) + 1);
-}
-const topTags = [...tagCount.entries()].sort((a, b) => b[1] - a[1]).slice(0, 9);
-const oldest = posts[posts.length - 1]?.data.date;
-const days = oldest ? Math.max(1, Math.ceil((Date.now() - oldest.valueOf()) / 86400000)) : 1;
-const sayPlain = latestSay ? stripShuoshuoTags(latestSay.data.content).replace(/\s+/g, ' ') : '';
-const sayText = sayPlain.slice(0, 120) + (sayPlain.length > 120 ? '…' : '');
-const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
+// 小站索引（B 版）：只留一行文字，不再拉最近的说说正文与标签云 —— 首页的第一个任务
+// 是让人看到文章列表，索引里的入口导航栏都有。
+const shuoshuoCount = (await getCollection('shuoshuo')).length;
+const tagTotal = new Set(posts.flatMap((post) => post.data.tags)).size;
 ---
 
 <BaseLayout
@@ -56,7 +42,6 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
         <p class="hero-description text-lead text-ink">{SITE_META.description}</p>
       </div>
       <div class="hero-portrait" data-parallax>
-        <span class="hero-mark" aria-hidden="true">{HERO.mark}</span>
         <Image
           src={HERO.avatar}
           alt={`${SITE.author} 的头像`}
@@ -97,100 +82,19 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
     </section>
   </Container>
 
-  <!-- 小站索引整段走一档色阶带（与 hero 同用 --brand-wash，首尾呼应）：分区边界由色阶 +
-       下方的 --space-section 给出，不再画 border-top，也不是一整屏的空白。 -->
-  <section class="site-index" aria-labelledby="index-title" data-motion>
+  <!-- 小站索引：只保留一行统计与入口。原先的「统计四连 + 最近说说 + 其他页面 + 常用标签」
+       四块把首页当仪表盘布置，区块数比文章还多，视觉重心也压过了正文。 -->
+  <section class="site-index" aria-label="站点索引">
     <Container width="standard">
-      <div class="section-heading index-heading" data-motion-item>
-        <h2 id="index-title" class="text-heading text-ink">小站索引</h2>
-      </div>
-
-      <!-- 统计不再是四张带 1px 网格的等宽卡片：数字与单位同一行、横向排开，
-           分隔只靠 gap。单位跟着数字走，标签不再悬在数字上方（探针把那种排法当 eyebrow）。 -->
-      <ul class="stats-row" aria-label="站点统计">
-        <li data-motion-item>
-          <span class="stat-value">{posts.length}</span>
-          <span class="stat-label">篇文章</span>
-        </li>
-        <li data-motion-item>
-          <span class="stat-value">{shuoshuo.length}</span>
-          <span class="stat-label">条说说</span>
-        </li>
-        <li data-motion-item>
-          <span class="stat-value">{days}</span>
-          <span class="stat-label">天持续更新</span>
-        </li>
-        <li data-motion-item>
-          <span class="stat-value">{tagCount.size}</span>
-          <span class="stat-label">个标签</span>
-        </li>
-      </ul>
-
-      <div class="index-grid">
-        {
-          latestSay && (
-            <div class="latest-say">
-              <div class="index-label text-note text-sub" data-motion-item>
-                <Icon name="material-symbols:chat-bubble-outline" class="size-4" aria-hidden="true" />
-                最近的说说
-              </div>
-              <p class="say-text text-base text-ink" data-motion-item>
-                {sayText}
-              </p>
-              <div class="say-meta text-note text-sub" data-motion-item>
-                <time datetime={latestSay.data.published_at.toISOString()}>{sayTime}</time>
-                <a href="/shuoshuo/">
-                  查看时间线{' '}
-                  <Icon name="material-symbols:arrow-forward" class="size-3.5" aria-hidden="true" />
-                </a>
-              </div>
-            </div>
-          )
-        }
-        <div class="index-links">
-          <div class="index-label text-note text-sub" data-motion-item>
-            <Icon name="material-symbols:link" class="size-4" aria-hidden="true" />
-            其他页面
-          </div>
-          <nav class="quick-links" aria-label="快捷入口">
-            <a href="/search/" class="quick-link text-base" data-motion-item>
-              <Icon name="material-symbols:search" class="size-4" aria-hidden="true" />搜索
-            </a>
-            <a href="/shuoshuo/" class="quick-link text-base" data-motion-item>
-              <Icon name="material-symbols:chat-bubble-outline" class="size-4" aria-hidden="true" />说说
-            </a>
-            <a href="/rss.xml" class="quick-link text-base" data-motion-item>
-              <Icon name="material-symbols:rss-feed" class="size-4" aria-hidden="true" />RSS
-            </a>
-            <a
-              href="https://github.com/Serina765P"
-              target="_blank"
-              rel="noopener"
-              class="quick-link text-base"
-              data-motion-item
-            >
-              <Icon name="simple-icons:github" class="size-4" aria-hidden="true" />GitHub
-            </a>
-          </nav>
-        </div>
-      </div>
-
-      <div class="tag-index">
-        <div class="index-label text-note text-sub" data-motion-item>
-          <Icon name="material-symbols:label-outline" class="size-4" aria-hidden="true" />
-          常用标签
-        </div>
-        <div class="tag-list" data-motion-item>
-          {
-            topTags.map(([name]) => (
-              <TagChip href={`/tags/${tagSlug(name)}/`} label={name} size="cloud" />
-            ))
-          }
-          <a href="/tags/" class="all-tags text-note">
-            全部标签 <Icon name="material-symbols:arrow-forward" class="size-3.5" aria-hidden="true" />
-          </a>
-        </div>
-      </div>
+      <p class="index-line">
+        {posts.length} 篇文章 · {shuoshuoCount} 条说说 · {tagTotal} 个标签 · <a href="/search/">搜索</a> · <a
+          href="/shuoshuo/">说说</a
+        > · <a href="/rss.xml">RSS</a> · <a
+          href="https://github.com/Serina765P"
+          target="_blank"
+          rel="noopener">GitHub</a
+        >
+      </p>
     </Container>
   </section>
 </BaseLayout>
@@ -249,17 +153,6 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
     object-fit: cover;
   }
 
-  .hero-mark {
-    position: absolute;
-    top: -1rem;
-    right: -0.5rem;
-    color: color-mix(in srgb, var(--brand) 35%, var(--surface));
-    font-family: var(--font-hero);
-    /* 取 heading 档（30px）而不是又开一档 2rem：竖排装饰字没有自己的刻度 */
-    font-size: var(--text-heading);
-    letter-spacing: 0.12em;
-    writing-mode: vertical-rl;
-  }
 
   .hero-caption {
     color: var(--sub);
@@ -287,8 +180,7 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
     display: grid;
   }
 
-  .archive-link,
-  .say-meta a {
+  .archive-link {
     display: inline-flex;
     min-height: 2.5rem;
     align-items: center;
@@ -298,134 +190,35 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
     transition: color 180ms ease;
   }
 
-  /* 分节：不画 border-top，用色阶带 + --space-section 的间距。下界 5rem 是「分区之间必须
-     读成断开」的最小距离：窄屏 --space-section 只有 48px，上一行末尾的标签 chip 会落到下一节
-     h2 上方 72px 判决窗里，被探针读成 eyebrow。1440 宽时 --space-section（88px）仍然说了算。 */
+  /* 小站索引：一行文字 + 一档色阶带。原先进这里的是四块「仪表盘」（统计 / 最近说说 /
+     其他页面 / 常用标签），区块数比文章列表还多，视觉重心压过了正文。 */
   .site-index {
     margin-top: max(var(--space-section), 5rem);
-    padding-block: 2.25rem;
+    padding-block: 1.15rem;
     background: var(--brand-wash);
   }
 
-  .index-heading {
-    margin-bottom: 1.75rem;
-  }
-
-  .stats-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem 2rem;
+  .index-line {
     margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .stats-row li {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 0.4rem;
-  }
-
-  .stat-value {
-    color: var(--ink);
-    font-size: var(--text-heading);
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0;
-    line-height: 1.1;
-  }
-
-  /* 单位标签取 16px（base 档）而不是 note 档：13px 的标签在窄屏换行后会落到下一行数字的上方，
-     被探针读成 eyebrow/kicker；16px 高于「标题的一半」阈值，读起来也更像一句完整的统计
-     （「12 篇文章」），而不是悬在数字上的小标签。 */
-  .stat-label {
     color: var(--sub);
     font-size: var(--text-base);
   }
 
-  /* 两栏用留白分开：左边最近说说（有正文，占更多宽度），右边入口 */
-  .index-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1.25fr) minmax(15rem, 0.75fr);
-    gap: 3rem;
-    padding-top: 2.25rem;
+  .index-line a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--line);
+    transition:
+      color 180ms ease,
+      border-color 180ms ease;
   }
 
-  .latest-say,
-  .index-links {
-    min-width: 0;
-  }
-
-  .index-label {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    color: var(--sub);
-  }
-
-  .say-text {
-    max-width: 34rem;
-    margin-top: 0.75rem;
-  }
-
-  .say-meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-top: 0.75rem;
-    color: var(--sub);
-  }
-
-  .quick-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 1.25rem;
-    margin-top: 0.75rem;
-  }
-
-  .quick-link {
-    display: inline-flex;
-    min-height: 2.5rem;
-    align-items: center;
-    gap: 0.4rem;
-    color: var(--body);
-    transition: color 180ms ease;
-  }
-
-  .quick-link:hover {
+  .index-line a:hover {
     color: var(--brand-strong);
+    border-color: var(--brand-strong);
   }
 
-  /* 标签区跟着两栏，用分区内部的 2.25rem —— 不是分区间距，也不再画 border-top */
-  .tag-index {
-    margin-top: 2.25rem;
-  }
-
-  .tag-list {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.9rem;
-  }
-
-  .all-tags {
-    /* 与同排 TagChip 的 44px 目标对齐：这一项只有文字，靠 min-height 撑出可点区域 */
-    display: inline-flex;
-    min-height: 2.75rem;
-    align-items: center;
-    gap: 0.4rem;
-    margin-left: 0.25rem;
-    color: var(--brand-strong);
-    font-weight: 600;
-    transition: color 180ms ease;
-  }
-
-  .archive-link:hover,
-  .say-meta a:hover,
-  .all-tags:hover {
+  .archive-link:hover {
     color: var(--brand);
   }
 
@@ -442,9 +235,6 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
       height: 7.5rem;
     }
 
-    .hero-mark {
-      font-size: 1.6rem;
-    }
   }
 
   @media (max-width: 48rem) {
@@ -460,17 +250,7 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
       border-width: 0.25rem;
     }
 
-    .hero-mark {
-      top: -1.25rem;
-      right: -0.75rem;
-      font-size: 1.4rem;
-    }
 
-    .index-grid {
-      grid-template-columns: 1fr;
-      gap: 2rem;
-      padding-top: 2rem;
-    }
   }
 
   @media (max-width: 36rem) {
@@ -500,19 +280,11 @@ const sayTime = latestSay ? formatDate(latestSay.data.published_at) : '';
       height: 4.5rem;
     }
 
-    .hero-mark {
-      top: -0.4rem;
-      right: auto;
-      left: 3.2rem;
-      font-size: 1.2rem;
-    }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .archive-link,
-    .say-meta a,
-    .all-tags,
-    .quick-link {
+    .index-line a {
       transition: none;
     }
   }

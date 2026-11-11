@@ -5,6 +5,10 @@
 // （首屏 0 依赖），未升级的 media-play-button 既没有 role 也不可聚焦。播放在首个交互后
 // 才懒加载 Video.js，标记必须在那之前就可访问；播放/暂停只是十行状态切换，不需要组件。
 // 时间轴、时间、静音与音量滑杆仍交给 Video.js 组件 —— 拖动/方向键/aria-valuetext 是那里真正的价值。
+//
+// 全站 BGM 退场后（B 版视觉减重），music.css 不再由 BaseLayout 全局引入：样式跟着这套
+// 标记走，第一次真正渲染音乐控件时才进产物，读者不再为没出现的播放器付 20KB CSS。
+import '../../styles/music.css';
 import { Icon } from 'astro-icon/components';
 
 interface Props {

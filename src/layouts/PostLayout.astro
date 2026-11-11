@@ -9,9 +9,10 @@ import ImasAlbum from '../components/skins/ImasAlbum.astro';
 import ArticleLicense from '../components/ArticleLicense.astro';
 import CodeBlock from '../components/CodeBlock.astro';
 import Card from '../components/primitives/Card.astro';
+import CategoryChip from '../components/primitives/CategoryChip.astro';
 import TagChip from '../components/primitives/TagChip.astro';
 import Container from '../components/primitives/Container.astro';
-import { categoryFillClass, categorySlug, tagSlug, SITE } from '../site.config';
+import { tagSlug, SITE } from '../site.config';
 import { formatDate, formatCount, readingTime, wordcount } from '../lib/utils';
 import type { PostLicense } from '../lib/post-frontmatter';
 
@@ -83,34 +84,19 @@ const showToc = data.toc !== false && !data.categories.includes('小游戏');
 
           <div class="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-note text-sub">
             {
-              category && (
-                <a
-                  href={`/categories/${categorySlug(category)}/`}
-                  class:list={[
-                    'inline-flex items-center rounded-full px-2.5 py-0.5 text-note text-cat-on transition-opacity hover:opacity-85',
-                    categoryFillClass(category),
-                  ]}
-                >
-                  {category}
-                </a>
-              )
+              category && <CategoryChip name={category} />
             }
             <span class="inline-flex items-center gap-1">
-              <Icon name="material-symbols:calendar-month" class="size-3.5" aria-hidden="true" />
               <time datetime={data.date.toISOString()}>发布于 {formatDate(data.date)}</time>
             </span>
             {
               data.updated && data.updated.getTime() !== data.date.getTime() && (
                 <span class="inline-flex items-center gap-1">
-                  <Icon name="material-symbols:article" class="size-3.5" aria-hidden="true" />
                   <time datetime={data.updated.toISOString()}>更新于 {formatDate(data.updated)}</time>
                 </span>
               )
             }
-            <span class="inline-flex items-center gap-1">
-              <Icon name="material-symbols:schedule" class="size-3.5" aria-hidden="true" />
-              约 {minutes} 分钟 · {formatCount(words)} 字
-            </span>
+            <span class="inline-flex items-center gap-1">约 {minutes} 分钟 · {formatCount(words)} 字</span>
           </div>
 
           {

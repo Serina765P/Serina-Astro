@@ -14,8 +14,6 @@ import {
   serializeShuoshuo,
   shuoshuoDayKey,
   shuoshuoDayNumber,
-  shuoshuoYear,
-  sortShuoshuo,
   stripShuoshuoTags,
   type ShuoshuoItem,
 } from '../../lib/shuoshuo';
@@ -28,11 +26,7 @@ export const getStaticPaths = (async ({ paginate }) => {
 }) satisfies GetStaticPaths;
 
 const { page } = Astro.props;
-const allItems = sortShuoshuo((await getCollection('shuoshuo')).map(serializeShuoshuo));
 const initialItems = page.data.map(serializeShuoshuo);
-const tagOptions = [...new Set(allItems.flatMap((item) => item.tags))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
-const yearOptions = [...new Set(allItems.map(shuoshuoYear))].sort((a, b) => b - a);
-const monthOptions = [...new Set(allItems.map((item) => monthInShanghai(new Date(item.published_at))))].sort().reverse();
 
 // 日期逻辑全部来自 lib/shuoshuo.ts —— 客户端脚本引用同一组函数，
 // 否则首屏（SSR）与筛选/翻页后（客户端渲染）会各有一套分组与时间格式。
@@ -48,58 +42,6 @@ const groupLabel = (item: ShuoshuoItem) => {
 <BaseLayout title={`说说 · ${SITE.title}`} description="碎碎念时间线" pathname={page.url.current}>
   <Container width="narrow" class="shuoshuo-page">
     <PageHeader title="说说" subtitle={`共 ${page.total} 条说说`} />
-
-    <form id="shuoshuo-filter" class="shuoshuo-tools mt-8" role="search">
-      <div class="shuoshuo-tools-main">
-        <label class="shuoshuo-search">
-          <span class="sr-only">搜索说说</span>
-          <Icon name="material-symbols:search" class="size-5" aria-hidden="true" />
-          <input
-            id="shuoshuo-query"
-            name="q"
-            type="search"
-            placeholder="搜索标题、正文或标签…"
-            autocomplete="off"
-            enterkeyhint="search"
-          />
-        </label>
-        <button type="submit" class="shuoshuo-submit">
-          <Icon name="material-symbols:filter-alt" class="size-4" aria-hidden="true" />
-          <span>筛选</span>
-        </button>
-        <a class="shuoshuo-reset" href={page.url.current.split('?')[0]} data-shuoshuo-reset>清除</a>
-      </div>
-      <details class="shuoshuo-refine" open>
-        <summary><span>细化范围</span><span class="shuoshuo-refine-hint">标签 / 年份 / 月份</span></summary>
-        <div class="shuoshuo-filter-row">
-          <label>
-            <span>标签</span>
-            <select name="tag">
-              <option value="">全部标签</option>
-              {tagOptions.map((tag) => <option value={tag}>{`#${tag}`}</option>)}
-            </select>
-          </label>
-          <label>
-            <span>年份</span>
-            <select name="year">
-              <option value="">全部年份</option>
-              {yearOptions.map((year) => <option value={year}>{year}</option>)}
-            </select>
-          </label>
-          <label>
-            <span>月份</span>
-            <select name="month">
-              <option value="">全部月份</option>
-              {monthOptions.map((month) => <option value={month}>{month}</option>)}
-            </select>
-          </label>
-        </div>
-      </details>
-    </form>
-
-    <p id="shuoshuo-status" class="shuoshuo-status mt-5" aria-live="polite">
-      当前显示第 {page.currentPage} 页，共 {page.total} 条
-    </p>
 
     <ol
       id="shuoshuo-list"
@@ -228,8 +170,6 @@ const groupLabel = (item: ShuoshuoItem) => {
     // <html> 上记录「当前实例的 render」，供只绑一次的 popstate 转发（见函数末尾）
     type ShuoshuoHost = HTMLElement & { __shuoshuoRender?: () => void };
     const host = document.documentElement as ShuoshuoHost;
-    const form = document.querySelector<HTMLFormElement>('#shuoshuo-filter');
-    const status = document.querySelector<HTMLElement>('#shuoshuo-status');
     const empty = document.querySelector<HTMLElement>('#shuoshuo-empty');
     const pagination = document.querySelector<HTMLElement>('#shuoshuo-pagination');
     const routePage = Number(app.dataset.currentPage ?? 1);
@@ -271,17 +211,6 @@ const groupLabel = (item: ShuoshuoItem) => {
     if (page > 1) params.set('page', String(page));
     const query = params.toString();
     return `${location.pathname}${query ? `?${query}` : ''}`;
-  };
-  const setFormValues = (filters: ReturnType<typeof currentFilters>) => {
-    if (!form) return;
-    const q = form.elements.namedItem('q') as HTMLInputElement | null;
-    const tag = form.elements.namedItem('tag') as HTMLSelectElement | null;
-    const year = form.elements.namedItem('year') as HTMLSelectElement | null;
-    const month = form.elements.namedItem('month') as HTMLSelectElement | null;
-    if (q) q.value = filters.q;
-    if (tag) tag.value = filters.tag;
-    if (year) year.value = filters.year;
-    if (month) month.value = filters.month;
   };
   const matches = (item: Item, filters: ReturnType<typeof currentFilters>) => {
     const query = filters.q.toLocaleLowerCase('zh-CN');
@@ -437,9 +366,8 @@ const groupLabel = (item: ShuoshuoItem) => {
   }
 
   function render() {
-    if (!app || !status || !empty) return;
+    if (!app || !empty) return;
     const filters = currentFilters();
-    setFormValues(filters);
     const filtered = sortItems(allItems.filter((item) => matches(item, filters)));
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
     const page = Math.min(Math.max(1, currentPage(filters)), totalPages);
@@ -449,9 +377,6 @@ const groupLabel = (item: ShuoshuoItem) => {
     visible.forEach((item, index) => app.append(createItem(item, index > 0 ? visible[index - 1] : undefined)));
     empty.hidden = visible.length > 0;
     app.hidden = visible.length === 0;
-    status.textContent = filtered.length === 0
-      ? '没有匹配结果'
-      : `当前显示第 ${page} 页，共 ${filtered.length} 条`;
     renderPagination(page, totalPages, filters);
   }
 
@@ -482,23 +407,6 @@ const groupLabel = (item: ShuoshuoItem) => {
     }
   }
 
-  form?.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const values = new FormData(form);
-    const filters = {
-      q: String(values.get('q') ?? '').trim(),
-      tag: String(values.get('tag') ?? ''),
-      year: String(values.get('year') ?? ''),
-      month: String(values.get('month') ?? ''),
-    };
-    history.pushState({}, '', buildUrl(1, filters));
-    render();
-  });
-  document.querySelector<HTMLAnchorElement>('[data-shuoshuo-reset]')?.addEventListener('click', (event) => {
-    event.preventDefault();
-    history.pushState({}, '', buildUrl(1, { q: '', tag: '', year: '', month: '' }));
-    render();
-  });
   // popstate 只绑一次：本函数按列表元素幂等（每次换页都是新元素），但 window 监听器会
   // 随每次进入本页累积，且闭包指向已被替换的旧列表。改为「绑一次 + 转发给当前实例」：
   // 幂等标记与新实例的 render 都挂在 <html>（documentElement 不随换页替换）。

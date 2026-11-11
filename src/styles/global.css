@@ -162,10 +162,9 @@
   --chip-fg-hover: var(--ink);
 }
 
-/* ── 分类胶囊：fill / on 分离（P0-3）──
-   亮色 fill 取 wash 原色（与旧行为逐像素一致）；暗色不再用亮色实底，把 wash 揉进 surface 当 fill，
-   靠色相而非明度提示分类，文字改用 --ink。fill 必须按分类分档：单一 fill 会把四种分类压成一色，
-   且与卡片色条（spine，取 --wash-*）色相脱节。 */
+/* ── 分类填色（B 版视觉减重后不再服务分类 chip）──
+   分类 chip 改成中性胶囊 + 色点（见 CategoryChip.astro），实底 fill 只剩小游戏页的徽标在用；
+   token 保留是因为暗色下不能再用 wash 原色当实底，徽标仍需要按分类分档的 fill。 */
 :root {
   --cat-on: var(--on-wash);
   --cat-fill-pink: var(--wash-pink);
@@ -185,6 +184,11 @@
   --cat-fill-clay: color-mix(in srgb, var(--wash-clay) 26%, var(--surface));
   --cat-fill-rose: color-mix(in srgb, var(--wash-rose) 26%, var(--surface));
 }
+
+/* ── 分类胶囊（B 版视觉减重）──
+   分类只保留一个颜色通道：胶囊本身是中性 chip（--chip-bg / --sub），色相由行内
+   --cat-dot 的五像素圆点承担。此前的实底 fill 四色团 + 卡片左侧色条是同一信息的两套颜色通道，
+   同页叠加后比旧版更花；现在填充色与 --cat-* token 一起退场，组件在 CategoryChip.astro。 */
 
 @theme {
   /* 正文字体：系统栈（R4）。拉丁取 system-ui / Segoe UI，CJK 逐级回退
@@ -269,6 +273,10 @@
   --text-display--line-height: 1.15;
   --text-heading: 1.875rem;
   --text-heading--line-height: 1.25;
+  /* 页面级 h1（内页）：display 只属于首页 hero。内页沿用 60px 时，只有六行的
+     分类页会被标题占掉首屏四分之一，所以内页单独一档 36px 封顶（B 版视觉减重）。 */
+  --text-page: clamp(1.75rem, 2.6vw, 2.25rem);
+  --text-page--line-height: 1.3;
   --text-lead: 1.25rem;
   --text-lead--line-height: 1.4;
   --text-base--line-height: 1.75;
@@ -311,9 +319,6 @@
      消费类：bg-chip / text-chip-fg / bg-chip-hover / text-chip-fg-hover /
              bg-cat-fill-* / text-cat-on */
   --color-chip: var(--chip-bg);
-  --color-chip-hover: var(--chip-bg-hover);
-  --color-chip-fg: var(--chip-fg);
-  --color-chip-fg-hover: var(--chip-fg-hover);
   --color-cat-on: var(--cat-on);
   --color-cat-fill-pink: var(--cat-fill-pink);
   --color-cat-fill-mist: var(--cat-fill-mist);
@@ -321,6 +326,10 @@
   --color-cat-fill-sand: var(--cat-fill-sand);
   --color-cat-fill-clay: var(--cat-fill-clay);
   --color-cat-fill-rose: var(--cat-fill-rose);
+
+  --color-chip-hover: var(--chip-bg-hover);
+  --color-chip-fg: var(--chip-fg);
+  --color-chip-fg-hover: var(--chip-fg-hover);
   /* 媒体遮罩与强调底上的文字（S16）：bg-scrim / text-on-scrim / text-on-accent */
   --color-scrim: var(--scrim);
   --color-scrim-strong: var(--scrim-strong);
@@ -706,78 +715,6 @@
     background: transparent;
   }
 
-  /* 说说的筛选栏与卡片之间不画分隔线（D3）：靠留白与控件自身的边界区分 */
-  .shuoshuo-tools {
-    padding-block: 0.75rem;
-  }
-  .shuoshuo-tools-main {
-    @apply grid items-center gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto];
-  }
-  .shuoshuo-search {
-    @apply relative flex min-w-0 items-center;
-  }
-  .shuoshuo-search > svg {
-    @apply pointer-events-none absolute left-3.5 size-4 text-sub;
-  }
-  .shuoshuo-tools input,
-  .shuoshuo-tools select {
-    @apply min-h-11 border border-line bg-surface text-base text-ink transition-colors;
-  }
-  .shuoshuo-tools input {
-    @apply w-full rounded-xl pl-10 pr-3.5;
-  }
-  .shuoshuo-tools select {
-    @apply w-full rounded-lg px-3;
-  }
-  .shuoshuo-tools input:focus-visible,
-  .shuoshuo-tools select:focus-visible {
-    @apply border-wash-pink-deep ring-2 ring-wash-pink/20;
-  }
-  .shuoshuo-submit,
-  .shuoshuo-reset {
-    @apply inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-4 text-base transition-colors;
-    touch-action: manipulation;
-  }
-  .shuoshuo-submit {
-    @apply bg-action text-on-action hover:bg-wash-clay-deep;
-  }
-  .shuoshuo-reset {
-    @apply text-sub hover:bg-surface-2 hover:text-ink;
-  }
-  .shuoshuo-refine {
-    @apply mt-3 pt-3;
-  }
-  .shuoshuo-refine summary {
-    @apply flex min-h-9 cursor-pointer list-none items-center justify-between gap-3 text-base text-body;
-    touch-action: manipulation;
-  }
-  .shuoshuo-refine summary::-webkit-details-marker {
-    display: none;
-  }
-  .shuoshuo-refine summary::after {
-    content: '+';
-    @apply text-lg leading-none text-sub;
-  }
-  .shuoshuo-refine[open] summary::after {
-    content: '−';
-  }
-  .shuoshuo-refine-hint {
-    @apply ml-auto text-xs text-sub;
-  }
-  .shuoshuo-filter-row {
-    @apply mt-3 grid gap-3 sm:grid-cols-3;
-  }
-  .shuoshuo-filter-row label {
-    @apply flex min-w-0 flex-col gap-1.5 text-xs text-sub;
-  }
-  .shuoshuo-status {
-    @apply flex items-center gap-2 text-sm text-sub;
-  }
-  .shuoshuo-status::before {
-    content: '';
-    @apply size-1.5 rounded-full bg-wash-clay-deep;
-  }
-
   .shuoshuo-timeline {
     --timeline-date: 6.5rem;
     --timeline-gutter: 1.25rem;
@@ -928,15 +865,6 @@
   }
 
   @media (max-width: 40rem) {
-    .shuoshuo-tools-main {
-      @apply grid-cols-[minmax(0,1fr)_auto];
-    }
-    .shuoshuo-search {
-      grid-column: 1 / -1;
-    }
-    .shuoshuo-filter-row {
-      @apply grid-cols-1;
-    }
     .shuoshuo-timeline {
       --timeline-date: 1.25rem;
       --timeline-gutter: 0.75rem;

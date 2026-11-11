@@ -2,8 +2,9 @@
 import { Image } from 'astro:assets';
 import { Icon } from 'astro-icon/components';
 import Card from './primitives/Card.astro';
+import CategoryChip from './primitives/CategoryChip.astro';
 import TagChip from './primitives/TagChip.astro';
-import { categoryColor, categoryFillClass, tagSlug } from '../site.config';
+import { tagSlug } from '../site.config';
 import { formatDate, readingTime } from '../lib/utils';
 import { getPostCover } from '../lib/post-covers';
 
@@ -33,7 +34,6 @@ const Heading = isDirectory ? 'h3' : 'h2';
 const href = `/posts/${post.id}/`;
 const minutes = post.body ? readingTime(post.body) : null;
 const category = post.data.categories[0];
-const spine = categoryColor(category ?? '');
 const cover = getPostCover(post.id, post.data.cover);
 ---
 
@@ -61,18 +61,6 @@ const cover = getPostCover(post.id, post.data.cover);
       />
     )
   }
-  <span
-    aria-hidden="true"
-    class:list={[
-      'absolute left-0',
-      isDirectory
-        ? 'top-0 bottom-0 w-0.5 rounded-full'
-        : cover
-          ? 'top-44 bottom-0 w-[5px] rounded-r-full sm:top-52'
-          : 'top-5 bottom-5 w-[5px] rounded-r-full',
-    ]}
-    style={`background:${spine}`}
-  />
   <div class:list={['relative', cover && !isDirectory ? 'p-5 sm:p-6 sm:pl-7' : '']}>
     <Heading class="text-lead">
       <a
@@ -100,22 +88,14 @@ const cover = getPostCover(post.id, post.data.cover);
         post.data.pinned && <span class="rounded-full bg-chip px-2.5 py-0.5 text-chip-fg">置顶</span>
       }
       {
-        category && (
-          <span class:list={['rounded-full px-3 py-0.5 text-cat-on', categoryFillClass(category)]}>
-            {category}
-          </span>
-        )
+        category && <CategoryChip name={category} link={false} />
       }
       <span class="inline-flex items-center gap-1">
-        <Icon name="material-symbols:calendar-month" class="size-3.5" aria-hidden="true" />
         <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
       </span>
       {
         minutes && (
-          <span class="inline-flex items-center gap-1">
-            <Icon name="material-symbols:schedule" class="size-3.5" aria-hidden="true" />
-            约 {minutes} 分钟
-          </span>
+          <span class="inline-flex items-center gap-1">约 {minutes} 分钟</span>
         )
       }
     </div>

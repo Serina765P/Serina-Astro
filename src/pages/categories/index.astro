@@ -3,7 +3,7 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Container from '../../components/primitives/Container.astro';
 import PageHeader from '../../components/primitives/PageHeader.astro';
-import { categoryColor, categorySlug } from '../../site.config';
+import { categorySlug } from '../../site.config';
 import { SITE } from '../../site.config';
 
 const posts = await getCollection('posts');
@@ -31,11 +31,6 @@ const sorted = [...categories.values()].sort((a, b) => b.count - a.count);
           {sorted.map(({ name, count }) => (
             <li data-motion-item>
               <a href={`/categories/${categorySlug(name)}/`} class="category-row">
-                <span
-                  aria-hidden="true"
-                  class="category-mark"
-                  style={`background:${categoryColor(name)}`}
-                />
                 <span class="category-name">{name}</span>
                 <span class="category-count">{count} 篇</span>
               </a>
@@ -69,13 +64,6 @@ const sorted = [...categories.values()].sort((a, b) => b.count - a.count);
   .category-row:hover,
   .category-row:focus-visible {
     background: var(--brand-wash);
-  }
-
-  .category-mark {
-    width: 0.5rem;
-    height: 0.5rem;
-    flex: none;
-    border-radius: 9999px;
   }
 
   .category-name {

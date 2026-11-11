@@ -1,0 +1,72 @@
+---
+/**
+ * 分类 chip（B 版视觉减重）：中性胶囊 + 五像素色点。
+ *
+ * 为什么不是彩色实底：分类信息此前同时用「实底胶囊 + 卡片左侧色条」两套颜色通道，
+ * 一个页面里出现两次以上就开始发花。现在颜色只留在圆点上一处，胶囊与标签 chip
+ * 共用 --chip-bg 一套语汇，页面上再没有第二个彩色色块。
+ *
+ * link=false 用于文章卡：整张卡片已经被标题链接的 ::after 覆盖，不能再嵌套 <a>。
+ */
+import { categoryColor, categorySlug } from '../../site.config';
+
+interface Props {
+  name: string;
+  /** 是否渲染成指向分类页的链接（默认是；卡片内传 false）。 */
+  link?: boolean;
+}
+
+const { name, link = true } = Astro.props;
+const href = `/categories/${categorySlug(name)}/`;
+const dot = `--cat-dot:${categoryColor(name)}`;
+---
+
+{
+  link ? (
+    <a href={href} class="cat-chip" style={dot}>
+      {name}
+    </a>
+  ) : (
+    <span class="cat-chip" style={dot}>
+      {name}
+    </span>
+  )
+}
+
+<style>
+  .cat-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 9999px;
+    background: var(--chip-bg);
+    padding: 0.125rem 0.55rem;
+    color: var(--sub);
+    font-size: var(--text-note);
+    line-height: 1.5;
+    transition:
+      background-color 180ms ease,
+      color 180ms ease;
+  }
+
+  a.cat-chip:hover,
+  a.cat-chip:focus-visible {
+    background: var(--chip-bg-hover);
+    color: var(--chip-fg-hover);
+  }
+
+  .cat-chip::before {
+    content: '';
+    flex: none;
+    width: 5px;
+    height: 5px;
+    border-radius: 9999px;
+    background: var(--cat-dot);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cat-chip {
+      transition: none;
+    }
+  }
+</style>
