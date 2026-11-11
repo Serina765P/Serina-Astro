@@ -110,3 +110,25 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 5: 页面标题统一朝华明朝体
+<!-- trellis-session: v=2 fp=65c565709ee1b522 -->
+
+**Date**: 2026-11-11
+**Task**: 页面标题统一朝华明朝体
+**Branch**: `main`
+
+### Summary
+
+hero 子集扩展到 110 字（hero 文案 + taxonomy/静态页面标题），所有页面共享 hero-mincho.css；PageHeader 与 404 的 h1 改用 --font-hero；字体按 unicode-range 按需下载。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `17ab02e` | feat(reading): 页面标题统一朝华明朝体 |
+
+### Status
+
+[OK] **Completed**

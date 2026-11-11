@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 4
+- **Total Sessions**: 5
 - **Last Active**: 2026-11-11
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~112 | Active |
+| `journal-1.md` | ~134 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 5 | 2026-11-11 | 页面标题统一朝华明朝体 | `17ab02e` | `main` |
 | 4 | 2026-11-11 | 标题宋体子集自托管 | `bd286b4` | `main` |
 | 3 | 2026-11-11 | 文章正文排版精修（C 方向） | `c36878c` | `main` |
 | 2 | 2026-11-10 | 全站视觉收敛与阅读排版修订 | `62d50eb`, `1445031` | `main` |
