@@ -7,7 +7,7 @@
     "predev": "npm run hero:font && npm run heading:font",
     "dev": "astro dev",
     "prebuild": "npm run hero:font && npm run heading:font",
-    "build": "astro build && node scripts/check-build.mjs && pagefind --site dist",
+    "build": "astro build && node scripts/build-sitemap.mjs && node scripts/check-build.mjs && pagefind --site dist",
     "hero:font": "node scripts/build-hero-font.mjs",
     "heading:font": "node scripts/build-heading-font.mjs",
     "emoji:import": "node scripts/import-emoji.mjs",
