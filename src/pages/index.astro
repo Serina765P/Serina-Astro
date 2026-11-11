@@ -190,12 +190,11 @@ const tagTotal = new Set(posts.flatMap((post) => post.data.tags)).size;
     transition: color 180ms ease;
   }
 
-  /* 小站索引：一行文字 + 一档色阶带。原先进这里的是四块「仪表盘」（统计 / 最近说说 /
-     其他页面 / 常用标签），区块数比文章列表还多，视觉重心压过了正文。 */
+  /* 小站索引：只有一行文字，不铺底色。原先进这里的是四块「仪表盘」（统计 / 最近说说 /
+     其他页面 / 常用标签），区块数比文章列表还多，视觉重心压过了正文；色带再把它抬成
+     一个「区块」，去掉底色后它就只是一行注脚。 */
   .site-index {
     margin-top: max(var(--space-section), 5rem);
-    padding-block: 1.15rem;
-    background: var(--brand-wash);
   }
 
   .index-line {
