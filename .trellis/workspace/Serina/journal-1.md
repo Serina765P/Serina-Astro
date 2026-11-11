@@ -66,3 +66,25 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 3: 文章正文排版精修（C 方向）
+<!-- trellis-session: v=2 fp=95e58c7e626274dd -->
+
+**Date**: 2026-11-11
+**Task**: 文章正文排版精修（C 方向）
+**Branch**: `main`
+
+### Summary
+
+正文 17px/1.85 + --prose-size/--measure，文章 h1/h2 明朝体系统栈，h3/h4 层级、段距、引用、表格、图片、代码块语言栏修复；规范与 AGENTS 同步，shots A/B 仅 prose 页变化。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `c36878c` | feat(reading): 正文 17px 与明朝体标题，表格/图片/代码块精修 |
+
+### Status
+
+[OK] **Completed**
