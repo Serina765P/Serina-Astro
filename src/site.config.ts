@@ -19,7 +19,7 @@ export const SITE = {
   description: '已经不再是低眉顺眼的昨日，从今天开始我的传说',
   author: '芹菜P',
   keywords: ['blog', '博客', '个人博客', '芹菜P', '偶像大师', 'THE iDOLM@STER'],
-  url: 'https://blog.serinap.top',
+  url: 'https://blog.serina.top',
   lang: 'zh-CN',
   since: 2025,
 };

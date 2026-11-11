@@ -12,7 +12,7 @@ Cloudflare Email Routing（serinap.top）
 Worker：先对比 SMTP envelope recipient 与 PUBLISH_TO，再检查 envelope From + MIME From 白名单
   │  postal-mime 解析正文、去签名；GitHub Contents API 更新年度分片
   ▼
-push（main 的 `src/data/shuoshuo/**`）→ GitHub Actions Deploy → Cloudflare Pages → https://blog.serinap.top/shuoshuo/
+push（main 的 `src/data/shuoshuo/**`）→ GitHub Actions Deploy → Cloudflare Pages → https://blog.serina.top/shuoshuo/
 ```
 
 ## 私密收件地址迁移

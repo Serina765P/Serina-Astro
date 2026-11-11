@@ -82,7 +82,7 @@ ORT（Overtone Reconstruction Technology，泛音重构技术）是由日本哥�
 
 为了方便各位同担，我已经将本家 Hi-Res 曲库按照上述标准全部压制完毕。
 
-* **收录内容**：曲目列表详见[上次发布的 Hi-Res 合集](https://blog.serinap.top/posts/imas-hires/)（包含所有 765AS 的 Hi-Res 音源）
+* **收录内容**：曲目列表详见[上次发布的 Hi-Res 合集](/posts/imas-hires/)（包含所有 765AS 的 Hi-Res 音源）
 * **压制规格**：M4A 封装 / AAC-LC 编码 / 48kHz / ~270kbps (TVBR q109)
 * **下载链接**：[百度网盘 [SerinaP] 765PRO ALLSTARS COLLECTION [qAAC_TVBR q109].zip](https://pan.baidu.com/s/1Habw8hzHnOt6R0cdiYtA9Q?pwd=imas)（提取码：imas）
 *注：本资源仅供同好交流与移动端试听测试使用，请支持并购买正版音源。*

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://blog.serinap.top/sitemap-index.xml
+Sitemap: https://blog.serina.top/sitemap-index.xml

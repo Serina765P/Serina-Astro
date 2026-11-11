@@ -9,7 +9,7 @@ import icon from 'astro-icon';
 import markdownEmoji from './src/lib/markdown-emoji.ts';
 
 export default defineConfig({
-  site: 'https://blog.serinap.top',
+  site: 'https://blog.serina.top',
   // P2-13：与 build.format: 'directory' 一致 —— 页面产物是 <name>/index.html，
   // 规范 URL 一律带尾斜杠；dev/preview 会对无斜杠访问直接 404，逼出站内漏改的链接。
   // 生产侧 Cloudflare Pages 对目录型路径自动 308 补斜杠（/about → /about/），无需 _redirects。

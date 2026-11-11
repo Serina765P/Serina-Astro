@@ -1,6 +1,6 @@
 # Serina-Astro
 
-[blog.serinap.top](https://blog.serinap.top) 的源码：Astro + Tailwind CSS 4 + Pagefind，由 GitHub Actions 构建并部署到 Cloudflare Pages。
+[blog.serina.top](https://blog.serina.top) 的源码：Astro + Tailwind CSS 4 + Pagefind，由 GitHub Actions 构建并部署到 Cloudflare Pages。
 
 ## 本地开发
 
