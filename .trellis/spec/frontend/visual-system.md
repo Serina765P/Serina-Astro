@@ -18,6 +18,7 @@
 - 不要再写 `text-xs` / `text-sm` / `text-lg` / `text-[0.95rem]`。新增档位前先证明现有五档无法表达。
 - 正文内部的 h2 / h3 / h4 走 `@tailwindcss/typography` 的相对刻度（17px 基准：h2 1.55em、h3 1.18em、h4 1.06em），也不并入五档；文章 h1 / h2 用 `--font-serif`（Noto Serif SC → Source Han Serif SC → Noto Serif CJK SC → Songti SC → SimSun → serif），h3 / h4 保持 `--font-sans`。
 - 文章标题的 `Noto Serif SC` 是构建期子集：`scripts/build-heading-font.mjs` 扫描文章 h1 / h2 的字符（当前 363 字），用 Google Fonts `text=` 接口取 woff2（约 70KB），生成 `public/fonts/heading-serif.css` + woff2；产物不入库，生成失败时 BaseLayout 不输出 link，字体栈回退系统衬线。
+- 页面级 h1（`PageHeader` 与 404）用 `--font-hero`（朝华明朝体），与首页 hero 共用 `public/fonts/hero-mincho.css`；该子集同时扫描 taxonomy 分类/标签名与静态页面标题（当前约 110 字），由 `BaseLayout` 全局 link，woff2 按 unicode-range 按需下载。
 - 正文档是五档之外的唯一例外：`--prose-size: 1.0625rem`（17px）、行高 1.85、字距 0.01em；`--measure = 40 × --prose-size = 680px`（约 40 个汉字/行）。页面 chrome 仍只用五档。
 - 五档管的是页面级 chrome；正文档按上一条的独立刻度。以下密集 UI 保留局部字号，不并入五档：正文代码块（`.astro-code` 14px、语言标签 10.9px）、TOC 侧栏条目与移动端 pill（14px）、emoji 图鉴的短代码标签（11.7px）与图鉴网格、说说时间线的元信息（12–15.2px）、首屏竖排装饰字（`aria-hidden`，窄屏 1.2–1.6rem）、MilliPachi 小游戏（组件自带 `<style is:inline>`）、标签云的连续字号（「热度」信息）。
 - 正文不得小于 16px；页面 chrome 的可读文字不得小于 13px。上面这些密集 UI 里既有的小字是待归并项，新增代码不得再扩大这个范围。

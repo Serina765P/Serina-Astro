@@ -90,17 +90,20 @@ const headingFontBuilt = existsSync(
     <!-- 字体：
          正文用系统栈（global.css 的 --font-sans），不再请求 ZeoSeven 的四档正文 CSS
          （此前是 1 个 preconnect + 4 个 result.css）。
-         首页 hero 的朝华标题明朝体（item 2101）不直接引用 CDN：它的 result.css 是 202KB / 385 条
-         @font-face，标题这 10 个字会触发 10 个分片共 325KB。改为构建期生成「只含用到的字形」的
-         本地子集（scripts/build-hero-font.mjs → public/fonts/hero-mincho.css），字体家族名不变，
-         global.css 的 --font-hero 无需改动。 -->
+         首页 hero 与所有页面级 h1 共用朝华标题明朝体（item 2101）。它的 result.css 是 202KB /
+         385 条 @font-face；改为构建期扫描 hero 文案 + 页面标题字符，只子集化用到的字形
+         （scripts/build-hero-font.mjs → public/fonts/hero-mincho.css），字体家族名不变。
+         所有页面共享这份 CSS，woff2 由 unicode-range 按需下载；生成失败时仅首页回退 CDN。 -->
     {
-      heroFont &&
-        (heroFontBuilt ? (
-          <link rel="stylesheet" href="/fonts/hero-mincho.css" />
-        ) : (
+      heroFontBuilt ? (
+        // 子集已覆盖 hero 与所有页面级 h1 的字符；所有页面共享这一份 CSS，
+        // woff2 由 unicode-range 按需下载。
+        <link rel="stylesheet" href="/fonts/hero-mincho.css" />
+      ) : (
+        heroFont && (
           <link rel="stylesheet" href="https://fontsapi.zeoseven.com/2101/main/result.css" />
-        ))
+        )
+      )
     }
     <!-- 文章标题的思源宋体子集：只在构建期生成成功时加载；字体 face 带 unicode-range，
          页面没有对应标题时浏览器不会请求 woff2。 -->

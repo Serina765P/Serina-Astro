@@ -14,12 +14,16 @@
 // 生成产物时会自动回退到 CDN 上的完整 CSS（旧行为），页面不会因此变成系统衬线。
 
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import subsetFont from 'subset-font';
+import { parse as parseYaml } from 'yaml';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const SITE_INFO = path.join(ROOT, 'src', 'data', 'site-info.json');
+const TAXONOMY = path.join(ROOT, 'src', 'data', 'taxonomy.json');
+const CONTENT_PAGES_DIR = path.join(ROOT, 'src', 'content', 'pages');
+const SRC_PAGES_DIR = path.join(ROOT, 'src', 'pages');
 const CSS_URL = 'https://fontsapi.zeoseven.com/2101/main/result.css';
 const CACHE_DIR = path.join(ROOT, '.cache', 'hero-mincho');
 const OUT_DIR = path.join(ROOT, 'public', 'fonts', 'hero-mincho');
@@ -27,6 +31,65 @@ const OUT_CSS = path.join(ROOT, 'public', 'fonts', 'hero-mincho.css');
 const FAMILY = 'ZhaohuaMinA Bold';
 
 const log = (message) => console.log(`[hero-font] ${message}`);
+
+/** 递归收集 .astro 页面文件（PageHeader / PageLayout 标题与 404 的 h1） */
+async function collectAstroFiles(dir) {
+  const files = [];
+  let entries;
+  try {
+    entries = await readdir(dir, { withFileTypes: true });
+  } catch {
+    return files;
+  }
+  for (const entry of entries) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) files.push(...(await collectAstroFiles(full)));
+    else if (entry.name.endsWith('.astro')) files.push(full);
+  }
+  return files;
+}
+
+/**
+ * 页面级 h1 的字符来源：分类/标签页标题来自 taxonomy 键，about 来自 content pages
+ * frontmatter；其余静态标题从 .astro 的 PageHeader / PageLayout 字面 title 与 404 的 h1 读取。
+ * 动态 `title={...}` 不解析，由 taxonomy / content 覆盖。
+ */
+async function collectPageTitleTexts() {
+  const texts = ['#']; // tag 页标题的 `# ` 前缀
+
+  try {
+    const taxonomy = JSON.parse(await readFile(TAXONOMY, 'utf8'));
+    texts.push(...Object.keys(taxonomy.categorySlugs ?? {}));
+    texts.push(...Object.keys(taxonomy.tagSlugs ?? {}));
+  } catch {
+    log('警告：读取 taxonomy.json 失败，分类/标签页标题可能缺字');
+  }
+
+  try {
+    for (const name of await readdir(CONTENT_PAGES_DIR)) {
+      if (!/\.mdx?$/.test(name)) continue;
+      const source = await readFile(path.join(CONTENT_PAGES_DIR, name), 'utf8');
+      const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---/.exec(source);
+      if (!frontmatter) continue;
+      const data = parseYaml(frontmatter[1]);
+      if (typeof data?.title === 'string') texts.push(data.title);
+    }
+  } catch {
+    log('警告：读取 content/pages 标题失败');
+  }
+
+  for (const file of await collectAstroFiles(SRC_PAGES_DIR)) {
+    const source = await readFile(file, 'utf8');
+    for (const match of source.matchAll(/<(?:PageHeader|PageLayout)\b[^>]*\btitle="([^"]+)"/g)) {
+      texts.push(match[1]);
+    }
+    for (const match of source.matchAll(/<h1\b[^>]*>([^<{]+)<\/h1>/g)) {
+      texts.push(match[1]);
+    }
+  }
+
+  return texts;
+}
 
 /** 把 `U+4E00-4E0F` / `U+30??` 这类 token 解析成 [start, end] */
 function parseRange(token) {
@@ -78,8 +141,14 @@ async function cachedFetch(url, cacheFile) {
 
 async function main() {
   const info = JSON.parse(await readFile(SITE_INFO, 'utf8'));
-  const texts = [info.heroTitle, info.heroMark].filter((v) => typeof v === 'string' && v.length);
-  if (texts.length === 0) throw new Error('site-info.json 缺少 heroTitle / heroMark');
+  const heroTexts = [info.heroTitle, info.heroMark].filter(
+    (v) => typeof v === 'string' && v.length,
+  );
+  if (heroTexts.length === 0) throw new Error('site-info.json 缺少 heroTitle / heroMark');
+
+  const pageTitleTexts = await collectPageTitleTexts();
+  const texts = [...heroTexts, ...pageTitleTexts];
+  log(`hero ${heroTexts.join('')} + 页面标题 ${pageTitleTexts.length} 条`);
 
   // 空白字符不需要字体，交给系统衬线即可
   const codes = [
