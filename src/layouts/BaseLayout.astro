@@ -50,32 +50,10 @@ const headingFontBuilt = existsSync(
   <head>
     <script is:inline>
       (function () {
-        function applyTheme() {
-          var stored = null;
-          try {
-            stored = localStorage.getItem('theme');
-          } catch (e) {
-            /* 隐私模式等 storage 不可用时回退到系统偏好 */
-          }
-          var dark = stored ? stored === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
-          document.documentElement.classList.toggle('dark', dark);
-          // 从 CSS token 读取浏览器 chrome 底色，避免主题色在 JS 中重复维护
-          var themeColor = document.querySelector('meta[name="theme-color"]');
-          if (themeColor) {
-            requestAnimationFrame(function () {
-              var bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
-              if (bg) themeColor.setAttribute('content', bg);
-            });
-          }
-        }
-        applyTheme();
-        // 监听器只在首次执行时绑定：本脚本换页后会被 ClientRouter 重跑，
-        // 幂等标记挂 <html>（documentElement 不随换页替换）防止监听器累积
-        if (document.documentElement.dataset.themeBound === 'true') return;
-        document.documentElement.dataset.themeBound = 'true';
-        // ClientRouter 换页会换掉 <html> 的 class，换页后必须重新应用主题
-        document.addEventListener('astro:after-swap', applyTheme);
-        // smooth 会让换页回顶变成动画，动画期间视口停在内容之外（页面下方出现大量空白）
+        // smooth 会让换页回顶变成动画，动画期间视口停在内容之外（页面下方出现大量空白）。
+        // 守卫挂 Document：换页会清空 <html> 的属性（swapRootAttributes），dataset 撑不过导航。
+        if (document.__scrollBehaviorBound) return;
+        document.__scrollBehaviorBound = true;
         document.addEventListener('astro:before-swap', function () {
           document.documentElement.style.scrollBehavior = 'auto';
         });
@@ -85,6 +63,11 @@ const headingFontBuilt = existsSync(
       })();
     </script>
     <BaseHead title={title} description={description} keywords={keywords} ogType={ogType} pathname={pathname} />
+    <script>
+      import { initTheme } from '../scripts/theme';
+
+      initTheme();
+    </script>
     <!-- 字体：
          正文用系统栈（global.css 的 --font-sans），不再请求 ZeoSeven 的四档正文 CSS
          （此前是 1 个 preconnect + 4 个 result.css）。

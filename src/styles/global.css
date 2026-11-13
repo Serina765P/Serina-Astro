@@ -8,42 +8,101 @@
    排除文档目录，只让 src/ 决定产物。 */
 @source not '../../docs';
 
-/* class 策略暗色模式（html.dark），由 ThemeToggle 控制 */
+/* class 策略只服务 Tailwind 的 dark: 工具类与旧浏览器回退（html.dark 由主题运行时镜像）；
+   配色真值是 color-scheme + light-dark()，见下方语义层 */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ── 基础语义色：高可读性的暖中性色，亮/暗两套随 .dark 切换 ── */
+/* ── 原始颜料：全站唯一允许写死色值的地方 ──
+   亮/暗成对存放，语义层只引用、不复制；改色只改这里。
+   静态强调阶（--paint-accent-50..950）不随配色翻转，见本块末尾。 */
 :root {
-  --bg: #f3f4f2;
-  --surface: #ffffff;
-  --surface-2: #e7ebee;
-  --ink: #20262b;
-  --body: #3f474d;
-  --sub: #5e6870;
-  --on-wash: #1f2930;
-  --line: rgba(31, 41, 48, 0.16);
-  /* 吸顶头取不透明底色（去玻璃感）：半透明 + backdrop-blur 会让滚动内容透上来。
-     直接别名 --bg，暗色随 :root.dark 自动跟随，不需要在暗色块里再写一遍。 */
-  --nav-bg: var(--bg);
-  --code-bg: #262d34;
-  --code-ink: #eef3f5;
+  --paint-bg-light: #f3f4f2;
+  --paint-bg-dark: #1e2327;
+  --paint-surface-light: #ffffff;
+  --paint-surface-dark: #272d32;
+  --paint-surface-2-light: #e7ebee;
+  --paint-surface-2-dark: #333b41;
+  --paint-ink-light: #20262b;
+  --paint-ink-dark: #eef2f3;
+  --paint-body-light: #3f474d;
+  --paint-body-dark: #d2dadf;
+  --paint-sub-light: #5e6870;
+  --paint-sub-dark: #aeb9bf;
+  --paint-on-wash-light: #1f2930;
+  --paint-on-wash-dark: #eef2f3;
+  --paint-line-light: rgb(31 41 48 / 0.16);
+  --paint-line-dark: rgb(238 242 243 / 0.16);
+  --paint-code-bg-light: #262d34;
+  --paint-code-bg-dark: #14191d;
+  --paint-code-ink-light: #eef3f5;
+  --paint-code-ink-dark: #e1e8eb;
 
-  /* 首页品牌色：芹菜 / せりな的人名识别，不与分类色相混用。 */
-  --brand: var(--paint-brand);
-  --brand-strong: var(--paint-brand-strong);
-  --brand-soft: var(--paint-brand-soft);
-  --brand-wash: var(--paint-brand-wash);
-  --brand-on: var(--paint-brand-on);
+  /* 首页品牌色：芹菜 / せりな的人名识别，不与分类色相混用。
+     暗色软底由品牌蓝混入表面色 —— 表面色取原始值，避免在 light-dark() 里再套一层。 */
+  --paint-brand-light: #788bc5;
+  --paint-brand-dark: #9cace0;
+  --paint-brand-strong-light: #5269ad;
+  --paint-brand-strong-dark: #c0caf0;
+  --paint-brand-soft-light: #eef1fa;
+  --paint-brand-soft-dark: color-mix(
+    in srgb,
+    var(--paint-brand-light) 24%,
+    var(--paint-surface-dark)
+  );
+  --paint-brand-wash-light: #f7f8fc;
+  --paint-brand-wash-dark: color-mix(
+    in srgb,
+    var(--paint-brand-light) 10%,
+    var(--paint-surface-dark)
+  );
+  --paint-brand-on-light: #ffffff;
+  --paint-brand-on-dark: #20262b;
 
-  /* ── 颜料阶（S13）：全站唯一允许写死色值的地方 ──
-     两个家族：
-     · --paint-accent-50..950  蓝灰强调阶，静态（不随 .dark 翻转）
-     · --paint-<色相>[-deep]   信息蓝灰、行动陶土等语义色，亮/暗各一套
-     消费方一律走别名：强调阶走 @theme 的 --color-accent-*，语义色走 --wash-*。 */
-  --paint-brand: #788bc5;
-  --paint-brand-strong: #5269ad;
-  --paint-brand-soft: #eef1fa;
-  --paint-brand-wash: #f7f8fc;
-  --paint-brand-on: #ffffff;
+  /* 语义色相（wash）：亮色是信息色本身，暗色是同一色相的深色变体 */
+  --paint-pink-light: #c98b79;
+  --paint-pink-dark: #7b5049;
+  --paint-pink-deep-light: #875044;
+  --paint-pink-deep-dark: #e0aa98;
+  --paint-mist-light: #91a9b7;
+  --paint-mist-dark: #506874;
+  --paint-mist-deep-light: #4b6877;
+  --paint-mist-deep-dark: #a6c1cc;
+  --paint-sage-light: #8fae9a;
+  --paint-sage-dark: #536b5b;
+  --paint-sage-deep-light: #42634e;
+  --paint-sage-deep-dark: #a9c7b2;
+  --paint-sand-light: #cbb28c;
+  --paint-sand-dark: #6e5b3e;
+  --paint-sand-deep-light: #7d6238;
+  --paint-sand-deep-dark: #d3bd90;
+  --paint-clay-light: #c18b78;
+  --paint-clay-dark: #6c4840;
+  --paint-clay-deep-light: #74463a;
+  --paint-clay-deep-dark: #d4a08f;
+  --paint-rose-light: #cc8179;
+  --paint-rose-dark: #76413c;
+  --paint-rose-deep-light: #8c3f38;
+  --paint-rose-deep-dark: #d59c93;
+
+  /* 实底上的文字（404 按钮）：亮色白字压玫瑰深底，暗色深字压玫瑰浅底 */
+  --paint-on-accent-light: #ffffff;
+  --paint-on-accent-dark: var(--paint-accent-950);
+  --paint-action-bg-light: var(--paint-clay-deep-light);
+  --paint-action-bg-dark: var(--paint-clay-dark);
+
+  /* 交互 chip / 分类胶囊：亮暗各一套，规则见各自小节 */
+  --paint-chip-bg-hover-light: var(--paint-accent-100);
+  --paint-chip-bg-hover-dark: color-mix(
+    in srgb,
+    var(--paint-pink-dark) 22%,
+    var(--paint-surface-dark)
+  );
+  --paint-chip-fg-hover-light: var(--paint-accent-700);
+  --paint-chip-fg-hover-dark: #eef2f3;
+  --paint-cat-on-light: var(--paint-on-wash-light);
+  --paint-cat-on-dark: var(--paint-ink-dark);
+
+  /* 静态强调阶：不随配色翻转 —— ::selection / 搜索高亮 / 404 按钮依赖这一点 */
   --paint-accent-50: #f4f7f8;
   --paint-accent-100: #e5ecef;
   --paint-accent-200: #cddbe0;
@@ -55,65 +114,172 @@
   --paint-accent-800: #334c56;
   --paint-accent-900: #2a3d45;
   --paint-accent-950: #1c2a30;
+}
 
-  --paint-pink: #c98b79;
-  --paint-pink-deep: #875044;
-  --paint-mist: #91a9b7;
-  --paint-mist-deep: #4b6877;
-  --paint-sage: #8fae9a;
-  --paint-sage-deep: #42634e;
-  --paint-sand: #cbb28c;
-  --paint-sand-deep: #7d6238;
-  --paint-clay: #c18b78;
-  --paint-clay-deep: #74463a;
-  --paint-rose: #cc8179;
-  --paint-rose-deep: #8c3f38;
+/* ── 语义层：亮/暗只写一对值，取哪一侧由 color-scheme 决定 ──
+   安全边界：light-dark() 的覆盖必须放在 @supports 里，不能在同一个 :root 里写两条
+   同名自定义属性 —— 自定义属性的值是 token 流，旧引擎会照样收下第二条，等到 var()
+   替换成真实属性时才发现函数不认识，那一刻整条声明变成无效值（回退不到第一条）。
+   = 旧浏览器走本块的基础值（亮色），暗色由文件末尾 @supports not 的 .dark 块补。
+   现代浏览器由下一块覆盖。 */
+:root {
+  color-scheme: light dark; /* 基础值跟系统；手动覆写见下方 meta 映射块 */
 
-  /* 压在强调色实底上的文字（404 按钮）：亮色玫瑰深底配白字，暗色玫瑰浅底配深字 */
-  --on-accent: #ffffff;
-  --action-bg: var(--paint-clay-deep);
+  --bg: var(--paint-bg-light);
+  --surface: var(--paint-surface-light);
+  --surface-2: var(--paint-surface-2-light);
+  --ink: var(--paint-ink-light);
+  --body: var(--paint-body-light);
+  --sub: var(--paint-sub-light);
+  --on-wash: var(--paint-on-wash-light);
+  --line: var(--paint-line-light);
+  --code-bg: var(--paint-code-bg-light);
+  --code-ink: var(--paint-code-ink-light);
+
+  --paint-brand: var(--paint-brand-light);
+  --paint-brand-strong: var(--paint-brand-strong-light);
+  --paint-brand-soft: var(--paint-brand-soft-light);
+  --paint-brand-wash: var(--paint-brand-wash-light);
+  --paint-brand-on: var(--paint-brand-on-light);
+
+  --paint-pink: var(--paint-pink-light);
+  --paint-pink-deep: var(--paint-pink-deep-light);
+  --paint-mist: var(--paint-mist-light);
+  --paint-mist-deep: var(--paint-mist-deep-light);
+  --paint-sage: var(--paint-sage-light);
+  --paint-sage-deep: var(--paint-sage-deep-light);
+  --paint-sand: var(--paint-sand-light);
+  --paint-sand-deep: var(--paint-sand-deep-light);
+  --paint-clay: var(--paint-clay-light);
+  --paint-clay-deep: var(--paint-clay-deep-light);
+  --paint-rose: var(--paint-rose-light);
+  --paint-rose-deep: var(--paint-rose-deep-light);
+
+  --on-accent: var(--paint-on-accent-light);
+  --action-bg: var(--paint-action-bg-light);
+  /* 静态强调阶不能直接用在需要翻色的地方（暗色下会闪出近白色块）：
+     · --accent-solid 实底（404 回首页按钮）
+     · --mark-bg / --mark-ink 搜索命中高亮
+     现代路径在下面 @supports 里成对翻转，不依赖 .dark 类。 */
+  --accent-solid: var(--paint-accent-700);
+  --mark-bg: var(--paint-accent-200);
+  --mark-ink: var(--paint-accent-900);
+
+  /* 吸顶头取不透明底色（去玻璃感）：半透明 + backdrop-blur 会让滚动内容透上来。
+     直接别名 --bg，随 color-scheme 自动跟随，不需要第二套取值。 */
+  --nav-bg: var(--bg);
+  /* 首页品牌色别名：消费方只认 --brand-*，不直接摸颜料阶 */
+  --brand: var(--paint-brand);
+  --brand-strong: var(--paint-brand-strong);
+  --brand-soft: var(--paint-brand-soft);
+  --brand-wash: var(--paint-brand-wash);
+  --brand-on: var(--paint-brand-on);
+  /* 实底上的文字：两种配色下都是白字 */
   --on-action: #ffffff;
 }
 
-:root.dark {
-  --bg: #1e2327;
-  --surface: #272d32;
-  --surface-2: #333b41;
-  --ink: #eef2f3;
-  --body: #d2dadf;
-  --sub: #aeb9bf;
-  --on-wash: #eef2f3;
-  --line: rgba(238, 242, 243, 0.16);
-  --code-bg: #14191d;
-  --code-ink: #e1e8eb;
+/* 现代路径：light-dark() 按 color-scheme 取亮/暗；旧引擎在规则层跳过整块，基础值不受影响 */
+@supports (color: light-dark(#fff, #000)) {
+  :root {
+    --bg: light-dark(var(--paint-bg-light), var(--paint-bg-dark));
+    --surface: light-dark(var(--paint-surface-light), var(--paint-surface-dark));
+    --surface-2: light-dark(var(--paint-surface-2-light), var(--paint-surface-2-dark));
+    --ink: light-dark(var(--paint-ink-light), var(--paint-ink-dark));
+    --body: light-dark(var(--paint-body-light), var(--paint-body-dark));
+    --sub: light-dark(var(--paint-sub-light), var(--paint-sub-dark));
+    --on-wash: light-dark(var(--paint-on-wash-light), var(--paint-on-wash-dark));
+    --line: light-dark(var(--paint-line-light), var(--paint-line-dark));
+    --code-bg: light-dark(var(--paint-code-bg-light), var(--paint-code-bg-dark));
+    --code-ink: light-dark(var(--paint-code-ink-light), var(--paint-code-ink-dark));
 
-  --paint-brand: #9cace0;
-  --paint-brand-strong: #c0caf0;
-  --paint-brand-soft: color-mix(in srgb, var(--paint-brand-source) 24%, var(--surface));
-  --paint-brand-wash: color-mix(in srgb, var(--paint-brand-source) 10%, var(--surface));
-  --paint-brand-on: #20262b;
-  --paint-brand-source: #788bc5;
-  --paint-pink: #7b5049;
-  --paint-pink-deep: #e0aa98;
-  --paint-mist: #506874;
-  --paint-mist-deep: #a6c1cc;
-  --paint-sage: #536b5b;
-  --paint-sage-deep: #a9c7b2;
-  --paint-sand: #6e5b3e;
-  --paint-sand-deep: #d3bd90;
-  --paint-clay: #6c4840;
-  --paint-clay-deep: #d4a08f;
-  --paint-rose: #76413c;
-  --paint-rose-deep: #d59c93;
+    --paint-brand: light-dark(var(--paint-brand-light), var(--paint-brand-dark));
+    --paint-brand-strong: light-dark(
+      var(--paint-brand-strong-light),
+      var(--paint-brand-strong-dark)
+    );
+    --paint-brand-soft: light-dark(var(--paint-brand-soft-light), var(--paint-brand-soft-dark));
+    --paint-brand-wash: light-dark(var(--paint-brand-wash-light), var(--paint-brand-wash-dark));
+    --paint-brand-on: light-dark(var(--paint-brand-on-light), var(--paint-brand-on-dark));
 
-  --on-accent: var(--paint-accent-950);
-  --action-bg: var(--paint-clay);
-  --on-action: #ffffff;
+    --paint-pink: light-dark(var(--paint-pink-light), var(--paint-pink-dark));
+    --paint-pink-deep: light-dark(var(--paint-pink-deep-light), var(--paint-pink-deep-dark));
+    --paint-mist: light-dark(var(--paint-mist-light), var(--paint-mist-dark));
+    --paint-mist-deep: light-dark(var(--paint-mist-deep-light), var(--paint-mist-deep-dark));
+    --paint-sage: light-dark(var(--paint-sage-light), var(--paint-sage-dark));
+    --paint-sage-deep: light-dark(var(--paint-sage-deep-light), var(--paint-sage-deep-dark));
+    --paint-sand: light-dark(var(--paint-sand-light), var(--paint-sand-dark));
+    --paint-sand-deep: light-dark(var(--paint-sand-deep-light), var(--paint-sand-deep-dark));
+    --paint-clay: light-dark(var(--paint-clay-light), var(--paint-clay-dark));
+    --paint-clay-deep: light-dark(var(--paint-clay-deep-light), var(--paint-clay-deep-dark));
+    --paint-rose: light-dark(var(--paint-rose-light), var(--paint-rose-dark));
+    --paint-rose-deep: light-dark(var(--paint-rose-deep-light), var(--paint-rose-deep-dark));
+
+    --on-accent: light-dark(var(--paint-on-accent-light), var(--paint-on-accent-dark));
+    --action-bg: light-dark(var(--paint-action-bg-light), var(--paint-action-bg-dark));
+    --accent-solid: light-dark(var(--paint-accent-700), var(--paint-accent-300));
+    --mark-bg: light-dark(var(--paint-accent-200), var(--paint-accent-700));
+    --mark-ink: light-dark(var(--paint-accent-900), var(--paint-accent-50));
+  }
+}
+
+/* ── 手动覆写（dark-mode-toggle 指南）──
+   <meta name="color-scheme"> 只是展示性提示，作者 CSS 的 color-scheme 会压过它 ——
+   必须用 :has() 把 meta 映射回属性，否则改 meta 毫无效果。
+   本块必须留在 @layer base 之外：基础值 `light dark` 在语义层（无层）声明，
+   带层规则永远压不过无层规则，放行内层会让映射失效。 */
+:root:has(> head > meta[name="color-scheme"][content='dark']) {
+  color-scheme: dark;
+}
+:root:has(> head > meta[name="color-scheme"][content='light']) {
+  color-scheme: light;
+}
+
+/* 回退：不支持 light-dark() 的浏览器（Chrome / Edge <123、Firefox <120、Safari <17.5）走 .dark。
+   .dark 由首帧内联脚本按「落盘值 → 系统偏好」设置，与 meta 保持一致；
+   现代浏览器里本块不生效，暗色完全由 light-dark() + color-scheme 决定。 */
+@supports not (color: light-dark(#fff, #000)) {
+  :root.dark {
+    --bg: var(--paint-bg-dark);
+    --surface: var(--paint-surface-dark);
+    --surface-2: var(--paint-surface-2-dark);
+    --ink: var(--paint-ink-dark);
+    --body: var(--paint-body-dark);
+    --sub: var(--paint-sub-dark);
+    --on-wash: var(--paint-on-wash-dark);
+    --line: var(--paint-line-dark);
+    --code-bg: var(--paint-code-bg-dark);
+    --code-ink: var(--paint-code-ink-dark);
+
+    --paint-brand: var(--paint-brand-dark);
+    --paint-brand-strong: var(--paint-brand-strong-dark);
+    --paint-brand-soft: var(--paint-brand-soft-dark);
+    --paint-brand-wash: var(--paint-brand-wash-dark);
+    --paint-brand-on: var(--paint-brand-on-dark);
+
+    --paint-pink: var(--paint-pink-dark);
+    --paint-pink-deep: var(--paint-pink-deep-dark);
+    --paint-mist: var(--paint-mist-dark);
+    --paint-mist-deep: var(--paint-mist-deep-dark);
+    --paint-sage: var(--paint-sage-dark);
+    --paint-sage-deep: var(--paint-sage-deep-dark);
+    --paint-sand: var(--paint-sand-dark);
+    --paint-sand-deep: var(--paint-sand-deep-dark);
+    --paint-clay: var(--paint-clay-dark);
+    --paint-clay-deep: var(--paint-clay-deep-dark);
+    --paint-rose: var(--paint-rose-dark);
+    --paint-rose-deep: var(--paint-rose-deep-dark);
+
+    --on-accent: var(--paint-on-accent-dark);
+    --action-bg: var(--paint-action-bg-dark);
+    --accent-solid: var(--paint-accent-300);
+    --mark-bg: var(--paint-accent-700);
+    --mark-ink: var(--paint-accent-50);
+  }
 }
 
 /* ── 语义层：莫兰迪色相（bg-wash-* / text-wash-* 等类名不变）──
-   只别名一次。:root.dark 只覆写 --paint-*，别名在取值时按上下文自动切到暗色颜料，
-   所以暗色块里不需要再写一遍 --wash-*。 */
+   只别名一次。--paint-* 由 light-dark()（或回退的 .dark）换值，别名在取值时按
+   当前 color-scheme 自动切到暗色颜料，所以不需要第二套 --wash-*。 */
 :root {
   --wash-pink: var(--paint-pink);
   --wash-pink-deep: var(--paint-pink-deep);
@@ -130,7 +296,7 @@
 }
 
 /* ── 模式无关的层级、度量与遮罩 token ──
-   不随主题切换，故不放 :root.dark。层级目前只有三档，且各有唯一消费点：
+   不随主题切换，故不放暗色块。层级目前只有三档，且各有唯一消费点：
    sticky-head → 归档页年份吸顶 / 代码复制按钮；nav → Header 吸顶；skip → 跳转正文。
    灯箱走 <dialog> 顶层，不参与 z-index，故不设 overlay 档。
    遮罩（S16）：纯黑玻璃压在照片上，亮暗同值 —— 与主题无关，故也放这里。
@@ -149,40 +315,87 @@
 }
 
 /* ── 交互 chip：亮暗各一套，替代静态 accent 阶 ──
-   静态 accent 阶不随 .dark 翻转，暗色下 hover 会闪出近白色块（#f3e7e7 压 #302c27）。 */
+   静态 accent 阶不随配色翻转，暗色下 hover 会闪出近白色块（#f3e7e7 压 #302c27）。 */
 :root {
   --chip-bg: var(--surface-2);
   --chip-fg: var(--body);
-  --chip-bg-hover: var(--color-accent-100);
-  --chip-fg-hover: var(--color-accent-700);
+  --chip-bg-hover: var(--paint-chip-bg-hover-light);
+  --chip-fg-hover: var(--paint-chip-fg-hover-light);
 }
 
-:root.dark {
-  --chip-bg-hover: color-mix(in srgb, var(--wash-pink) 22%, var(--surface));
-  --chip-fg-hover: var(--ink);
+@supports (color: light-dark(#fff, #000)) {
+  :root {
+    --chip-bg-hover: light-dark(
+      var(--paint-chip-bg-hover-light),
+      var(--paint-chip-bg-hover-dark)
+    );
+    --chip-fg-hover: light-dark(
+      var(--paint-chip-fg-hover-light),
+      var(--paint-chip-fg-hover-dark)
+    );
+  }
+}
+
+@supports not (color: light-dark(#fff, #000)) {
+  :root.dark {
+    --chip-bg-hover: var(--paint-chip-bg-hover-dark);
+    --chip-fg-hover: var(--paint-chip-fg-hover-dark);
+  }
 }
 
 /* ── 分类填色（B 版视觉减重后不再服务分类 chip）──
    分类 chip 改成中性胶囊 + 色点（见 CategoryChip.astro），实底 fill 只剩小游戏页的徽标在用；
    token 保留是因为暗色下不能再用 wash 原色当实底，徽标仍需要按分类分档的 fill。 */
 :root {
-  --cat-on: var(--on-wash);
-  --cat-fill-pink: var(--wash-pink);
-  --cat-fill-mist: var(--wash-mist);
-  --cat-fill-sage: var(--wash-sage);
-  --cat-fill-sand: var(--wash-sand);
-  --cat-fill-clay: var(--wash-clay);
-  --cat-fill-rose: var(--wash-rose);
+  --cat-on: var(--paint-on-wash-light);
+  --cat-fill-pink: var(--paint-pink-light);
+  --cat-fill-mist: var(--paint-mist-light);
+  --cat-fill-sage: var(--paint-sage-light);
+  --cat-fill-sand: var(--paint-sand-light);
+  --cat-fill-clay: var(--paint-clay-light);
+  --cat-fill-rose: var(--paint-rose-light);
 }
 
-:root.dark {
-  --cat-on: var(--ink);
-  --cat-fill-pink: color-mix(in srgb, var(--wash-pink) 26%, var(--surface));
-  --cat-fill-mist: color-mix(in srgb, var(--wash-mist) 26%, var(--surface));
-  --cat-fill-sage: color-mix(in srgb, var(--wash-sage) 26%, var(--surface));
-  --cat-fill-sand: color-mix(in srgb, var(--wash-sand) 26%, var(--surface));
-  --cat-fill-clay: color-mix(in srgb, var(--wash-clay) 26%, var(--surface));
-  --cat-fill-rose: color-mix(in srgb, var(--wash-rose) 26%, var(--surface));
+@supports (color: light-dark(#fff, #000)) {
+  :root {
+    --cat-on: light-dark(var(--paint-on-wash-light), var(--paint-ink-dark));
+    --cat-fill-pink: light-dark(
+      var(--paint-pink-light),
+      color-mix(in srgb, var(--paint-pink-dark) 26%, var(--paint-surface-dark))
+    );
+    --cat-fill-mist: light-dark(
+      var(--paint-mist-light),
+      color-mix(in srgb, var(--paint-mist-dark) 26%, var(--paint-surface-dark))
+    );
+    --cat-fill-sage: light-dark(
+      var(--paint-sage-light),
+      color-mix(in srgb, var(--paint-sage-dark) 26%, var(--paint-surface-dark))
+    );
+    --cat-fill-sand: light-dark(
+      var(--paint-sand-light),
+      color-mix(in srgb, var(--paint-sand-dark) 26%, var(--paint-surface-dark))
+    );
+    --cat-fill-clay: light-dark(
+      var(--paint-clay-light),
+      color-mix(in srgb, var(--paint-clay-dark) 26%, var(--paint-surface-dark))
+    );
+    --cat-fill-rose: light-dark(
+      var(--paint-rose-light),
+      color-mix(in srgb, var(--paint-rose-dark) 26%, var(--paint-surface-dark))
+    );
+  }
+}
+
+@supports not (color: light-dark(#fff, #000)) {
+  :root.dark {
+    --cat-on: var(--paint-ink-dark);
+    --cat-fill-pink: color-mix(in srgb, var(--paint-pink-dark) 26%, var(--paint-surface-dark));
+    --cat-fill-mist: color-mix(in srgb, var(--paint-mist-dark) 26%, var(--paint-surface-dark));
+    --cat-fill-sage: color-mix(in srgb, var(--paint-sage-dark) 26%, var(--paint-surface-dark));
+    --cat-fill-sand: color-mix(in srgb, var(--paint-sand-dark) 26%, var(--paint-surface-dark));
+    --cat-fill-clay: color-mix(in srgb, var(--paint-clay-dark) 26%, var(--paint-surface-dark));
+    --cat-fill-rose: color-mix(in srgb, var(--paint-rose-dark) 26%, var(--paint-surface-dark));
+  }
 }
 
 /* ── 分类胶囊（B 版视觉减重）──
@@ -314,7 +527,7 @@
   --color-body: var(--body);
   --color-sub: var(--sub);
   --color-on-wash: var(--on-wash);
-  /* 交互 chip / 分类胶囊：inline 引用使工具类直接跟随 :root.dark 切换
+  /* 交互 chip / 分类胶囊：inline 引用使工具类直接跟随 color-scheme 切换
      消费类：bg-chip / text-chip-fg / bg-chip-hover / text-chip-fg-hover /
              bg-cat-fill-* / text-cat-on */
   --color-chip: var(--chip-bg);
@@ -335,6 +548,9 @@
   --color-scrim-backdrop: var(--scrim-backdrop);
   --color-on-scrim: var(--on-scrim);
   --color-on-accent: var(--on-accent);
+  --color-accent-solid: var(--accent-solid);
+  --color-mark-bg: var(--mark-bg);
+  --color-mark-ink: var(--mark-ink);
   --color-action: var(--action-bg);
   --color-on-action: var(--on-action);
   --color-line: var(--line);
@@ -394,12 +610,6 @@
 }
 
 @layer base {
-  :root {
-    color-scheme: light;
-  }
-  :root.dark {
-    color-scheme: dark;
-  }
 
   /* 宽屏框架（R6，≥1600）：主设计宽度改为 1920。放大的是页面框架，不是行宽 ——
      --measure 不动，阅读列仍是 680px（40 × --prose-size）。1440 及以下不命中，逐像素保持原样。
@@ -463,8 +673,12 @@
     @apply bg-bg font-sans text-body antialiased transition-colors duration-300;
   }
 
+  /* 选中色：静态强调阶不随配色翻转，取哪一档由 color-scheme 决定（回退用亮色一档） */
   ::selection {
-    @apply bg-accent-200 text-accent-950 dark:bg-accent-700 dark:text-accent-50;
+    background-color: var(--color-accent-200);
+    background-color: light-dark(var(--color-accent-200), var(--color-accent-700));
+    color: var(--color-accent-950);
+    color: light-dark(var(--color-accent-950), var(--color-accent-50));
   }
 
   /* 锚点定位不被吸顶导航遮挡（S15）：唯一来源 = --header-h（吸顶头高度）+ 1.5rem 呼吸缝。
@@ -698,20 +912,31 @@
     @apply max-h-[92vh] max-w-[92vw] rounded-none object-contain shadow-media;
   }
 
-  /* TOC 长目录：容器内滚轮浏览，细滚动条（PostLayout .toc-scroll） */
+  /* TOC 长目录：容器内滚轮浏览（PostLayout .toc-scroll）。
+     滚动条走标准属性：滑块与轨道/底色 ≥3:1（WCAG 1.4.11，滑块不能依赖轨道色才可见）；
+     不写 scrollbar-width: thin —— 细滑块对部分用户太小，默认宽度才是可操作尺寸。
+     旧 WebKit 兜底包在 @supports not 里，避免与标准属性同时生效（自定义属性会自动级联进伪元素）。 */
   .toc-scroll {
-    scrollbar-width: thin;
-    scrollbar-color: var(--wash-mist) transparent;
+    scrollbar-width: auto;
+    scrollbar-color: var(--wash-mist-deep) transparent;
   }
-  .toc-scroll::-webkit-scrollbar {
-    width: 6px;
+  @media (prefers-contrast: more) {
+    .toc-scroll {
+      scrollbar-color: var(--ink) transparent;
+    }
   }
-  .toc-scroll::-webkit-scrollbar-thumb {
-    background: var(--wash-mist);
-    border-radius: 9999px;
-  }
-  .toc-scroll::-webkit-scrollbar-track {
-    background: transparent;
+  @supports not (scrollbar-color: auto) {
+    .toc-scroll::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+    .toc-scroll::-webkit-scrollbar-thumb {
+      background: var(--wash-mist-deep);
+      border-radius: 9999px;
+    }
+    .toc-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
   }
 
   .shuoshuo-timeline {
@@ -967,12 +1192,33 @@
     color: var(--wash-sage);
   }
 
+  /* ── 强制配色（forced-colors）下的系统色回退（color 指南）──
+     forced-colors 只强制 color / background-color / border-color 这类常规属性；
+     用背景色画出来的进度条、时间线、圆点会被压成 Canvas 而看不见，这里显式给系统色。
+     不给 forced-color-adjust: none —— 那等于关掉用户的系统配色。
+     放在 components 层：层序低于本层的规则压不住上面各组件的颜色声明。 */
+  @media (forced-colors: active) {
+    #reading-progress,
+    .shuoshuo-timeline::before,
+    .shuoshuo-node,
+    .shuoshuo-node-day {
+      background: CanvasText;
+    }
+    /* 渐隐只是「下面还有内容」的装饰，展开按钮已说明状态，强制色下直接去掉渐变 */
+    .code-fold.is-collapsed .code-clip::after {
+      background: none;
+    }
+    /* 预览图的暗底遮罩会被压成 Canvas，靠系统色描边把图与背景分开 */
+    .lightbox-dialog img {
+      border: 1px solid CanvasText;
+    }
+  }
 }
 
 /* ── S18：prose 的 typography 变量与字重阶 ──
    @tailwindcss/typography 的规则产出在 utilities 层，components 层的手写颜色/字重压不过它
    （此前它们全是死规则：正文一直渲染的是 typography 默认灰）。现在颜色改由 --tw-prose-* 变量
-   驱动，值全部引用主题 token —— 亮暗翻转跟随 :root.dark 换值，不再依赖 typography 的反色机制
+   驱动，值全部引用主题 token —— 亮暗翻转跟随 color-scheme 换值，不再依赖 typography 的反色机制
    （组件上原有的灰阶调色板类已随之移除）。`.prose.prose` 双类 (0,2,0) 压过插件写在同层的
    `.prose` 默认调色板 (0,1,0)；字重/引用不正体同理靠特异性取胜，.prose 相关 !important 归零
    （.astro-code 的 bg ! 保留 —— 那是压 shiki 内联样式的，与 typography 无关）。 */

@@ -105,7 +105,7 @@ import { SITE } from '../../site.config';
               a.textContent = (result.meta && result.meta.title) || result.url;
               var excerpt = document.createElement('div');
               excerpt.className =
-                'mt-1 text-base text-sub [&_mark]:rounded-sm [&_mark]:bg-accent-200 [&_mark]:text-accent-900 dark:[&_mark]:bg-accent-700 dark:[&_mark]:text-accent-50';
+                'mt-1 text-base text-sub [&_mark]:rounded-sm [&_mark]:bg-mark-bg [&_mark]:text-mark-ink';
               excerpt.innerHTML = result.excerpt;
               li.append(a, excerpt);
               resultsEl.appendChild(li);

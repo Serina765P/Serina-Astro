@@ -25,16 +25,24 @@ import { GISCUS } from '../site.config';
   }}
 >
   (function () {
-    // 幂等标记挂 <html>（documentElement 不随换页替换）：本脚本换页后会被重跑
-    if (document.documentElement.dataset.giscusBound === 'true') return;
-    document.documentElement.dataset.giscusBound = 'true';
+    // 幂等标记挂 Document 对象：换页会清空 <html> 的 data 属性（swapRootAttributes），
+    // 挂 documentElement 的 dataset 撑不过一次导航
+    if (document.__giscusBound) return;
+    document.__giscusBound = true;
 
     function mountGiscus() {
       var container = document.getElementById('giscus-root');
       if (!container || container.dataset.mounted === 'true') return;
       container.dataset.mounted = 'true';
 
-      var theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      // 主题真值是 meta[name="color-scheme"]：light dark = 跟系统，light / dark = 钉住。
+      // 不再读 .dark 类 —— 那只是 Tailwind 工具类的镜像。
+      var meta = document.querySelector('meta[name="color-scheme"]');
+      var content = meta ? meta.getAttribute('content') : 'light dark';
+      var dark =
+        content === 'dark' ||
+        (content === 'light dark' && matchMedia('(prefers-color-scheme: dark)').matches);
+      var theme = dark ? 'dark' : 'light';
       var s = document.createElement('script');
       s.src = 'https://giscus.app/client.js';
       s.setAttribute('data-repo', repo);

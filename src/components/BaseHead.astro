@@ -1,4 +1,6 @@
 ---
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { getImage } from 'astro:assets';
 import { HERO, SITE } from '../site.config';
 
@@ -17,10 +19,38 @@ const ogImage = new URL('/images/og.png', Astro.site);
 const rssUrl = new URL('/rss.xml', Astro.site);
 // WebP 用于支持该格式的浏览器；多尺寸 ICO 覆盖传统 favicon 请求。
 const favicon = await getImage({ src: HERO.avatar, width: 64 });
+
+// theme-color 只收具体色值，没法引用 CSS 变量 —— 构建期从 global.css 的原始颜料取值，
+// 避免在组件里出现第二份色值。缺 token 直接构建失败，不静默用错色。
+const THEME_CSS = readFileSync(path.join(process.cwd(), 'src/styles/global.css'), 'utf8');
+function paint(name: 'paint-bg-light' | 'paint-bg-dark'): string {
+  const match = new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{6})`).exec(THEME_CSS);
+  if (!match) throw new Error(`global.css 缺少 --${name}，theme-color 无法生成`);
+  return match[1];
+}
 ---
 
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- 主题：先声明支持两种配色（避免首帧白闪），紧接着用内联脚本（非 module、非 defer）
+     把落盘覆写写回 meta。CSS 用 :has() 把 meta 映射成 color-scheme；JS 不跑时保持
+     light dark，页面跟随系统偏好。 -->
+<meta name="color-scheme" content="light dark" />
+<script is:inline>
+  (function () {
+    var stored = null;
+    try {
+      stored = localStorage.getItem('theme');
+    } catch (e) {
+      /* 存储被阻止：保持 light dark，跟随系统 */
+    }
+    var meta = document.querySelector('meta[name="color-scheme"]');
+    if (meta && (stored === 'light' || stored === 'dark')) meta.setAttribute('content', stored);
+    // .dark 只是 Tailwind dark: 工具类与旧浏览器回退的镜像，配色真值是 color-scheme
+    var dark = stored ? stored === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.classList.toggle('dark', dark);
+  })();
+</script>
 <meta name="generator" content={Astro.generator} />
 <title>{title}</title>
 <meta name="description" content={description} />
@@ -29,8 +59,10 @@ const favicon = await getImage({ src: HERO.avatar, width: 64 });
 <link rel="canonical" href={canonical} />
 <link rel="icon" type="image/webp" sizes="64x64" href={favicon.src} />
 <link rel="icon" type="image/x-icon" sizes="16x16 32x32 48x48 64x64" href="/favicon.ico" />
-<!-- 导航底色延伸到浏览器 chrome；content 由主题脚本随手动切换同步（media 写法只跟系统偏好） -->
-<meta name="theme-color" content="var(--bg)" />
+<!-- 浏览器 chrome 底色：无 JS 时按系统偏好二选一（值取自 global.css 的 --paint-bg-*）；
+     手动切换后由 scripts/theme.ts 覆写为当前解析出的 --bg（两个 meta 都改，媒体查询不再有意义） -->
+<meta name="theme-color" content={paint('paint-bg-light')} media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content={paint('paint-bg-dark')} media="(prefers-color-scheme: dark)" />
 <link rel="alternate" type="application/rss+xml" title={SITE.title} href={rssUrl} />
 <link rel="sitemap" href="/sitemap-index.xml" />
 

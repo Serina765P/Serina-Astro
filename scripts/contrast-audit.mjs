@@ -103,8 +103,11 @@ const rgbToHex = ([r, g, b]) =>
     )
     .join('');
 
-/** 递归解析一个颜色值；token 缺失或循环引用一律抛错，绝不静默返回错值 */
-function resolveColor(raw, table, stack = []) {
+/**
+ * 递归解析一个颜色值；token 缺失或循环引用一律抛错，绝不静默返回错值。
+ * mode 决定 light-dark() 取哪一侧 —— 同一份 token 表按亮/暗各解析一次。
+ */
+function resolveColor(raw, table, stack = [], mode = 'light') {
   const value = raw.trim();
 
   const varMatch = /^var\(\s*(--[A-Za-z0-9-]+)\s*(?:,\s*([\s\S]+))?\)$/.exec(value);
@@ -114,9 +117,16 @@ function resolveColor(raw, table, stack = []) {
     const next = table[name];
     if (next === undefined) {
       if (fallback === undefined) throw new Error(`global.css 缺少 token ${name}`);
-      return resolveColor(fallback, table, stack);
+      return resolveColor(fallback, table, stack, mode);
     }
-    return resolveColor(next, table, [...stack, name]);
+    return resolveColor(next, table, [...stack, name], mode);
+  }
+
+  const lightDarkMatch = /^light-dark\(\s*([\s\S]+)\)$/i.exec(value);
+  if (lightDarkMatch) {
+    const args = splitTopLevel(lightDarkMatch[1]);
+    if (args.length !== 2) throw new Error(`light-dark 参数不是 2 个颜色：${value}`);
+    return resolveColor(mode === 'dark' ? args[1] : args[0], table, stack, mode);
   }
 
   const mixMatch = /^color-mix\(\s*in\s+srgb\s*,\s*([\s\S]+)\)$/i.exec(value);
@@ -129,8 +139,8 @@ function resolveColor(raw, table, stack = []) {
       return pct ? { color: pct[1], pct: Number(pct[2]) } : { color: arg, pct: null };
     });
     const shareA = parsed[0].pct ?? (parsed[1].pct === null ? 50 : 100 - parsed[1].pct);
-    const a = resolveColor(parsed[0].color, table, stack);
-    const b = resolveColor(parsed[1].color, table, stack);
+    const a = resolveColor(parsed[0].color, table, stack, mode);
+    const b = resolveColor(parsed[1].color, table, stack, mode);
     return mix(a, b, shareA);
   }
 
@@ -193,14 +203,15 @@ const TOKENS = {
   chipFgHover: '--chip-fg-hover',
   catOn: '--cat-on',
   onAccent: '--on-accent',
+  accentSolid: '--accent-solid',
+  markBg: '--mark-bg',
+  markInk: '--mark-ink',
   brand: '--brand',
   brandStrong: '--brand-strong',
   brandSoft: '--brand-soft',
   brandOn: '--brand-on',
   actionBg: '--action-bg',
   onAction: '--on-action',
-  accent300: '--color-accent-300',
-  accent700: '--color-accent-700',
   catFillPink: '--cat-fill-pink',
   catFillMist: '--cat-fill-mist',
   catFillSage: '--cat-fill-sage',
@@ -219,7 +230,10 @@ const tables = {};
 try {
   for (const mode of ['light', 'dark']) {
     tables[mode] = Object.fromEntries(
-      Object.entries(TOKENS).map(([key, name]) => [key, resolveColor(`var(${name})`, vars[mode])]),
+      Object.entries(TOKENS).map(([key, name]) => [
+        key,
+        resolveColor(`var(${name})`, vars[mode], [], mode),
+      ]),
     );
   }
 } catch (err) {
@@ -246,8 +260,8 @@ function check(mode, name, fg, bg, min) {
  *   → mix(fg, bg, alpha*100)
  */
 function checkComposite(mode, name, fgToken, alpha, bgToken, min) {
-  const fg = resolveColor(`var(${fgToken})`, vars[mode]);
-  const bg = resolveColor(`var(${bgToken})`, vars[mode]);
+  const fg = resolveColor(`var(${fgToken})`, vars[mode], [], mode);
+  const bg = resolveColor(`var(${bgToken})`, vars[mode], [], mode);
   check(mode, name, mix(fg, bg, alpha * 100), bg, min);
 }
 
@@ -282,13 +296,10 @@ for (const [mode, T] of Object.entries(tables)) {
   // hover chip 配对（亮色 = accent-100/700；暗色 = wash 揉进 surface / ink）——
   // 取代旧的静态 accent-100/accent-700 直配（S4 后已无消费点）
   check(mode, 'chip-fg-hover / chip-bg-hover（hover chip）', T.chipFgHover, T.chipBgHover, 4.5);
-  // 404 回首页按钮（S16）：文字走 --on-accent，实底随模式换档
-  // 亮 = 白字压玫瑰深底；暗 = 深字压玫瑰浅底。故配对随模式切换。
-  if (mode === 'light') {
-    check(mode, 'on-accent / accent-700（404 按钮）', T.onAccent, T.accent700, 4.5);
-  } else {
-    check(mode, 'on-accent / accent-300（404 按钮）', T.onAccent, T.accent300, 4.5);
-  }
+  // 404 回首页按钮（S16）：文字走 --on-accent，实底走 --accent-solid；
+  // 搜索命中高亮（mark）同理。两者都是 light-dark() 语义 token，亮/暗各取一侧。
+  check(mode, 'on-accent / accent-solid（404 按钮）', T.onAccent, T.accentSolid, 4.5);
+  check(mode, 'mark-ink / mark-bg（搜索高亮）', T.markInk, T.markBg, 4.5);
   // 分类胶囊：cat-on 压每种 wash 底（亮色 = wash 原色；暗色 = wash 揉进 surface）
   for (const w of [
     'catFillPink',
@@ -355,9 +366,9 @@ for (const file of walkSource(SRC_DIR)) {
     const alpha = Number(raw) / 100;
     const rel = path.relative(ROOT_DIR, file);
     for (const mode of Object.keys(tables)) {
-      const fg = resolveColor(`var(${ALPHA_FG[name]})`, vars[mode]);
+      const fg = resolveColor(`var(${ALPHA_FG[name]})`, vars[mode], [], mode);
       for (const bgName of ALPHA_BG) {
-        const bg = resolveColor(`var(${bgName})`, vars[mode]);
+        const bg = resolveColor(`var(${bgName})`, vars[mode], [], mode);
         alphaUsage += 1;
         check(mode, `text-${name}/${raw} @ ${rel}`, mix(fg, bg, alpha * 100), bg, 4.5);
       }
