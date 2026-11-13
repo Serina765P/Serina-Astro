@@ -1,4 +1,0 @@
-{"file": ".trellis/spec/frontend/visual-system.md", "reason": "页面标题字号/字体与视觉闸门"}
-{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "PageHeader 基元与 scoped 样式"}
-{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "构建与验收命令"}
-{"file": ".trellis/tasks/11-11-page-title-mincho/design.md", "reason": "字符收集、加载与回退设计"}

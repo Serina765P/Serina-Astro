@@ -1,7 +1,7 @@
-# CONTEXT
+# GLOSSARY
 
-Serina-Astro 的领域词汇表。术语在这里只有一个含义；新增或改写术语时直接更新
-本文件并记入相关 ADR。实现细节以源码为准，这里只记「叫什么、指什么、别叫成什么」。
+Serina-Astro 的领域词汇表。术语在这里只有一个含义；新增或改写术语走
+`/domain-modeling`。实现细节以源码为准，这里只记「叫什么、指什么、别叫成什么」。
 
 站点：`https://blog.serina.top`（Astro 7 + Tailwind v4 + Pagefind + Vue 小部件）。
 仓库里有两个独立 Node 项目：根站点与 `worker/`（Cloudflare Email Worker）。

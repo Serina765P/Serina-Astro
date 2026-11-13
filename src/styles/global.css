@@ -258,11 +258,10 @@
 
   /* ── 字号刻度（D2）：页面级 chrome 只渲染这五档，页面/组件里不要再写
      text-xs / text-lg / text-[0.95rem] 这类散档 —— 档位一多，层级就塌（卡片标题 18px
-     与正文档 17px 只差 1px）。正文档（.prose）是唯一例外：--prose-size = 17px / 1.85，
-     见 visual-system.md。密集 UI 里既有的局部字号（代码块、TOC 条目、说说时间线、
-     emoji 图鉴、小游戏、标签云）列在 .trellis/spec/frontend/visual-system.md，属待归并清单，
-     不得再扩大。行高随档位绑定在 --text-*--line-height 上，需要另一套节奏时（标题 vs 正文）
-     才单独写 leading-*。
+     与正文档 17px 只差 1px）。正文档（.prose）是唯一例外：--prose-size = 17px / 1.85。
+     密集 UI 里既有的局部字号（代码块、TOC 条目、说说时间线、emoji 图鉴、小游戏、
+     标签云）属待归并清单，不得再扩大。行高随档位绑定在 --text-*--line-height 上，
+     需要另一套节奏时（标题 vs 正文）才单独写 leading-*。
        display 页面级 h1（首页 hero / 各页 h1 / 文章 h1）：clamp 到 390 宽 ≈ 36px，1440 宽封顶 60px
        heading 分区 h2（「最近写下的」「小站索引」）
        lead    文章列表行标题 / 卡片标题 / 导语
@@ -979,7 +978,7 @@
    （.astro-code 的 bg ! 保留 —— 那是压 shiki 内联样式的，与 typography 无关）。 */
 @layer utilities {
   /* 正文档（C 方向）：17px / 1.85 / 0.01em。这是「正文档」的独立刻度，不并入页面 chrome
-     的五档字号（visual-system.md 有例外说明）；正文仍是系统无衬线栈。
+     的五档字号；正文仍是系统无衬线栈。
      17px 下 --measure = 40 × --prose-size = 680px，约 40 个汉字/行；面板内容盒 752px 时文本列两侧各 36px。
      颜色继续由 --tw-prose-* 变量驱动，正文取 --body（比 --ink 柔一档），亮暗自动跟随。
      宽度归这里管，Prose.astro 上不要再写 max-w-none 把它覆盖掉。
