@@ -27,7 +27,7 @@ written lazily by `/domain-modeling` (reached via `/grill-with-docs` and
 │   ├── agents/           ← per-repo config for the engineering skills
 │   ├── custom-emoji.md   ← existing Chinese SOPs for asset upkeep
 │   └── custom-sticker.md
-├── AGENTS.md             ← local working agreements (gitignored)
+├── AGENTS.md             ← working agreements for agents
 └── src/
 ```
 
@@ -41,8 +41,9 @@ with the Worker, URL shapes, timezone policy). Keep the numbering monotonic:
   exclusion; the Chinese SOPs under `docs/` are not template input.
 - `GLOSSARY.md` at the root **is** scanned by Tailwind. Do not write utility-class
   literals in it — describe rules in prose, or quote them without class syntax.
-- `AGENTS.md` is gitignored on purpose. Configuration that must survive a fresh
-  clone belongs in `GLOSSARY.md` or `docs/agents/`, never only in `AGENTS.md`.
+- `AGENTS.md` is tracked and is the entry point for every agent. Keep it focused
+  on stable working agreements; configuration that only one skill needs belongs
+  in `docs/agents/`, and domain vocabulary belongs in `GLOSSARY.md`.
 
 ## Use the glossary's vocabulary
 
