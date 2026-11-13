@@ -16,13 +16,16 @@ corresponding label string from this table.
 
 ## Current state
 
-`ready-for-agent` and `wontfix` already exist in `Serina765P/Serina-Astro`. The
-other three are created on demand the first time an issue needs them, or run:
+All five labels exist in `Serina765P/Serina-Astro` — `ready-for-agent` and
+`wontfix` were already there, the other three were created during setup.
+Recreate them in a fresh fork with:
 
 ```bash
 gh label create needs-triage    --color E4E669 --description "Maintainer needs to evaluate this issue"
 gh label create needs-info      --color D876E3 --description "Waiting on reporter for more information"
+gh label create ready-for-agent --color 0E8A16 --description "Fully specified, ready for an AFK agent"
 gh label create ready-for-human --color 1D76DB --description "Requires human implementation"
+gh label create wontfix         --color FFFFFF --description "Will not be actioned"
 ```
 
 Tickets produced by `/to-tickets` are already agent-ready and skip triage;
